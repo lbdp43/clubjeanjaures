@@ -47,6 +47,19 @@ async function main() {
   });
   console.log('Compte admin créé:', adminEmail);
 
+  // 2b. Compte admin La Brasserie des Plantes
+  const brasserie = await prisma.user.upsert({
+    where: { email: 'labrasseriedesplantes@gmail.com' },
+    update: { role: 'admin' },
+    create: {
+      email: 'labrasseriedesplantes@gmail.com',
+      role: 'admin',
+      status: 'active',
+      onboardingDone: false
+    }
+  });
+  console.log('Compte admin créé: labrasseriedesplantes@gmail.com');
+
   // 3. Les 20 événements 2026
   const events = [
     { title: 'Matinale — Janvier', type: 'matinale', date: '2026-01-16', timeStart: '07:30', timeEnd: '09:30' },
