@@ -120,9 +120,12 @@ router.delete('/members/:id', requireAuth, requireAdmin, async (req, res) => {
     if (req.params.id === req.user.id) {
       return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
     }
-    // Supprimer les sessions liées (pas de onDelete cascade sur Session)
-    await prisma.session.deleteMany({ where: { userId: req.params.id } });
-    await prisma.user.delete({ where: { id: req.params.id } });
+    const uid = req.params.id;
+    // Supprimer toutes les données liées sans onDelete cascade
+    await prisma.session.deleteMany({ where: { userId: uid } });
+    await prisma.event.deleteMany({ where: { createdBy: uid } });
+    await prisma.favorite.deleteMany({ where: { OR: [{ userId: uid }, { memberId: uid }] } });
+    await prisma.user.delete({ where: { id: uid } });
     res.json({ success: true });
   } catch (err) {
     console.error('Erreur delete member:', err);

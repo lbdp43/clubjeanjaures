@@ -40,7 +40,9 @@ export default function AdminMembers() {
     try {
       await api.deleteMember(id);
       setMembers(prev => prev.filter(m => m.id !== id));
-    } catch {}
+    } catch (err) {
+      alert(err.message || 'Erreur lors de la suppression');
+    }
   };
 
   const handleCopyLink = () => {
