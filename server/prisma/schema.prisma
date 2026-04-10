@@ -37,6 +37,7 @@ model User {
   email             String     @unique
   role              Role       @default(visitor)
   status            UserStatus @default(active)
+  passwordHash      String?    @map("password_hash")
   magicToken        String?    @map("magic_token")
   magicTokenExpires DateTime?  @map("magic_token_expires")
   googleId          String?    @map("google_id")

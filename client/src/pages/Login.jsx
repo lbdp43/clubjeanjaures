@@ -1,20 +1,40 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Login() {
+  const [mode, setMode] = useState('password'); // 'password' | 'magic'
   const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState('');
+  const [magicSent, setMagicSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handlePasswordLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await api.login(email, password);
+      await refreshUser();
+      navigate('/tableau-de-bord', { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMagicLink = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
       await api.sendMagicLink(email);
-      setSent(true);
+      setMagicSent(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -33,7 +53,101 @@ export default function Login() {
           <p className="text-text-muted">Connexion à votre espace</p>
         </div>
 
-        {sent ? (
+        {/* Onglets de mode */}
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
+          <button
+            onClick={() => { setMode('password'); setError(''); }}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+              mode === 'password' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
+            }`}
+          >
+            Email / Mot de passe
+          </button>
+          <button
+            onClick={() => { setMode('magic'); setError(''); setMagicSent(false); }}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+              mode === 'magic' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
+            }`}
+          >
+            Lien par email
+          </button>
+        </div>
+
+        {/* Mode mot de passe */}
+        {mode === 'password' && (
+          <form onSubmit={handlePasswordLogin} className="space-y-4">
+            <div>
+              <label htmlFor="email-pw" className="block text-sm font-medium mb-2">
+                Adresse email
+              </label>
+              <input
+                id="email-pw"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-field"
+                placeholder="votre@email.fr"
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-2">
+                Mot de passe
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field"
+                placeholder="Votre mot de passe"
+                required
+                minLength={6}
+              />
+            </div>
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <button type="submit" className="btn-primary w-full" disabled={loading}>
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </button>
+          </form>
+        )}
+
+        {/* Mode magic link */}
+        {mode === 'magic' && !magicSent && (
+          <form onSubmit={handleMagicLink} className="space-y-4">
+            <div>
+              <label htmlFor="email-magic" className="block text-sm font-medium mb-2">
+                Adresse email
+              </label>
+              <input
+                id="email-magic"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-field"
+                placeholder="votre@email.fr"
+                required
+                autoFocus
+              />
+            </div>
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <button type="submit" className="btn-primary w-full" disabled={loading}>
+              {loading ? 'Envoi...' : 'Recevoir le lien de connexion'}
+            </button>
+
+            <p className="text-xs text-text-muted text-center">
+              Un lien de connexion unique vous sera envoyé par email. Pas besoin de mot de passe.
+            </p>
+          </form>
+        )}
+
+        {/* Magic link envoyé */}
+        {mode === 'magic' && magicSent && (
           <div className="text-center slide-up">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -45,43 +159,22 @@ export default function Login() {
               Un lien de connexion a été envoyé à <strong>{email}</strong>.
               Il expire dans 15 minutes.
             </p>
-            <button onClick={() => setSent(false)} className="text-blue hover:underline text-sm">
+            <button onClick={() => setMagicSent(false)} className="text-blue hover:underline text-sm">
               Utiliser une autre adresse
             </button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Adresse email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                placeholder="votre@email.fr"
-                required
-                autoFocus
-              />
-            </div>
-
-            {error && (
-              <p className="text-red-500 text-sm">{error}</p>
-            )}
-
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? 'Envoi en cours...' : 'Recevoir le lien de connexion'}
-            </button>
-
-            <div className="text-center">
-              <Link to="/" className="text-sm text-text-muted hover:text-blue">
-                Retour à l'accueil
-              </Link>
-            </div>
-          </form>
         )}
+
+        {/* Liens bas de page */}
+        <div className="mt-6 pt-4 border-t border-gray-100 text-center space-y-2">
+          <p className="text-sm text-text-muted">
+            Pas encore inscrit ?{' '}
+            <Link to="/inscription" className="text-blue hover:underline font-medium">Créer un compte</Link>
+          </p>
+          <Link to="/" className="text-sm text-text-muted hover:text-blue block">
+            Retour à l'accueil
+          </Link>
+        </div>
       </div>
     </div>
   );

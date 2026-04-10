@@ -25,6 +25,12 @@ async function apiFetch(path, options = {}) {
 
 export const api = {
   // Auth
+  register: (email, password) => apiFetch('/auth/register', {
+    method: 'POST', body: JSON.stringify({ email, password })
+  }),
+  login: (email, password) => apiFetch('/auth/login', {
+    method: 'POST', body: JSON.stringify({ email, password })
+  }),
   sendMagicLink: (email) => apiFetch('/auth/magic-link', {
     method: 'POST', body: JSON.stringify({ email })
   }),
