@@ -60,6 +60,111 @@ async function main() {
   });
   console.log('Compte admin créé: labrasseriedesplantes@gmail.com');
 
+  // 2c. Membres du club
+  const membres = [
+    {
+      email: 'contact@rgce-habitat.fr',
+      companyName: 'RGCE Habitat',
+      jobTitle: 'Président',
+      phone: '0666548515',
+      website: 'https://rgce-habitat.fr/',
+      description: 'Nous vous accompagnons sur vos projets de rénovation énergétique.',
+      city: 'Saint-Étienne'
+    },
+    {
+      email: 'n.sariak@meilleurtaux.com',
+      companyName: 'Meilleurtaux',
+      jobTitle: 'Conseiller Financier',
+      phone: '0748100483',
+      description: 'Courtière en financements immo & conso',
+      city: 'Saint-Étienne'
+    },
+    {
+      email: 'lucileprost.adv@gmail.com',
+      companyName: 'Lucile Prost',
+      jobTitle: 'Assistante administrative',
+      phone: '0668305746',
+      description: 'Aide administrative et Pré-comptabilité. Gestion et suivi commercial. Gestion litige et recouvrement.',
+      city: 'Saint-Étienne'
+    },
+    {
+      email: 'loric.vigier@gmail.com',
+      companyName: 'Vigelec',
+      jobTitle: 'Électricité courant fort et courant faible',
+      phone: '0633093622',
+      description: 'Vous suit dans vos projets neuf ou rénovation, pro ou particuliers. Courant fort et courant faibles.',
+      address: '8 rue des roseaux',
+      city: 'Sorbiers'
+    },
+    {
+      email: 'florian.neto@fenyx-conseil.fr',
+      companyName: 'Fenyx Conseil',
+      jobTitle: 'Expert-Comptable',
+      phone: '0770253226',
+      website: 'https://www.fenyx-conseil.fr/',
+      description: 'Expert-Comptable',
+      city: 'Saint-Étienne'
+    },
+    {
+      email: 'contact@lagencedudiagnostic.fr',
+      companyName: "L'Agence du Diagnostic",
+      jobTitle: 'Gérant',
+      phone: '0616641550',
+      website: 'https://www.lagencedudiagnostic.fr/',
+      description: 'Nous sommes spécialisés dans les diagnostics de biens immobiliers en cours de transaction, de location, de construction ou de rénovation.',
+      address: '181 Boulevard Jean Jaurès',
+      city: 'St-Just-St-Rambert'
+    },
+    {
+      email: 'bonnetcic@glail.com',
+      companyName: 'CIC',
+      jobTitle: "Chargé d'affaires professionnels",
+      phone: '0617474886',
+      website: 'https://www.cic.fr',
+      description: 'Accompagner les professionnels',
+      city: 'Saint-Étienne La Terrasse'
+    },
+    {
+      email: 'louis.napierala@groupe-ciec.com',
+      companyName: 'Groupe CIEC',
+      jobTitle: 'Conseiller en Gestion de Patrimoine',
+      phone: '0783815490',
+      website: 'https://ciec.group/',
+      description: "Votre Conseiller en Gestion de Patrimoine, vous accompagnant sur l'épargne, la valorisation de capital, la prévoyance, l'assurance emprunteur, la diminution de votre imposition, la préparation de votre retraite, la transmission, à travers des solutions financières et immobilières.",
+      city: 'Auvergne-Rhône-Alpes'
+    }
+  ];
+
+  for (const m of membres) {
+    const user = await prisma.user.upsert({
+      where: { email: m.email },
+      update: {},
+      create: {
+        email: m.email,
+        role: 'member',
+        status: 'active',
+        onboardingDone: true
+      }
+    });
+
+    await prisma.member.upsert({
+      where: { id: user.id },
+      update: {},
+      create: {
+        id: user.id,
+        companyName: m.companyName,
+        jobTitle: m.jobTitle,
+        phone: m.phone,
+        address: m.address || '',
+        city: m.city || '',
+        website: m.website || null,
+        description: m.description || null
+      }
+    });
+
+    console.log(`Membre créé: ${m.companyName} (${m.email})`);
+  }
+
   // 3. Les 20 événements 2026
   const events = [
     { title: 'Matinale — Janvier', type: 'matinale', date: '2026-01-16', timeStart: '07:30', timeEnd: '09:30' },
