@@ -95,16 +95,28 @@ export default function Profile() {
       <form onSubmit={handleSave} className="card p-4 sm:p-6 space-y-5">
         {/* Logo */}
         <div className="flex items-center gap-4">
-          {user.member?.logoUrl ? (
-            <img src={user.member.logoUrl} alt="" className="w-16 h-16 rounded-xl object-cover" />
-          ) : (
-            <div className="w-16 h-16 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-xl">
-              {form.companyName?.charAt(0) || '?'}
-            </div>
-          )}
-          <button type="button" onClick={() => logoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-            {uploading ? 'Envoi...' : 'Modifier le logo'}
-          </button>
+          <div className="relative">
+            {user.member?.logoUrl ? (
+              <img src={user.member.logoUrl} alt="" className="w-16 h-16 rounded-xl object-cover" />
+            ) : (
+              <div className="w-16 h-16 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-xl">
+                {form.companyName?.charAt(0) || '?'}
+              </div>
+            )}
+            {uploading && (
+              <div className="absolute inset-0 bg-white/80 rounded-xl flex items-center justify-center">
+                <div className="animate-spin w-6 h-6 border-3 border-blue border-t-transparent rounded-full" />
+              </div>
+            )}
+          </div>
+          <div>
+            <button type="button" onClick={() => logoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+              Modifier le logo
+            </button>
+            {uploadMsg && uploadMsg.includes('Logo') && (
+              <p className={`text-xs mt-1 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
+            )}
+          </div>
           <input ref={logoRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
         </div>
 
@@ -199,7 +211,13 @@ export default function Profile() {
       </form>
 
       {/* Photos */}
-      <div className="card p-4 sm:p-6">
+      <div className="card p-4 sm:p-6 relative">
+        {uploading && (
+          <div className="absolute inset-0 bg-white/80 rounded-card flex flex-col items-center justify-center z-10">
+            <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
+            <p className="text-sm text-text-muted mt-2">Envoi en cours...</p>
+          </div>
+        )}
         <h3 className="font-semibold mb-4">Photos de l'entreprise</h3>
         {uploadMsg && (
           <p className={`text-sm mb-3 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
@@ -221,7 +239,7 @@ export default function Profile() {
           ))}
         </div>
         <label className={`text-sm text-blue hover:underline cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-          {uploading ? 'Envoi en cours...' : '+ Ajouter des photos'}
+          + Ajouter des photos
           <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
         </label>
       </div>

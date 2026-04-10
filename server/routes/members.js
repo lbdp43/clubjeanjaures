@@ -24,6 +24,7 @@ router.get('/public', optionalAuth, async (req, res) => {
         companyName: m.companyName,
         jobTitle: m.jobTitle,
         city: m.city,
+        address: m.address,
         logoUrl: m.logoUrl,
         description: m.description,
         website: m.website,

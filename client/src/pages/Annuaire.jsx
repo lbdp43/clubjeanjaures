@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import MemberCard from '../components/annuaire/MemberCard';
@@ -72,7 +72,7 @@ export default function Annuaire() {
       ) : showMap ? (
         <MapView members={filteredMembers} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {filteredMembers.map(m => (
             <MemberCard key={m.id} member={m} />
           ))}
@@ -100,34 +100,50 @@ function MapView({ members }) {
 }
 
 function MapContainer({ members }) {
-  const [loaded, setLoaded] = useState(false);
+  const mapRef = useRef(null);
 
   useEffect(() => {
-    if (!document.getElementById('leaflet-css')) {
-      const link = document.createElement('link');
-      link.id = 'leaflet-css';
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(link);
-    }
-    setLoaded(true);
-  }, []);
+    let map;
+    import('leaflet').then((mod) => {
+      const L = mod.default || mod;
+      // Charger le CSS Leaflet
+      if (!document.getElementById('leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
 
-  useEffect(() => {
-    if (!loaded || !window.L) return;
-    const map = window.L.map('member-map').setView([45.4397, 4.3872], 12);
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+      // Fix icônes Leaflet manquantes avec les bundlers
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
 
-    members.forEach(m => {
-      window.L.marker([m.latitude, m.longitude])
-        .addTo(map)
-        .bindPopup(`<strong>${m.companyName}</strong><br/>${m.jobTitle}`);
+      if (!mapRef.current) return;
+      map = L.map(mapRef.current).setView([45.4397, 4.3872], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      members.forEach(m => {
+        L.marker([m.latitude, m.longitude])
+          .addTo(map)
+          .bindPopup(`<strong>${m.companyName}</strong><br/>${m.jobTitle}`);
+      });
+
+      // Ajuster la vue si des membres existent
+      if (members.length > 0) {
+        const bounds = L.latLngBounds(members.map(m => [m.latitude, m.longitude]));
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+      }
     });
 
-    return () => map.remove();
-  }, [loaded, members]);
+    return () => { if (map) map.remove(); };
+  }, [members]);
 
-  return <div id="member-map" className="w-full h-full" />;
+  return <div ref={mapRef} className="w-full h-full" />;
 }
