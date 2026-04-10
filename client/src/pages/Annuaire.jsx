@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import MemberCard from '../components/annuaire/MemberCard';
@@ -8,7 +8,6 @@ export default function Annuaire() {
   const [members, setMembers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -42,15 +41,7 @@ export default function Annuaire() {
 
   return (
     <div className="space-y-6 fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl text-blue-dark">Annuaire</h1>
-        <button
-          onClick={() => setShowMap(!showMap)}
-          className="text-sm text-blue hover:underline"
-        >
-          {showMap ? 'Vue liste' : 'Vue carte'}
-        </button>
-      </div>
+      <h1 className="font-display text-2xl text-blue-dark">Annuaire</h1>
 
       <div className="relative">
         <input
@@ -69,8 +60,6 @@ export default function Annuaire() {
         <div className="flex justify-center py-12">
           <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
         </div>
-      ) : showMap ? (
-        <MapView members={filteredMembers} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {filteredMembers.map(m => (
@@ -83,67 +72,4 @@ export default function Annuaire() {
       )}
     </div>
   );
-}
-
-function MapView({ members }) {
-  const membersWithCoords = members.filter(m => m.latitude && m.longitude);
-
-  if (membersWithCoords.length === 0) {
-    return <p className="text-text-muted text-center py-8">Aucun membre géolocalisé.</p>;
-  }
-
-  return (
-    <div className="card p-0 overflow-hidden" style={{ height: 'min(500px, 70vh)' }}>
-      <MapContainer members={membersWithCoords} />
-    </div>
-  );
-}
-
-function MapContainer({ members }) {
-  const mapRef = useRef(null);
-
-  useEffect(() => {
-    let map;
-    import('leaflet').then((mod) => {
-      const L = mod.default || mod;
-      // Charger le CSS Leaflet
-      if (!document.getElementById('leaflet-css')) {
-        const link = document.createElement('link');
-        link.id = 'leaflet-css';
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-      }
-
-      // Fix icônes Leaflet manquantes avec les bundlers
-      delete L.Icon.Default.prototype._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      });
-
-      if (!mapRef.current) return;
-      map = L.map(mapRef.current).setView([45.4397, 4.3872], 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
-
-      members.forEach(m => {
-        L.marker([m.latitude, m.longitude])
-          .addTo(map)
-          .bindPopup(`<strong>${m.companyName}</strong><br/>${m.jobTitle}`);
-      });
-
-      // Ajuster la vue si des membres existent
-      if (members.length > 0) {
-        const bounds = L.latLngBounds(members.map(m => [m.latitude, m.longitude]));
-        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
-      }
-    });
-
-    return () => { if (map) map.remove(); };
-  }, [members]);
-
-  return <div ref={mapRef} className="w-full h-full" />;
 }
