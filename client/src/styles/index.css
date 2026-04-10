@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream text-text-main font-sans antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue text-white px-6 py-3 rounded-full font-semibold
+           hover:bg-blue-dark transition-colors duration-200
+           active:scale-95 transform;
+  }
+  .btn-secondary {
+    @apply bg-white text-blue border-2 border-blue px-6 py-3 rounded-full
+           font-semibold hover:bg-blue-light transition-colors duration-200;
+  }
+  .btn-danger {
+    @apply bg-red-500 text-white px-6 py-3 rounded-full font-semibold
+           hover:bg-red-600 transition-colors duration-200;
+  }
+  .card {
+    @apply bg-white rounded-card shadow-sm p-4 border border-gray-100;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white
+           focus:border-blue focus:ring-2 focus:ring-blue-light outline-none
+           transition-all duration-200;
+  }
+  .badge {
+    @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
+  }
+  .badge-matinale {
+    @apply badge bg-yellow-100 text-yellow-800;
+  }
+  .badge-afterwork {
+    @apply badge bg-purple-100 text-purple-800;
+  }
+  .badge-formation {
+    @apply badge bg-green-100 text-green-800;
+  }
+  .badge-conference {
+    @apply badge bg-blue-light text-blue-dark;
+  }
+  .badge-special {
+    @apply badge bg-red-100 text-red-800;
+  }
+  .badge-demande {
+    @apply badge bg-orange-100 text-orange-800;
+  }
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mode hors-ligne */
+.offline-banner {
+  @apply fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 text-sm font-medium z-50;
+}

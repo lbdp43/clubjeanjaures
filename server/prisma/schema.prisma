@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  visitor
+  member
+  moderator
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum EventType {
+  matinale
+  afterwork
+  formation
+  conference
+  special
+}
+
+enum PostType {
+  post
+  demande
+}
+
+model User {
+  id                String     @id @default(uuid()) @db.Uuid
+  email             String     @unique
+  role              Role       @default(visitor)
+  status            UserStatus @default(active)
+  magicToken        String?    @map("magic_token")
+  magicTokenExpires DateTime?  @map("magic_token_expires")
+  googleId          String?    @map("google_id")
+  onboardingDone    Boolean    @default(false) @map("onboarding_done")
+  invitedBy         String?    @map("invited_by") @db.Uuid
+  createdAt         DateTime   @default(now()) @map("created_at")
+  lastLogin         DateTime?  @map("last_login")
+
+  inviter       User?      @relation("Invitations", fields: [invitedBy], references: [id])
+  invitees      User[]     @relation("Invitations")
+  member        Member?
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  favorites     Favorite[] @relation("UserFavorites")
+  favoritedBy   Favorite[] @relation("FavoritedMember")
+  eventsCreated Event[]
+
+  @@map("users")
+}
+
+model Member {
+  id          String   @id @db.Uuid
+  companyName String   @map("company_name")
+  jobTitle    String   @map("job_title")
+  phone       String
+  address     String
+  city        String?
+  latitude    Float?
+  longitude   Float?
+  logoUrl     String?  @map("logo_url")
+  photos      Json     @default("[]")
+  website     String?
+  socialLinks Json     @default("{}") @map("social_links")
+  description String?
+  lookingFor  String?  @map("looking_for")
+  canOffer    String?  @map("can_offer")
+  visibility  Json     @default("{\"phone\":\"public\",\"email\":\"public\"}")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("members")
+}
+
+model Event {
+  id              String    @id @default(uuid()) @db.Uuid
+  title           String
+  type            EventType
+  date            DateTime  @db.Date
+  timeStart       String    @map("time_start")
+  timeEnd         String?   @map("time_end")
+  location        String
+  description     String?
+  speaker         String?
+  createdBy       String    @map("created_by") @db.Uuid
+  recurrenceGroup String?   @map("recurrence_group") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  creator User @relation(fields: [createdBy], references: [id])
+
+  @@map("events")
+}
+
+model Post {
+  id          String   @id @default(uuid()) @db.Uuid
+  authorId    String   @map("author_id") @db.Uuid
+  type        PostType @default(post)
+  content     String
+  attachments Json     @default("[]")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  likes    Like[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("likes")
+}
+
+model Favorite {
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @map("user_id") @db.Uuid
+  memberId String @map("member_id") @db.Uuid
+
+  user   User @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+  member User @relation("FavoritedMember", fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, memberId])
+  @@map("favorites")
+}
+
+model ClubSettings {
+  id           Int     @id @default(1)
+  name         String  @default("Club de Jean Jaurès")
+  description  String  @default("")
+  logoUrl      String? @map("logo_url")
+  contactEmail String? @map("contact_email")
+  contactPhone String? @map("contact_phone")
+  address      String?
+
+  @@map("club_settings")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
+}
