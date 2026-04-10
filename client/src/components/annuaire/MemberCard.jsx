@@ -20,9 +20,9 @@ export default function MemberCard({ member }) {
       {/* Logo centré en haut */}
       <div className="flex justify-center mb-3">
         {member.logoUrl ? (
-          <img src={member.logoUrl} alt={member.companyName} className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover" />
+          <img src={member.logoUrl} alt={member.companyName} className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-cover" />
         ) : (
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-blue-light flex items-center justify-center text-blue font-bold text-3xl sm:text-4xl">
+          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-blue-light flex items-center justify-center text-blue font-bold text-4xl sm:text-5xl">
             {member.companyName?.charAt(0) || '?'}
           </div>
         )}

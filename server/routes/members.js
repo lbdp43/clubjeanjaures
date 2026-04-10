@@ -171,10 +171,10 @@ router.post('/:id/photos', requireAuth, upload.array('photos', 10), async (req, 
     const processedFiles = [];
     for (const file of req.files) {
       if (file.mimetype.startsWith('image/')) {
-        const url = await uploadImage(file.path, 'members');
+        const url = await uploadImage(file.path);
         processedFiles.push(url);
       } else {
-        const url = await uploadFile(file.path, 'members');
+        const url = await uploadFile(file.path);
         processedFiles.push(url);
       }
     }

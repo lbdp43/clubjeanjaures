@@ -169,7 +169,7 @@ router.post('/settings/logo', requireAuth, requireAdmin, upload.single('logo'), 
   try {
     if (!req.file) return res.status(400).json({ error: 'Fichier requis' });
 
-    const logoUrl = await uploadImage(req.file.path, 'club');
+    const logoUrl = await uploadImage(req.file.path);
 
     await prisma.clubSettings.upsert({
       where: { id: 1 },

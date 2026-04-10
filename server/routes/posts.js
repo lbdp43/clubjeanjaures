@@ -60,10 +60,10 @@ router.post('/', requireAuth, requireMember, upload.array('attachments', 5), asy
     if (req.files) {
       for (const file of req.files) {
         if (file.mimetype.startsWith('image/')) {
-          const url = await uploadImage(file.path, 'posts');
+          const url = await uploadImage(file.path);
           attachments.push(url);
         } else {
-          const url = await uploadFile(file.path, 'posts');
+          const url = await uploadFile(file.path);
           attachments.push(url);
         }
       }
@@ -80,6 +80,8 @@ router.post('/', requireAuth, requireMember, upload.array('attachments', 5), asy
         author: {
           select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true } } }
         },
+        comments: true,
+        likes: { select: { userId: true } },
         _count: { select: { likes: true, comments: true } }
       }
     });
@@ -87,6 +89,24 @@ router.post('/', requireAuth, requireMember, upload.array('attachments', 5), asy
     res.status(201).json(post);
   } catch (err) {
     console.error('Erreur create post:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// DELETE /api/posts/comments/:id — DOIT être avant /:id pour éviter le conflit
+router.delete('/comments/:id', requireAuth, async (req, res) => {
+  try {
+    const comment = await prisma.comment.findUnique({ where: { id: req.params.id } });
+    if (!comment) return res.status(404).json({ error: 'Commentaire introuvable' });
+
+    const canDelete = comment.authorId === req.user.id ||
+      ['moderator', 'admin'].includes(req.user.role);
+    if (!canDelete) return res.status(403).json({ error: 'Non autorisé' });
+
+    await prisma.comment.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erreur delete comment:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -136,24 +156,6 @@ router.post('/:id/comments', requireAuth, requireMember, async (req, res) => {
     res.status(201).json(comment);
   } catch (err) {
     console.error('Erreur create comment:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// DELETE /api/comments/:id
-router.delete('/comments/:id', requireAuth, async (req, res) => {
-  try {
-    const comment = await prisma.comment.findUnique({ where: { id: req.params.id } });
-    if (!comment) return res.status(404).json({ error: 'Commentaire introuvable' });
-
-    const canDelete = comment.authorId === req.user.id ||
-      ['moderator', 'admin'].includes(req.user.role);
-    if (!canDelete) return res.status(403).json({ error: 'Non autorisé' });
-
-    await prisma.comment.delete({ where: { id: req.params.id } });
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Erreur delete comment:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
