@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { whatsappLink, mapsUrl } from '../utils/helpers';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
@@ -13,6 +14,8 @@ export default function Profile() {
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [uploadMsg, setUploadMsg] = useState('');
+  const [uploading, setUploading] = useState(false);
   const logoRef = useRef();
 
   useEffect(() => {
@@ -52,25 +55,37 @@ export default function Profile() {
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploading(true);
+    setUploadMsg('');
     const formData = new FormData();
     formData.append('photos', file);
     formData.append('type', 'logo');
     try {
       await api.uploadPhotos(user.id, formData);
       await refreshUser();
-    } catch {}
+      setUploadMsg('Logo mis à jour.');
+    } catch (err) {
+      setUploadMsg(`Erreur logo : ${err.message}`);
+    }
+    setUploading(false);
   };
 
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
+    setUploading(true);
+    setUploadMsg('');
     const formData = new FormData();
     files.forEach(f => formData.append('photos', f));
     formData.append('type', 'gallery');
     try {
       await api.uploadPhotos(user.id, formData);
       await refreshUser();
-    } catch {}
+      setUploadMsg('Photos ajoutées.');
+    } catch (err) {
+      setUploadMsg(`Erreur photos : ${err.message}`);
+    }
+    setUploading(false);
   };
 
   return (
@@ -87,8 +102,8 @@ export default function Profile() {
               {form.companyName?.charAt(0) || '?'}
             </div>
           )}
-          <button type="button" onClick={() => logoRef.current?.click()} className="text-sm text-blue hover:underline">
-            Modifier le logo
+          <button type="button" onClick={() => logoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+            {uploading ? 'Envoi...' : 'Modifier le logo'}
           </button>
           <input ref={logoRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
         </div>
@@ -186,12 +201,18 @@ export default function Profile() {
       {/* Photos */}
       <div className="card p-4 sm:p-6">
         <h3 className="font-semibold mb-4">Photos de l'entreprise</h3>
+        {uploadMsg && (
+          <p className={`text-sm mb-3 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {(user.member?.photos || []).map((url, i) => (
             <div key={i} className="relative">
               <img src={url} alt="" className="rounded-xl object-cover w-full h-24" />
               <button
-                onClick={async () => { await api.deletePhoto(user.id, i); refreshUser(); }}
+                onClick={async () => {
+                  try { await api.deletePhoto(user.id, i); refreshUser(); }
+                  catch (err) { setUploadMsg(`Erreur suppression : ${err.message}`); }
+                }}
                 className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
               >
                 &times;
@@ -199,11 +220,70 @@ export default function Profile() {
             </div>
           ))}
         </div>
-        <label className="text-sm text-blue hover:underline cursor-pointer">
-          + Ajouter des photos
+        <label className={`text-sm text-blue hover:underline cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+          {uploading ? 'Envoi en cours...' : '+ Ajouter des photos'}
           <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
         </label>
       </div>
+
+      {/* Aperçu des liens de contact */}
+      {(form.phone || user?.email || form.website || form.socialLinks?.linkedin || form.socialLinks?.facebook || form.socialLinks?.instagram || form.address) && (
+        <div className="card p-4 sm:p-6">
+          <h3 className="font-semibold mb-4">Aperçu de vos liens de contact</h3>
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mb-4">
+            {form.phone && (
+              <a href={`tel:${form.phone}`} className="btn-primary text-sm py-2 px-4 text-center">
+                Appeler
+              </a>
+            )}
+            {user?.email && (
+              <a href={`mailto:${user.email}`} className="btn-secondary text-sm py-2 px-4 text-center">
+                Email
+              </a>
+            )}
+            {form.phone && (
+              <a href={whatsappLink(form.phone)} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-4 text-center">
+                WhatsApp
+              </a>
+            )}
+            {form.website && (
+              <a href={form.website} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-4 text-center">
+                Site web
+              </a>
+            )}
+          </div>
+          <div className="space-y-2 text-sm">
+            {form.address && (
+              <p>
+                <span className="text-text-muted">Adresse :</span>{' '}
+                <a href={mapsUrl(form.address)} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline inline-flex items-center gap-1">
+                  {form.address}
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                </a>
+              </p>
+            )}
+            <div className="flex flex-wrap gap-3">
+              {form.socialLinks?.linkedin && (
+                <a href={form.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">
+                  LinkedIn
+                </a>
+              )}
+              {form.socialLinks?.facebook && (
+                <a href={form.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">
+                  Facebook
+                </a>
+              )}
+              {form.socialLinks?.instagram && (
+                <a href={form.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">
+                  Instagram
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

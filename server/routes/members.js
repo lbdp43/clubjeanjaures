@@ -157,8 +157,13 @@ router.post('/:id/photos', requireAuth, upload.array('photos', 10), async (req, 
       return res.status(403).json({ error: 'Non autorisé' });
     }
 
-    const member = await prisma.member.findUnique({ where: { id: req.params.id } });
-    if (!member) return res.status(404).json({ error: 'Membre introuvable' });
+    // Auto-créer le profil membre s'il n'existe pas encore
+    let member = await prisma.member.findUnique({ where: { id: req.params.id } });
+    if (!member) {
+      member = await prisma.member.create({
+        data: { id: req.params.id, companyName: '', jobTitle: '', phone: '', address: '' }
+      });
+    }
 
     const processedFiles = [];
     for (const file of req.files) {

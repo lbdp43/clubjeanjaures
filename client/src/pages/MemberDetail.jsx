@@ -138,10 +138,16 @@ export default function MemberDetail() {
             </p>
           )}
           {member.phone && (
-            <p><span className="text-text-muted">Téléphone :</span> {member.phone}</p>
+            <p>
+              <span className="text-text-muted">Téléphone :</span>{' '}
+              <a href={`tel:${member.phone}`} className="text-blue hover:underline">{member.phone}</a>
+            </p>
           )}
           {member.user?.email && (
-            <p><span className="text-text-muted">Email :</span> {member.user.email}</p>
+            <p>
+              <span className="text-text-muted">Email :</span>{' '}
+              <a href={`mailto:${member.user.email}`} className="text-blue hover:underline">{member.user.email}</a>
+            </p>
           )}
         </div>
 
