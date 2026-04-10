@@ -12,7 +12,6 @@ import Admin from './pages/Admin';
 import Profile from './pages/Profile';
 import MemberDashboard from './pages/MemberDashboard';
 import Login from './pages/Login';
-import Verify from './pages/Verify';
 import Onboarding from './pages/Onboarding';
 import Inscription from './pages/Inscription';
 
@@ -33,7 +32,6 @@ export default function App() {
       {!online && <div className="offline-banner">Mode hors-ligne</div>}
       <Routes>
         <Route path="/connexion" element={<Login />} />
-        <Route path="/auth/verify" element={<Verify />} />
         <Route path="/inscription" element={<Inscription />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route element={<Layout />}>

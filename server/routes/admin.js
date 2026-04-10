@@ -1,11 +1,13 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const prisma = require('../prisma/db');
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
-const { sendInvitation, sendBulkEmail } = require('../services/email');
 const xss = require('xss');
+
+const SALT_ROUNDS = 10;
 
 const router = express.Router();
 
@@ -118,6 +120,8 @@ router.delete('/members/:id', requireAuth, requireAdmin, async (req, res) => {
     if (req.params.id === req.user.id) {
       return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
     }
+    // Supprimer les sessions liées (pas de onDelete cascade sur Session)
+    await prisma.session.deleteMany({ where: { userId: req.params.id } });
     await prisma.user.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   } catch (err) {
@@ -184,42 +188,62 @@ router.post('/settings/logo', requireAuth, requireAdmin, upload.single('logo'), 
   }
 });
 
-// POST /api/admin/notify
-router.post('/notify', requireAuth, requireAdmin, async (req, res) => {
+// PUT /api/admin/members/:id/password — Reset password
+router.put('/members/:id/password', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { subject, content } = req.body;
-    if (!subject || !content) {
-      return res.status(400).json({ error: 'Sujet et contenu requis' });
+    const { password } = req.body;
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
     }
 
-    const users = await prisma.user.findMany({
-      where: { status: 'active', role: { not: 'visitor' } },
-      select: { email: true }
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    await prisma.user.update({
+      where: { id: req.params.id },
+      data: { passwordHash }
     });
 
-    const emails = users.map(u => u.email);
-    const sent = await sendBulkEmail(emails, subject, content);
-    res.json({ sent, total: emails.length });
+    res.json({ success: true });
   } catch (err) {
-    console.error('Erreur notify:', err);
+    console.error('Erreur reset password:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// POST /api/admin/invite
-router.post('/invite', requireAuth, requireAdmin, async (req, res) => {
+// PUT /api/admin/members/:id/profile — Edit member profile
+router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email requis' });
+    const { companyName, jobTitle, phone, address, city, website, description, lookingFor, canOffer } = req.body;
 
-    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-    if (existing) return res.status(400).json({ error: 'Cet email est déjà inscrit' });
+    const user = await prisma.user.findUnique({ where: { id: req.params.id }, include: { member: true } });
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
-    const inviterName = req.user.member?.companyName || req.user.email;
-    await sendInvitation(email.toLowerCase(), inviterName);
-    res.json({ message: 'Invitation envoyée' });
+    const data = {};
+    if (companyName !== undefined) data.companyName = xss(companyName);
+    if (jobTitle !== undefined) data.jobTitle = xss(jobTitle);
+    if (phone !== undefined) data.phone = phone;
+    if (address !== undefined) data.address = xss(address);
+    if (city !== undefined) data.city = xss(city);
+    if (website !== undefined) data.website = website;
+    if (description !== undefined) data.description = xss(description);
+    if (lookingFor !== undefined) data.lookingFor = xss(lookingFor);
+    if (canOffer !== undefined) data.canOffer = xss(canOffer);
+
+    const member = await prisma.member.upsert({
+      where: { id: req.params.id },
+      update: data,
+      create: {
+        id: req.params.id,
+        companyName: data.companyName || '',
+        jobTitle: data.jobTitle || '',
+        phone: data.phone || '',
+        address: data.address || '',
+        ...data
+      }
+    });
+
+    res.json(member);
   } catch (err) {
-    console.error('Erreur invite:', err);
+    console.error('Erreur edit profile:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

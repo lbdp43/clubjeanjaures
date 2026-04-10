@@ -31,10 +31,6 @@ export const api = {
   login: (email, password) => apiFetch('/auth/login', {
     method: 'POST', body: JSON.stringify({ email, password })
   }),
-  sendMagicLink: (email) => apiFetch('/auth/magic-link', {
-    method: 'POST', body: JSON.stringify({ email })
-  }),
-  verifyToken: (token) => apiFetch(`/auth/verify?token=${token}`),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
   getMe: () => apiFetch('/auth/me'),
   completeOnboarding: () => apiFetch('/auth/onboarding', { method: 'PUT' }),
@@ -94,17 +90,17 @@ export const api = {
     method: 'PUT', body: JSON.stringify({ status })
   }),
   deleteMember: (id) => apiFetch(`/admin/members/${id}`, { method: 'DELETE' }),
+  resetPassword: (id, password) => apiFetch(`/admin/members/${id}/password`, {
+    method: 'PUT', body: JSON.stringify({ password })
+  }),
+  adminUpdateProfile: (id, data) => apiFetch(`/admin/members/${id}/profile`, {
+    method: 'PUT', body: JSON.stringify(data)
+  }),
   getSettings: () => apiFetch('/admin/settings'),
   updateSettings: (data) => apiFetch('/admin/settings', {
     method: 'PUT', body: JSON.stringify(data)
   }),
   uploadClubLogo: (formData) => apiFetch('/admin/settings/logo', {
     method: 'POST', body: formData
-  }),
-  sendNotification: (subject, content) => apiFetch('/admin/notify', {
-    method: 'POST', body: JSON.stringify({ subject, content })
-  }),
-  sendInvite: (email) => apiFetch('/admin/invite', {
-    method: 'POST', body: JSON.stringify({ email })
   })
 };

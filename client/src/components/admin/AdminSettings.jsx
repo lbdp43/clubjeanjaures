@@ -6,8 +6,6 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
-  const [notifySubject, setNotifySubject] = useState('');
-  const [notifyContent, setNotifyContent] = useState('');
   const logoRef = useRef();
 
   useEffect(() => {
@@ -38,18 +36,6 @@ export default function AdminSettings() {
     } catch {}
   };
 
-  const handleNotify = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.sendNotification(notifySubject, notifyContent);
-      setMsg(`Email envoyé à ${res.sent || res.total} membres.`);
-      setNotifySubject('');
-      setNotifyContent('');
-    } catch {
-      setMsg("Erreur lors de l'envoi.");
-    }
-  };
-
   if (loading) {
     return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" /></div>;
   }
@@ -58,7 +44,6 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Paramètres du club */}
       <form onSubmit={handleSave} className="card p-4 sm:p-5 space-y-4">
         <h3 className="font-semibold text-sm sm:text-base">Paramètres du club</h3>
 
@@ -101,20 +86,6 @@ export default function AdminSettings() {
         <button type="submit" className="btn-primary" disabled={saving}>
           {saving ? 'Sauvegarde...' : 'Enregistrer'}
         </button>
-      </form>
-
-      {/* Envoyer un email */}
-      <form onSubmit={handleNotify} className="card p-4 sm:p-5 space-y-4">
-        <h3 className="font-semibold text-sm sm:text-base">Envoyer un email à tous les membres</h3>
-        <div>
-          <label className="block text-sm font-medium mb-1">Sujet</label>
-          <input value={notifySubject} onChange={e => setNotifySubject(e.target.value)} className="input-field" required />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Contenu (HTML)</label>
-          <textarea value={notifyContent} onChange={e => setNotifyContent(e.target.value)} className="input-field resize-none" rows={4} required />
-        </div>
-        <button type="submit" className="btn-primary">Envoyer</button>
       </form>
     </div>
   );
