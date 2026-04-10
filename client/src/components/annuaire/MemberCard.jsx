@@ -20,9 +20,9 @@ export default function MemberCard({ member }) {
       {/* En-tête : logo + nom */}
       <div className="flex items-start gap-3 sm:gap-4">
         {member.logoUrl ? (
-          <img src={member.logoUrl} alt={member.companyName} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover flex-shrink-0" />
+          <img src={member.logoUrl} alt={member.companyName} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover flex-shrink-0" />
         ) : (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-lg sm:text-xl flex-shrink-0">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-xl sm:text-2xl flex-shrink-0">
             {member.companyName?.charAt(0) || '?'}
           </div>
         )}

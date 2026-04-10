@@ -3,7 +3,7 @@ const prisma = require('../prisma/db');
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const upload = require('../middleware/upload');
-const { processImage } = require('../services/imageProcessor');
+const { uploadImage } = require('../services/cloudinaryUpload');
 const { sendInvitation, sendBulkEmail } = require('../services/email');
 const xss = require('xss');
 
@@ -169,8 +169,7 @@ router.post('/settings/logo', requireAuth, requireAdmin, upload.single('logo'), 
   try {
     if (!req.file) return res.status(400).json({ error: 'Fichier requis' });
 
-    const filename = await processImage(req.file.path);
-    const logoUrl = `/uploads/${filename}`;
+    const logoUrl = await uploadImage(req.file.path, 'club');
 
     await prisma.clubSettings.upsert({
       where: { id: 1 },

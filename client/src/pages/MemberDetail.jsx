@@ -55,9 +55,9 @@ export default function MemberDetail() {
       <div className="card p-4 sm:p-6">
         <div className="flex items-start gap-3 sm:gap-4 mb-6">
           {member.logoUrl ? (
-            <img src={member.logoUrl} alt={member.companyName} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover flex-shrink-0" />
+            <img src={member.logoUrl} alt={member.companyName} className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl object-cover flex-shrink-0" />
           ) : (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-xl sm:text-2xl flex-shrink-0">
+            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl sm:text-4xl flex-shrink-0">
               {member.companyName?.charAt(0)}
             </div>
           )}

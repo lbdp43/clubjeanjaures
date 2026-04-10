@@ -97,15 +97,15 @@ export default function Profile() {
         <div className="flex items-center gap-4">
           <div className="relative">
             {user.member?.logoUrl ? (
-              <img src={user.member.logoUrl} alt="" className="w-16 h-16 rounded-xl object-cover" />
+              <img src={user.member.logoUrl} alt="" className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover" />
             ) : (
-              <div className="w-16 h-16 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-xl">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl">
                 {form.companyName?.charAt(0) || '?'}
               </div>
             )}
             {uploading && (
               <div className="absolute inset-0 bg-white/80 rounded-xl flex items-center justify-center">
-                <div className="animate-spin w-6 h-6 border-3 border-blue border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
               </div>
             )}
           </div>

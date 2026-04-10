@@ -3,7 +3,7 @@ const prisma = require('../prisma/db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { requireMember } = require('../middleware/roles');
 const upload = require('../middleware/upload');
-const { processImage } = require('../services/imageProcessor');
+const { uploadImage, uploadFile } = require('../services/cloudinaryUpload');
 const xss = require('xss');
 
 const router = express.Router();
@@ -169,10 +169,11 @@ router.post('/:id/photos', requireAuth, upload.array('photos', 10), async (req, 
     const processedFiles = [];
     for (const file of req.files) {
       if (file.mimetype.startsWith('image/')) {
-        const filename = await processImage(file.path);
-        processedFiles.push(`/uploads/${filename}`);
+        const url = await uploadImage(file.path, 'members');
+        processedFiles.push(url);
       } else {
-        processedFiles.push(`/uploads/${file.filename}`);
+        const url = await uploadFile(file.path, 'members');
+        processedFiles.push(url);
       }
     }
 
