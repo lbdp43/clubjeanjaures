@@ -47,7 +47,10 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
       }
     });
 
-    await sendMagicLink(normalizedEmail, rawToken);
+    const sent = await sendMagicLink(normalizedEmail, rawToken);
+    if (!sent) {
+      return res.status(500).json({ error: "Impossible d'envoyer l'email. Vérifiez la configuration EMAIL_API_KEY." });
+    }
     res.json({ message: 'Lien de connexion envoyé par email.' });
   } catch (err) {
     console.error('Erreur magic-link:', err);
