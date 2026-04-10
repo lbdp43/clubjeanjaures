@@ -31,6 +31,10 @@ export const api = {
   login: (email, password) => apiFetch('/auth/login', {
     method: 'POST', body: JSON.stringify({ email, password })
   }),
+  sendMagicLink: (email) => apiFetch('/auth/magic-link', {
+    method: 'POST', body: JSON.stringify({ email })
+  }),
+  verifyToken: (token) => apiFetch(`/auth/verify?token=${encodeURIComponent(token)}`),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
   getMe: () => apiFetch('/auth/me'),
   completeOnboarding: () => apiFetch('/auth/onboarding', { method: 'PUT' }),
@@ -102,5 +106,11 @@ export const api = {
   }),
   uploadClubLogo: (formData) => apiFetch('/admin/settings/logo', {
     method: 'POST', body: formData
+  }),
+  sendInvite: (email) => apiFetch('/admin/invite', {
+    method: 'POST', body: JSON.stringify({ email })
+  }),
+  sendNotification: (subject, message) => apiFetch('/admin/notify', {
+    method: 'POST', body: JSON.stringify({ subject, message })
   })
 };

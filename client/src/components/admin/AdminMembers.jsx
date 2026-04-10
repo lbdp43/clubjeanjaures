@@ -6,6 +6,9 @@ export default function AdminMembers() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState('');
 
   useEffect(() => {
     loadMembers();
@@ -53,33 +56,74 @@ export default function AdminMembers() {
     });
   };
 
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    setInviteMsg('');
+    setInviteLoading(true);
+    try {
+      await api.sendInvite(inviteEmail);
+      setInviteMsg(`Invitation envoyée à ${inviteEmail}`);
+      setInviteEmail('');
+    } catch (err) {
+      setInviteMsg(err.message || "Erreur lors de l'envoi");
+    }
+    setInviteLoading(false);
+  };
+
   if (loading) {
     return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" /></div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Lien d'inscription */}
+      {/* Inviter un membre */}
       <div className="card p-4 sm:p-5">
         <h3 className="font-semibold mb-3 text-sm sm:text-base">Inviter de nouveaux membres</h3>
-        <p className="text-sm text-text-muted mb-3">Copiez le lien d'inscription et partagez-le directement.</p>
-        <button onClick={handleCopyLink} className="btn-primary text-sm flex items-center gap-2">
-          {linkCopied ? (
-            <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              Lien copié !
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              Copier le lien d'inscription
-            </>
-          )}
-        </button>
+
+        {/* Invitation par email */}
+        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2 mb-4">
+          <input
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="email@exemple.fr"
+            className="input-field flex-1 text-sm"
+            required
+          />
+          <button type="submit" className="btn-primary text-sm whitespace-nowrap flex items-center gap-2" disabled={inviteLoading}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            {inviteLoading ? 'Envoi...' : 'Envoyer l\'invitation'}
+          </button>
+        </form>
+        {inviteMsg && (
+          <p className={`text-sm mb-3 ${inviteMsg.includes('Erreur') || inviteMsg.includes('Impossible') ? 'text-red-500' : 'text-green-600'}`}>
+            {inviteMsg}
+          </p>
+        )}
+
+        {/* Copier le lien */}
+        <div className="pt-3 border-t border-gray-100">
+          <p className="text-sm text-text-muted mb-2">Ou partagez le lien d'inscription directement :</p>
+          <button onClick={handleCopyLink} className="text-sm text-blue hover:underline flex items-center gap-2">
+            {linkCopied ? (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Lien copié !
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copier le lien d'inscription
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Liste */}

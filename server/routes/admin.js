@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
+const { sendInvitation, sendBulkEmail } = require('../services/email');
 const xss = require('xss');
 
 const SALT_ROUNDS = 10;
@@ -121,9 +122,9 @@ router.delete('/members/:id', requireAuth, requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
     }
     const uid = req.params.id;
-    // Supprimer toutes les données liées sans onDelete cascade
+    // Nettoyer les données liées avant suppression
     await prisma.session.deleteMany({ where: { userId: uid } });
-    await prisma.event.deleteMany({ where: { createdBy: uid } });
+    await prisma.event.updateMany({ where: { createdBy: uid }, data: { createdBy: null } });
     await prisma.favorite.deleteMany({ where: { OR: [{ userId: uid }, { memberId: uid }] } });
     await prisma.user.delete({ where: { id: uid } });
     res.json({ success: true });
@@ -247,6 +248,61 @@ router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) =
     res.json(member);
   } catch (err) {
     console.error('Erreur edit profile:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/admin/invite — Invite a new member by email
+router.post('/invite', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email requis' });
+
+    const inviterName = req.user.member?.companyName || req.user.email;
+    const sent = await sendInvitation(email.toLowerCase().trim(), inviterName);
+
+    if (!sent) {
+      return res.status(500).json({ error: "Impossible d'envoyer l'email. Vérifiez la configuration Gmail." });
+    }
+    res.json({ success: true, message: 'Invitation envoyée.' });
+  } catch (err) {
+    console.error('Erreur invite:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/admin/notify — Send email to all active members
+router.post('/notify', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { subject, message } = req.body;
+    if (!subject || !message) {
+      return res.status(400).json({ error: 'Sujet et message requis.' });
+    }
+
+    const members = await prisma.user.findMany({
+      where: { status: 'active', role: { not: 'visitor' } },
+      select: { email: true }
+    });
+
+    const emails = members.map(m => m.email);
+    if (emails.length === 0) {
+      return res.json({ sent: 0, message: 'Aucun membre actif trouvé.' });
+    }
+
+    const htmlContent = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+        <h2 style="color:#2B5C8A;">Club Jean Jaurès</h2>
+        <h3>${xss(subject)}</h3>
+        <div>${xss(message).replace(/\n/g, '<br>')}</div>
+        <hr style="margin:24px 0;border:none;border-top:1px solid #eee;">
+        <p style="color:#6B7280;font-size:12px;">Vous recevez cet email en tant que membre du Club Jean Jaurès.</p>
+      </div>
+    `;
+
+    const sent = await sendBulkEmail(emails, subject, htmlContent);
+    res.json({ sent, total: emails.length, message: `Email envoyé à ${sent}/${emails.length} membres.` });
+  } catch (err) {
+    console.error('Erreur notify:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

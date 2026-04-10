@@ -7,6 +7,10 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const logoRef = useRef();
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailMsg, setEmailMsg] = useState('');
 
   useEffect(() => {
     api.getSettings().then(setSettings).catch(() => {}).finally(() => setLoading(false));
@@ -39,6 +43,22 @@ export default function AdminSettings() {
   if (loading) {
     return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" /></div>;
   }
+
+  const handleSendEmail = async (e) => {
+    e.preventDefault();
+    if (!confirm(`Envoyer cet email à tous les membres actifs ?`)) return;
+    setEmailMsg('');
+    setEmailSending(true);
+    try {
+      const res = await api.sendNotification(emailSubject, emailMessage);
+      setEmailMsg(res.message || `Email envoyé à ${res.sent} membre(s).`);
+      setEmailSubject('');
+      setEmailMessage('');
+    } catch (err) {
+      setEmailMsg(err.message || "Erreur lors de l'envoi.");
+    }
+    setEmailSending(false);
+  };
 
   if (!settings) return null;
 
@@ -85,6 +105,44 @@ export default function AdminSettings() {
         {msg && <p className="text-sm text-green-600">{msg}</p>}
         <button type="submit" className="btn-primary" disabled={saving}>
           {saving ? 'Sauvegarde...' : 'Enregistrer'}
+        </button>
+      </form>
+
+      {/* Email notification section */}
+      <form onSubmit={handleSendEmail} className="card p-4 sm:p-5 space-y-4">
+        <h3 className="font-semibold text-sm sm:text-base">Envoyer un email à tous les membres</h3>
+        <p className="text-sm text-text-muted">L'email sera envoyé à tous les membres actifs du club (hors visiteurs).</p>
+        <div>
+          <label className="block text-sm font-medium mb-1">Sujet</label>
+          <input
+            value={emailSubject}
+            onChange={e => setEmailSubject(e.target.value)}
+            className="input-field"
+            placeholder="Objet de l'email"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Message</label>
+          <textarea
+            value={emailMessage}
+            onChange={e => setEmailMessage(e.target.value)}
+            className="input-field resize-none"
+            rows={5}
+            placeholder="Contenu de l'email..."
+            required
+          />
+        </div>
+        {emailMsg && (
+          <p className={`text-sm ${emailMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>
+            {emailMsg}
+          </p>
+        )}
+        <button type="submit" className="btn-primary flex items-center gap-2" disabled={emailSending}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+          </svg>
+          {emailSending ? 'Envoi en cours...' : 'Envoyer à tous les membres'}
         </button>
       </form>
     </div>

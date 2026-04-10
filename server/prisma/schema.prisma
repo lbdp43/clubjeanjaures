@@ -94,11 +94,11 @@ model Event {
   location        String
   description     String?
   speaker         String?
-  createdBy       String    @map("created_by") @db.Uuid
+  createdBy       String?   @map("created_by") @db.Uuid
   recurrenceGroup String?   @map("recurrence_group") @db.Uuid
   createdAt       DateTime  @default(now()) @map("created_at")
 
-  creator User @relation(fields: [createdBy], references: [id])
+  creator User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@map("events")
 }
