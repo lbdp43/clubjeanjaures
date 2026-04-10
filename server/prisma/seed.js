@@ -58,6 +58,21 @@ async function main() {
       onboardingDone: false
     }
   });
+
+  await prisma.member.upsert({
+    where: { id: brasserie.id },
+    update: {},
+    create: {
+      id: brasserie.id,
+      companyName: 'La Brasserie des Plantes',
+      jobTitle: 'Direction',
+      phone: '0684444044',
+      address: '',
+      city: 'Saint-Didier-en-Velay',
+      website: 'https://www.labrasseriedesplantes.com',
+      description: "Artisan-Liquoriste. Création d'apéritifs et spiritueux à base de plante et de fruit."
+    }
+  });
   console.log('Compte admin créé: labrasseriedesplantes@gmail.com');
 
   // 2c. Membres du club
@@ -76,7 +91,7 @@ async function main() {
       companyName: 'Meilleurtaux',
       jobTitle: 'Conseiller Financier',
       phone: '0748100483',
-      description: 'Courtière en financements immo & conso',
+      description: 'Courtage en prêts et assurances de prêt pour les particuliers et professionnels.',
       city: 'Saint-Étienne'
     },
     {
@@ -111,7 +126,7 @@ async function main() {
       jobTitle: 'Gérant',
       phone: '0616641550',
       website: 'https://www.lagencedudiagnostic.fr/',
-      description: 'Nous sommes spécialisés dans les diagnostics de biens immobiliers en cours de transaction, de location, de construction ou de rénovation.',
+      description: "Nous sommes spécialisés dans les diagnostics de biens immobiliers en cours de transaction, de location, de construction ou de rénovation. Les diagnostics concernés sont : exposition au plomb, amiante, gaz, DPE, électricité, termites, loi Carrez, état des risques, audit énergétique. Nous nous déplaçons en Rhône-Alpes.",
       address: '181 Boulevard Jean Jaurès',
       city: 'St-Just-St-Rambert'
     },
@@ -130,8 +145,33 @@ async function main() {
       jobTitle: 'Conseiller en Gestion de Patrimoine',
       phone: '0783815490',
       website: 'https://ciec.group/',
-      description: "Votre Conseiller en Gestion de Patrimoine, vous accompagnant sur l'épargne, la valorisation de capital, la prévoyance, l'assurance emprunteur, la diminution de votre imposition, la préparation de votre retraite, la transmission, à travers des solutions financières et immobilières.",
+      description: "Votre Conseiller en Gestion de Patrimoine, vous accompagnant sur l'épargne, la valorisation de capital, la prévoyance, l'assurance emprunteur, la diminution de votre imposition, la préparation de votre retraite, la transmission, à travers des solutions financières et immobilières. Bénéficiez d'un bilan patrimonial offert.",
       city: 'Auvergne-Rhône-Alpes'
+    },
+    {
+      email: 'atoutbois42@gmail.com',
+      companyName: 'Atout Bois 42',
+      jobTitle: 'Président',
+      phone: '0669409723',
+      website: 'https://atoutbois-42.com',
+      description: 'Aménagement extérieur en bois.',
+      city: 'Montbrison'
+    },
+    {
+      email: 'laetitia.richard@notaires.fr',
+      companyName: 'Notaire',
+      jobTitle: 'Notaire',
+      phone: '0628300548',
+      description: 'Notaire avec un accompagnement personnalisé et adapté.',
+      city: 'Vaulx-en-Velin'
+    },
+    {
+      email: 'verredevert@gmail.com',
+      companyName: 'Verre De Vert',
+      jobTitle: 'Président',
+      phone: '0648096599',
+      description: 'Fabrication et vente de liqueurs de menthe.',
+      city: 'Andrézieux-Bouthéon'
     }
   ];
 
