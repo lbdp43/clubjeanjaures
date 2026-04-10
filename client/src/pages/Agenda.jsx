@@ -38,12 +38,12 @@ export default function Agenda() {
   const displayed = tab === 'past' ? pastEvents : events;
 
   return (
-    <div className="space-y-6 fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl text-blue-dark">Agenda</h1>
+    <div className="space-y-4 sm:space-y-6 fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <h1 className="font-display text-xl sm:text-2xl text-blue-dark">Agenda</h1>
         <button
           onClick={() => setShowSubscribe(s => !s)}
-          className="text-sm text-blue hover:underline"
+          className="text-sm text-blue hover:underline self-start sm:self-auto"
         >
           Ajouter à mon agenda
         </button>
@@ -51,12 +51,12 @@ export default function Agenda() {
 
       {/* Panneau abonnement */}
       {showSubscribe && (
-        <div className="card p-5 space-y-4 slide-up">
+        <div className="card p-3 sm:p-5 space-y-3 sm:space-y-4 slide-up">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Ajouter à mon agenda</h3>
-            <button onClick={() => setShowSubscribe(false)} className="text-text-muted hover:text-text-main">&times;</button>
+            <h3 className="font-semibold text-sm sm:text-base">Ajouter à mon agenda</h3>
+            <button onClick={() => setShowSubscribe(false)} className="text-text-muted hover:text-text-main text-xl leading-none">&times;</button>
           </div>
-          <p className="text-sm text-text-muted">
+          <p className="text-xs sm:text-sm text-text-muted">
             Synchronisez tous les événements du club avec votre agenda. Les nouveaux événements seront ajoutés automatiquement.
           </p>
           <div className="flex flex-col gap-2">
@@ -64,7 +64,7 @@ export default function Agenda() {
               href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(`${window.location.origin}/api/calendar/feed.ics`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-4 py-3 rounded-xl transition-colors"
+              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-colors"
             >
               <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -72,21 +72,21 @@ export default function Agenda() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Google Agenda</p>
                 <p className="text-xs text-text-muted">S'abonner automatiquement</p>
               </div>
             </a>
             <a
               href={`webcal://${window.location.host}/api/calendar/feed.ics`}
-              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-4 py-3 rounded-xl transition-colors"
+              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-colors"
             >
               <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Apple Calendar / Outlook</p>
-                <p className="text-xs text-text-muted">Ouvre l'app calendrier du téléphone</p>
+                <p className="text-xs text-text-muted truncate">Ouvre l'app calendrier du téléphone</p>
               </div>
             </a>
             <button
@@ -95,27 +95,27 @@ export default function Agenda() {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }}
-              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-4 py-3 rounded-xl transition-colors text-left"
+              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-colors text-left"
             >
               <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
               </svg>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium">{copied ? 'Lien copié !' : 'Copier le lien iCal'}</p>
-                <p className="text-xs text-text-muted">Pour coller dans n'importe quelle app agenda</p>
+                <p className="text-xs text-text-muted truncate">Pour coller dans n'importe quelle app agenda</p>
               </div>
             </button>
             <a
               href="/api/calendar/export"
               download
-              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-4 py-3 rounded-xl transition-colors"
+              className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-colors"
             >
               <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Télécharger le fichier .ics</p>
-                <p className="text-xs text-text-muted">Tous les événements en un seul fichier</p>
+                <p className="text-xs text-text-muted truncate">Tous les événements en un seul fichier</p>
               </div>
             </a>
           </div>
@@ -126,7 +126,7 @@ export default function Agenda() {
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
         <button
           onClick={() => setTab('upcoming')}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-medium transition-colors ${
             tab === 'upcoming' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
           }`}
         >
@@ -134,7 +134,7 @@ export default function Agenda() {
         </button>
         <button
           onClick={() => setTab('past')}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-medium transition-colors ${
             tab === 'past' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
           }`}
         >
@@ -143,12 +143,12 @@ export default function Agenda() {
       </div>
 
       {/* Filtres */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         {TYPES.map(t => (
           <button
             key={t.value}
             onClick={() => setFilter(t.value)}
-            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
               filter === t.value
                 ? 'bg-blue text-white'
                 : 'bg-white text-text-muted border border-gray-200 hover:border-blue'
