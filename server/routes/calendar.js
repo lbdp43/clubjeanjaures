@@ -28,6 +28,8 @@ router.get('/feed.ics', async (req, res) => {
     const events = await prisma.event.findMany({ orderBy: { date: 'asc' } });
     const cal = createCalendar(events);
     res.set('Content-Type', 'text/calendar; charset=utf-8');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Access-Control-Allow-Origin', '*');
     res.send(cal.toString());
   } catch (err) {
     console.error('Erreur calendar feed:', err);

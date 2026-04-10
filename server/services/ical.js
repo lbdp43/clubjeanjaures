@@ -28,8 +28,7 @@ function createCalendar(events) {
       end,
       summary: event.title,
       description: event.description || '',
-      location: event.location,
-      organizer: { name: 'Club Jean Jaurès' }
+      location: event.location
     });
   }
 

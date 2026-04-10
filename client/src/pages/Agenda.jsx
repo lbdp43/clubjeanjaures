@@ -61,7 +61,7 @@ export default function Agenda() {
           </p>
           <div className="flex flex-col gap-2">
             <a
-              href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(`${window.location.origin}/api/calendar/feed.ics`)}`}
+              href={`https://calendar.google.com/calendar/r?cid=webcal://${window.location.host}/api/calendar/feed.ics`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-colors"
