@@ -1,83 +1,84 @@
 const nodemailer = require('nodemailer');
 
 const APP_URL = process.env.APP_URL || 'http://localhost:5173';
-const FROM_EMAIL = process.env.EMAIL_FROM || 'Club Jean Jaurès <noreply@clubjeanjaures.fr>';
 
-// Créer le transporteur email
-function getTransporter() {
-  // Option 1 : Gmail SMTP (gratuit)
-  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
-  }
-
-  // Option 2 : Resend API (via SMTP)
-  if (process.env.EMAIL_API_KEY) {
-    return nodemailer.createTransport({
-      host: 'smtp.resend.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'resend',
-        pass: process.env.EMAIL_API_KEY
-      }
-    });
-  }
-
-  // Option 3 : SMTP personnalisé
-  if (process.env.SMTP_HOST) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
-  }
-
-  return null;
-}
-
-function getFromEmail() {
-  if (process.env.GMAIL_USER) {
-    return `Club Jean Jaurès <${process.env.GMAIL_USER}>`;
-  }
-  return FROM_EMAIL;
-}
-
-async function sendEmail(to, subject, html) {
-  const transporter = getTransporter();
-
-  if (!transporter) {
-    // Mode développement : pas de service email configuré
-    console.log(`\n=== EMAIL (dev) ===`);
-    console.log(`À: ${to}`);
-    console.log(`Sujet: ${subject}`);
-    console.log(`====================\n`);
-    return true;
-  }
-
-  try {
-    await transporter.sendMail({
-      from: getFromEmail(),
-      to,
+// ─── Envoi via Resend HTTP API (recommandé pour Railway) ───
+async function sendViaResend(to, subject, html) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM || 'Club Jean Jaurès <onboarding@resend.dev>',
+      to: [to],
       subject,
       html
-    });
-    return true;
-  } catch (err) {
-    console.error('Erreur envoi email:', err.message);
-    return false;
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || `Resend erreur ${response.status}`);
   }
 }
 
+// ─── Envoi via Gmail SMTP (hors Railway) ───
+async function sendViaGmail(to, subject, html) {
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD
+    }
+  });
+
+  await transporter.sendMail({
+    from: `Club Jean Jaurès <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html
+  });
+}
+
+// ─── Envoi principal ───
+async function sendEmail(to, subject, html) {
+  // Priorité 1 : Resend HTTP API (fonctionne sur Railway)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      await sendViaResend(to, subject, html);
+      console.log(`Email envoyé à ${to} via Resend`);
+      return { ok: true };
+    } catch (err) {
+      console.error('Erreur Resend:', err.message);
+      return { ok: false, error: err.message };
+    }
+  }
+
+  // Priorité 2 : Gmail SMTP (pour hébergement hors Railway)
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    try {
+      await sendViaGmail(to, subject, html);
+      console.log(`Email envoyé à ${to} via Gmail SMTP`);
+      return { ok: true };
+    } catch (err) {
+      console.error('Erreur Gmail SMTP:', err.message);
+      return { ok: false, error: `Gmail: ${err.message}` };
+    }
+  }
+
+  // Aucun provider configuré
+  console.log(`\n=== EMAIL (aucun provider) ===\nÀ: ${to}\nSujet: ${subject}\n==============================\n`);
+  return { ok: false, error: 'Aucun service email configuré. Ajoutez RESEND_API_KEY dans Railway.' };
+}
+
+// ─── Magic Link ───
 async function sendMagicLink(email, token) {
   const link = `${APP_URL}/auth/verify?token=${token}`;
 
@@ -99,6 +100,7 @@ async function sendMagicLink(email, token) {
   );
 }
 
+// ─── Invitation ───
 async function sendInvitation(email, inviterName) {
   const link = `${APP_URL}/inscription`;
 
@@ -117,11 +119,12 @@ async function sendInvitation(email, inviterName) {
   );
 }
 
+// ─── Email groupé ───
 async function sendBulkEmail(emails, subject, htmlContent) {
   let sent = 0;
   for (const email of emails) {
-    const ok = await sendEmail(email, subject, htmlContent);
-    if (ok) sent++;
+    const result = await sendEmail(email, subject, htmlContent);
+    if (result.ok) sent++;
   }
   if (sent < emails.length) {
     console.error(`Email groupé: ${emails.length - sent} échecs sur ${emails.length}`);

@@ -259,10 +259,10 @@ router.post('/invite', requireAuth, requireAdmin, async (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email requis' });
 
     const inviterName = req.user.member?.companyName || req.user.email;
-    const sent = await sendInvitation(email.toLowerCase().trim(), inviterName);
+    const result = await sendInvitation(email.toLowerCase().trim(), inviterName);
 
-    if (!sent) {
-      return res.status(500).json({ error: "Impossible d'envoyer l'email. Vérifiez la configuration Gmail." });
+    if (!result.ok) {
+      return res.status(500).json({ error: result.error || "Impossible d'envoyer l'email." });
     }
     res.json({ success: true, message: 'Invitation envoyée.' });
   } catch (err) {

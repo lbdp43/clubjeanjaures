@@ -151,9 +151,9 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
       }
     });
 
-    const sent = await sendMagicLink(normalizedEmail, rawToken);
-    if (!sent) {
-      return res.status(500).json({ error: "Impossible d'envoyer l'email. Vérifiez la configuration Gmail (GMAIL_USER + GMAIL_APP_PASSWORD)." });
+    const result = await sendMagicLink(normalizedEmail, rawToken);
+    if (!result.ok) {
+      return res.status(500).json({ error: result.error || "Impossible d'envoyer l'email." });
     }
     res.json({ message: 'Lien de connexion envoyé par email.' });
   } catch (err) {
