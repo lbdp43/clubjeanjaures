@@ -27,6 +27,8 @@ router.get('/public', optionalAuth, async (req, res) => {
         address: m.address,
         logoUrl: m.logoUrl,
         description: m.description,
+        lookingFor: m.lookingFor,
+        canOffer: m.canOffer,
         website: m.website,
         phone: (isAuthenticated || visibility.phone === 'public') ? m.phone : null,
         email: (isAuthenticated || visibility.email === 'public') ? m.user.email : null,

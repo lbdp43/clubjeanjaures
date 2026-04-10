@@ -5,8 +5,8 @@ export default function MemberCard({ member }) {
   const navigate = useNavigate();
 
   const shortDesc = member.description
-    ? member.description.length > 100
-      ? member.description.slice(0, 100) + '...'
+    ? member.description.length > 120
+      ? member.description.slice(0, 120) + '...'
       : member.description
     : null;
 
@@ -17,33 +17,53 @@ export default function MemberCard({ member }) {
       onClick={() => navigate(`/annuaire/${member.id}`)}
       className="card hover:shadow-md transition-shadow cursor-pointer"
     >
-      {/* En-tête : logo + nom */}
-      <div className="flex items-start gap-3 sm:gap-4">
+      {/* Logo centré en haut */}
+      <div className="flex justify-center mb-3">
         {member.logoUrl ? (
-          <img src={member.logoUrl} alt={member.companyName} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover flex-shrink-0" />
+          <img src={member.logoUrl} alt={member.companyName} className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover" />
         ) : (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-xl sm:text-2xl flex-shrink-0">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-blue-light flex items-center justify-center text-blue font-bold text-3xl sm:text-4xl">
             {member.companyName?.charAt(0) || '?'}
           </div>
         )}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-text-main text-sm sm:text-base truncate">{member.companyName}</h3>
-          <p className="text-sm text-text-muted truncate">{member.jobTitle}</p>
-          {member.city && (
-            <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1">
-              <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-              </svg>
-              {member.city}
-            </p>
-          )}
-        </div>
+      </div>
+
+      {/* Nom + métier + ville */}
+      <div className="text-center mb-3">
+        <h3 className="font-semibold text-text-main text-base truncate">{member.companyName}</h3>
+        <p className="text-sm text-text-muted truncate">{member.jobTitle}</p>
+        {member.city && (
+          <p className="text-xs text-text-muted mt-0.5 flex items-center justify-center gap-1">
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+            {member.city}
+          </p>
+        )}
       </div>
 
       {/* Description courte */}
       {shortDesc && (
-        <p className="text-xs sm:text-sm text-text-muted mt-3 line-clamp-2">{shortDesc}</p>
+        <p className="text-xs sm:text-sm text-text-muted mb-3 line-clamp-2">{shortDesc}</p>
+      )}
+
+      {/* Ce que je recherche / Ce que je peux apporter */}
+      {(member.lookingFor || member.canOffer) && (
+        <div className="space-y-2 mb-3 text-xs sm:text-sm">
+          {member.lookingFor && (
+            <div className="bg-blue-light/30 rounded-lg px-3 py-2">
+              <span className="font-medium text-blue-dark">Recherche :</span>{' '}
+              <span className="text-text-muted">{member.lookingFor.length > 80 ? member.lookingFor.slice(0, 80) + '...' : member.lookingFor}</span>
+            </div>
+          )}
+          {member.canOffer && (
+            <div className="bg-green-50 rounded-lg px-3 py-2">
+              <span className="font-medium text-green-700">Apporte :</span>{' '}
+              <span className="text-text-muted">{member.canOffer.length > 80 ? member.canOffer.slice(0, 80) + '...' : member.canOffer}</span>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Adresse cliquable */}
@@ -53,7 +73,7 @@ export default function MemberCard({ member }) {
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-1 text-xs text-blue hover:underline mt-2"
+          className="inline-flex items-center gap-1 text-xs text-blue hover:underline mb-3"
         >
           <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -68,7 +88,7 @@ export default function MemberCard({ member }) {
 
       {/* Boutons de contact */}
       {(member.phone || email) && (
-        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
+        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
           {member.phone && (
             <a
               href={`tel:${member.phone}`}
