@@ -54,6 +54,10 @@ export function whatsappLink(phone) {
   return `https://wa.me/${cleaned}`;
 }
 
+export function mapsUrl(address) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+
 // Formater une date+heure en format iCal (YYYYMMDDTHHmmSS)
 function toCalDateStr(dateStr, time) {
   const d = new Date(dateStr);

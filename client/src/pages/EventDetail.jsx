@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../utils/api';
-import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl } from '../utils/helpers';
+import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl, mapsUrl } from '../utils/helpers';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -53,13 +53,21 @@ export default function EventDetail() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <a
+            href={mapsUrl(event.location)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 hover:text-blue transition-colors group"
+          >
             <svg className="w-5 h-5 text-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
             </svg>
-            <span>{event.location}</span>
-          </div>
+            <span className="group-hover:underline">{event.location}</span>
+            <svg className="w-4 h-4 text-text-muted group-hover:text-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
 
           {event.speaker && (
             <div className="flex items-center gap-3">

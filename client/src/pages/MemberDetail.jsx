@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { whatsappLink } from '../utils/helpers';
+import { whatsappLink, mapsUrl } from '../utils/helpers';
 
 export default function MemberDetail() {
   const { id } = useParams();
@@ -122,7 +122,20 @@ export default function MemberDetail() {
         {/* Infos complètes */}
         <div className="border-t border-gray-100 pt-4 space-y-2 text-sm">
           {member.address && (
-            <p><span className="text-text-muted">Adresse :</span> {member.address}</p>
+            <p>
+              <span className="text-text-muted">Adresse :</span>{' '}
+              <a
+                href={mapsUrl(member.address)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue hover:underline inline-flex items-center gap-1"
+              >
+                {member.address}
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+              </a>
+            </p>
           )}
           {member.phone && (
             <p><span className="text-text-muted">Téléphone :</span> {member.phone}</p>
