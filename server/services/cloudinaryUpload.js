@@ -1,25 +1,13 @@
-const cloudinary = require('cloudinary').v2;
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
-
-// Configuration Cloudinary via variable d'environnement
-// CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
-// (Railway: ajouter la variable CLOUDINARY_URL dans les settings)
-cloudinary.config();
-
-const CLOUDINARY_CONFIGURED = !!(
-  process.env.CLOUDINARY_URL ||
-  (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
-);
+const prisma = require('../prisma/db');
 
 /**
- * Traite et upload une image.
- * Si Cloudinary est configuré → upload vers le cloud (URL permanente).
- * Sinon → fallback local /uploads/ (perdu au redéploiement).
+ * Traite une image (redimensionne + WebP) puis la stocke en base de données.
+ * Retourne une URL permanente /api/uploads/:id
  */
-async function uploadImage(filePath, folder = 'members') {
-  // Convertir en WebP et redimensionner
+async function uploadImage(filePath) {
   const ext = path.extname(filePath);
   const webpPath = filePath.replace(ext, '.webp');
 
@@ -33,49 +21,48 @@ async function uploadImage(filePath, folder = 'members') {
     try { fs.unlinkSync(filePath); } catch {}
   }
 
-  if (CLOUDINARY_CONFIGURED) {
-    try {
-      const result = await cloudinary.uploader.upload(webpPath, {
-        folder: `club-jean-jaures/${folder}`,
-        format: 'webp',
-        transformation: [{ quality: 'auto', fetch_format: 'auto' }]
-      });
+  // Lire le fichier WebP en binaire
+  const data = fs.readFileSync(webpPath);
 
-      // Supprimer le fichier local après upload cloud
-      try { fs.unlinkSync(webpPath); } catch {}
-
-      return result.secure_url;
-    } catch (err) {
-      console.error('Erreur Cloudinary upload:', err.message);
-      // Fallback local en cas d'erreur
-      return `/uploads/${path.basename(webpPath)}`;
+  // Stocker en base de données
+  const upload = await prisma.upload.create({
+    data: {
+      data: data,
+      mimeType: 'image/webp'
     }
-  }
+  });
 
-  // Fallback local
-  return `/uploads/${path.basename(webpPath)}`;
+  // Supprimer le fichier local
+  try { fs.unlinkSync(webpPath); } catch {}
+
+  return `/api/uploads/${upload.id}`;
 }
 
 /**
- * Upload un fichier non-image (PDF, etc.)
+ * Upload un fichier non-image (PDF, etc.) en base de données.
  */
-async function uploadFile(filePath, folder = 'files') {
-  if (CLOUDINARY_CONFIGURED) {
-    try {
-      const result = await cloudinary.uploader.upload(filePath, {
-        folder: `club-jean-jaures/${folder}`,
-        resource_type: 'raw'
-      });
+async function uploadFile(filePath) {
+  const data = fs.readFileSync(filePath);
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeTypes = {
+    '.pdf': 'application/pdf',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp'
+  };
 
-      try { fs.unlinkSync(filePath); } catch {}
-      return result.secure_url;
-    } catch (err) {
-      console.error('Erreur Cloudinary file upload:', err.message);
-      return `/uploads/${path.basename(filePath)}`;
+  const upload = await prisma.upload.create({
+    data: {
+      data: data,
+      mimeType: mimeTypes[ext] || 'application/octet-stream'
     }
-  }
+  });
 
-  return `/uploads/${path.basename(filePath)}`;
+  // Supprimer le fichier local
+  try { fs.unlinkSync(filePath); } catch {}
+
+  return `/api/uploads/${upload.id}`;
 }
 
-module.exports = { uploadImage, uploadFile, CLOUDINARY_CONFIGURED };
+module.exports = { uploadImage, uploadFile };

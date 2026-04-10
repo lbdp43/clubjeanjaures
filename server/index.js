@@ -12,6 +12,7 @@ const postRoutes = require('./routes/posts');
 const adminRoutes = require('./routes/admin');
 const calendarRoutes = require('./routes/calendar');
 const favoriteRoutes = require('./routes/favorites');
+const uploadRoutes = require('./routes/uploads');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +39,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
