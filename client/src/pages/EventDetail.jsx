@@ -79,22 +79,22 @@ export default function EventDetail() {
 
       {/* Mode édition admin */}
       {editing ? (
-        <form onSubmit={handleSave} className="card p-4 sm:p-6 space-y-4">
+        <form onSubmit={handleSave} className="card p-3 sm:p-6 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg text-blue-dark">Modifier l'événement</h2>
-            <button type="button" onClick={() => setEditing(false)} className="text-sm text-text-muted hover:text-text-main">
+            <h2 className="font-display text-base sm:text-lg text-blue-dark">Modifier l'événement</h2>
+            <button type="button" onClick={() => setEditing(false)} className="text-xs sm:text-sm text-text-muted hover:text-text-main">
               Annuler
             </button>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium mb-1">Titre *</label>
-              <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input-field" required />
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium mb-1">Titre *</label>
+              <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input-field text-sm" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Type</label>
-              <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="input-field">
+              <label className="block text-xs sm:text-sm font-medium mb-1">Type</label>
+              <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="input-field text-sm">
                 <option value="matinale">Matinale</option>
                 <option value="afterwork">Afterwork</option>
                 <option value="formation">Formation</option>
@@ -103,48 +103,48 @@ export default function EventDetail() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Date *</label>
-              <input type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="input-field" required />
+              <label className="block text-xs sm:text-sm font-medium mb-1">Date *</label>
+              <input type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="input-field text-sm" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Heure début *</label>
-              <input type="time" value={form.timeStart} onChange={e => setForm({...form, timeStart: e.target.value})} className="input-field" required />
+              <label className="block text-xs sm:text-sm font-medium mb-1">Heure début *</label>
+              <input type="time" value={form.timeStart} onChange={e => setForm({...form, timeStart: e.target.value})} className="input-field text-sm" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Heure fin</label>
-              <input type="time" value={form.timeEnd} onChange={e => setForm({...form, timeEnd: e.target.value})} className="input-field" />
+              <label className="block text-xs sm:text-sm font-medium mb-1">Heure fin</label>
+              <input type="time" value={form.timeEnd} onChange={e => setForm({...form, timeEnd: e.target.value})} className="input-field text-sm" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Lieu / Adresse *</label>
-              <input value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="input-field" required />
+            <div className="sm:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium mb-1">Lieu / Adresse *</label>
+              <input value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="input-field text-sm" required />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input-field resize-none" rows={3} />
+            <label className="block text-xs sm:text-sm font-medium mb-1">Description</label>
+            <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input-field text-sm resize-none" rows={3} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Intervenant(s)</label>
-            <input value={form.speaker} onChange={e => setForm({...form, speaker: e.target.value})} className="input-field" />
+            <label className="block text-xs sm:text-sm font-medium mb-1">Intervenant(s)</label>
+            <input value={form.speaker} onChange={e => setForm({...form, speaker: e.target.value})} className="input-field text-sm" />
           </div>
-          <div className="flex gap-3">
-            <button type="submit" className="btn-primary" disabled={saving}>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <button type="submit" className="btn-primary text-sm w-full sm:w-auto" disabled={saving}>
               {saving ? 'Enregistrement...' : 'Enregistrer'}
             </button>
-            <button type="button" onClick={handleDelete} className="btn-danger text-sm py-2 px-4">
+            <button type="button" onClick={handleDelete} className="btn-danger text-sm py-2 px-4 w-full sm:w-auto">
               Supprimer
             </button>
           </div>
         </form>
       ) : (
         /* Mode lecture */
-        <div className="card p-4 sm:p-6">
+        <div className="card p-3 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <span className={getEventBadgeClass(event.type)}>
               {getEventTypeLabel(event.type)}
             </span>
             {isAdmin && (
-              <button onClick={() => setEditing(true)} className="text-sm text-blue hover:underline flex items-center gap-1 flex-shrink-0">
+              <button onClick={() => setEditing(true)} className="text-xs sm:text-sm text-blue hover:underline flex items-center gap-1 flex-shrink-0">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                 </svg>
@@ -153,7 +153,7 @@ export default function EventDetail() {
             )}
           </div>
 
-          <h1 className="font-display text-2xl text-blue-dark mt-3 mb-4">{event.title}</h1>
+          <h1 className="font-display text-xl sm:text-2xl text-blue-dark mt-3 mb-4">{event.title}</h1>
 
           <div className="space-y-3 text-sm">
             <div className="flex items-center gap-3">
@@ -205,8 +205,8 @@ export default function EventDetail() {
             </div>
           )}
 
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <p className="text-sm font-medium text-text-muted mb-3">Ajouter à mon agenda</p>
+          <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-100">
+            <p className="text-xs sm:text-sm font-medium text-text-muted mb-3">Ajouter à mon agenda</p>
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
               <a
                 href={googleCalendarUrl(event)}

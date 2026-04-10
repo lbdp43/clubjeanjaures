@@ -79,26 +79,26 @@ export default function AdminEvents() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold">Événements ({events.length})</h3>
-        <button onClick={showForm ? cancelForm : openCreate} className="btn-primary text-sm py-2 px-4">
+      <div className="flex justify-between items-center gap-2">
+        <h3 className="font-semibold text-sm sm:text-base">Événements ({events.length})</h3>
+        <button onClick={showForm ? cancelForm : openCreate} className="btn-primary text-xs sm:text-sm py-2 px-3 sm:px-4 flex-shrink-0">
           {showForm ? 'Annuler' : '+ Créer'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="card p-4 sm:p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="card p-3 sm:p-5 space-y-3 sm:space-y-4">
           <h4 className="font-semibold text-sm text-blue-dark">
             {editingId ? 'Modifier l\'événement' : 'Nouvel événement'}
           </h4>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium mb-1">Titre</label>
-              <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input-field" required />
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium mb-1">Titre</label>
+              <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input-field text-sm" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Type</label>
-              <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="input-field">
+              <label className="block text-xs sm:text-sm font-medium mb-1">Type</label>
+              <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="input-field text-sm">
                 <option value="matinale">Matinale</option>
                 <option value="afterwork">Afterwork</option>
                 <option value="formation">Formation</option>
@@ -107,32 +107,32 @@ export default function AdminEvents() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Date</label>
-              <input type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="input-field" required />
+              <label className="block text-xs sm:text-sm font-medium mb-1">Date</label>
+              <input type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="input-field text-sm" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Heure début</label>
-              <input type="time" value={form.timeStart} onChange={e => setForm({...form, timeStart: e.target.value})} className="input-field" required />
+              <label className="block text-xs sm:text-sm font-medium mb-1">Heure début</label>
+              <input type="time" value={form.timeStart} onChange={e => setForm({...form, timeStart: e.target.value})} className="input-field text-sm" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Heure fin</label>
-              <input type="time" value={form.timeEnd} onChange={e => setForm({...form, timeEnd: e.target.value})} className="input-field" />
+              <label className="block text-xs sm:text-sm font-medium mb-1">Heure fin</label>
+              <input type="time" value={form.timeEnd} onChange={e => setForm({...form, timeEnd: e.target.value})} className="input-field text-sm" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Lieu / Adresse</label>
-              <input value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="input-field" placeholder="Adresse complète" required />
+            <div className="sm:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium mb-1">Lieu / Adresse</label>
+              <input value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="input-field text-sm" placeholder="Adresse complète" required />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input-field resize-none" rows={2} />
+            <label className="block text-xs sm:text-sm font-medium mb-1">Description</label>
+            <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input-field text-sm resize-none" rows={2} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Intervenant(s)</label>
-            <input value={form.speaker} onChange={e => setForm({...form, speaker: e.target.value})} className="input-field" />
+            <label className="block text-xs sm:text-sm font-medium mb-1">Intervenant(s)</label>
+            <input value={form.speaker} onChange={e => setForm({...form, speaker: e.target.value})} className="input-field text-sm" />
           </div>
-          <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? 'Enregistrement...' : editingId ? 'Enregistrer les modifications' : 'Créer l\'événement'}
+          <button type="submit" className="btn-primary text-sm w-full sm:w-auto" disabled={saving}>
+            {saving ? 'Enregistrement...' : editingId ? 'Enregistrer' : 'Créer l\'événement'}
           </button>
         </form>
       )}
@@ -140,25 +140,30 @@ export default function AdminEvents() {
       {loading ? (
         <div className="flex justify-center py-8"><div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" /></div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {events.map(e => (
-            <div key={e.id} className="card p-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{e.title}</p>
-                <p className="text-sm text-text-muted">
-                  {formatDate(e.date)} — {formatTime(e.timeStart)} — {getEventTypeLabel(e.type)}
-                </p>
-                {e.location && (
-                  <p className="text-xs text-text-muted mt-0.5">{e.location}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <button onClick={() => openEdit(e)} className="text-sm text-blue hover:underline whitespace-nowrap">
-                  Modifier
-                </button>
-                <button onClick={() => handleDelete(e.id)} className="text-sm text-red-500 hover:underline whitespace-nowrap">
-                  Supprimer
-                </button>
+            <div key={e.id} className="card p-3 sm:p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate text-sm sm:text-base">{e.title}</p>
+                  <p className="text-xs sm:text-sm text-text-muted mt-0.5">
+                    {formatDate(e.date)} — {formatTime(e.timeStart)}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-light text-blue-dark">{getEventTypeLabel(e.type)}</span>
+                    {e.location && (
+                      <span className="text-xs text-text-muted truncate">{e.location}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                  <button onClick={() => openEdit(e)} className="text-xs sm:text-sm text-blue hover:underline whitespace-nowrap">
+                    Modifier
+                  </button>
+                  <button onClick={() => handleDelete(e.id)} className="text-xs sm:text-sm text-red-500 hover:underline whitespace-nowrap">
+                    Supprimer
+                  </button>
+                </div>
               </div>
             </div>
           ))}

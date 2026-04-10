@@ -39,11 +39,11 @@ export default function Agenda() {
 
   return (
     <div className="space-y-4 sm:space-y-6 fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-xl sm:text-2xl text-blue-dark">Agenda</h1>
         <button
           onClick={() => setShowSubscribe(s => !s)}
-          className="text-sm text-blue hover:underline self-start sm:self-auto"
+          className="text-xs sm:text-sm text-blue hover:underline flex-shrink-0"
         >
           Ajouter à mon agenda
         </button>
@@ -51,8 +51,8 @@ export default function Agenda() {
 
       {/* Panneau abonnement */}
       {showSubscribe && (
-        <div className="card p-3 sm:p-5 space-y-3 sm:space-y-4 slide-up">
-          <div className="flex items-center justify-between">
+        <div className="card p-3 sm:p-5 space-y-2 sm:space-y-4 slide-up">
+          <div className="flex items-center justify-between gap-2">
             <h3 className="font-semibold text-sm sm:text-base">Ajouter à mon agenda</h3>
             <button onClick={() => setShowSubscribe(false)} className="text-text-muted hover:text-text-main text-xl leading-none">&times;</button>
           </div>
@@ -164,12 +164,12 @@ export default function Agenda() {
           <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
           {displayed.map(event => (
             <EventCard key={event.id} event={event} />
           ))}
           {displayed.length === 0 && (
-            <p className="text-text-muted col-span-full text-center py-8">
+            <p className="text-text-muted col-span-full text-center py-8 text-sm">
               {tab === 'past' ? 'Aucun événement passé.' : 'Aucun événement à venir.'}
             </p>
           )}

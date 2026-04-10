@@ -77,7 +77,7 @@ export default function AdminMembers() {
   return (
     <div className="space-y-6">
       {/* Inviter un membre */}
-      <div className="card p-4 sm:p-5">
+      <div className="card p-3 sm:p-5">
         <h3 className="font-semibold mb-3 text-sm sm:text-base">Inviter de nouveaux membres</h3>
 
         {/* Invitation par email */}
@@ -90,7 +90,7 @@ export default function AdminMembers() {
             className="input-field flex-1 text-sm"
             required
           />
-          <button type="submit" className="btn-primary text-sm whitespace-nowrap flex items-center gap-2" disabled={inviteLoading}>
+          <button type="submit" className="btn-primary text-xs sm:text-sm whitespace-nowrap flex items-center justify-center gap-2" disabled={inviteLoading}>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
@@ -127,8 +127,8 @@ export default function AdminMembers() {
       </div>
 
       {/* Liste */}
-      <div className="card p-4 sm:p-5">
-        <h3 className="font-semibold mb-4 text-sm sm:text-base">Membres ({members.length})</h3>
+      <div className="card p-3 sm:p-5">
+        <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Membres ({members.length})</h3>
         <div className="space-y-2">
           {members.map(m => (
             <MemberRow
@@ -244,19 +244,21 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
   return (
     <div className="border border-gray-100 rounded-xl overflow-hidden">
       {/* Header row */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={handleExpand}
-      >
-        <div className="flex-1 min-w-0">
-          <p className="font-medium truncate">{m.member?.companyName || m.email}</p>
-          <p className="text-sm text-text-muted truncate">{m.email}</p>
+      <div className="p-3 cursor-pointer hover:bg-gray-50 transition-colors" onClick={handleExpand}>
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium truncate text-sm sm:text-base">{m.member?.companyName || m.email}</p>
+            <p className="text-xs sm:text-sm text-text-muted truncate">{m.email}</p>
+          </div>
+          <svg className={`w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
-        <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-2 mt-2 flex-wrap" onClick={e => e.stopPropagation()}>
           <select
             value={m.role}
             onChange={e => onRoleChange(m.id, e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-2 py-1"
+            className="text-xs sm:text-sm border border-gray-200 rounded-lg px-2 py-1.5"
           >
             <option value="visitor">Visiteur</option>
             <option value="member">Membre</option>
@@ -265,7 +267,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
           </select>
           <button
             onClick={() => onStatusToggle(m)}
-            className={`text-sm px-3 py-1 rounded-full ${
+            className={`text-xs sm:text-sm px-3 py-1.5 rounded-full ${
               m.status === 'active'
                 ? 'bg-green-100 text-green-700'
                 : 'bg-red-100 text-red-700'
@@ -275,24 +277,21 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
           </button>
           <button
             onClick={() => onDelete(m.id)}
-            className="text-sm text-red-500 hover:underline"
+            className="text-xs sm:text-sm text-red-500 hover:underline ml-auto"
           >
             Supprimer
           </button>
-          <svg className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
         </div>
       </div>
 
       {/* Expanded section */}
       {expanded && (
-        <div className="border-t border-gray-100 p-4 bg-gray-50/50">
+        <div className="border-t border-gray-100 p-3 sm:p-4 bg-gray-50/50">
           {/* Tabs */}
           <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-4">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-1.5 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === 'profile' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
               }`}
             >
@@ -300,7 +299,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
             </button>
             <button
               onClick={() => setActiveTab('photos')}
-              className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-1.5 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === 'photos' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
               }`}
             >
@@ -308,7 +307,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
             </button>
             <button
               onClick={() => setActiveTab('password')}
-              className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-1.5 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === 'password' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
               }`}
             >

@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <StatCard label="Membres actifs" value={stats.activeMembers} />
         <StatCard label="Suspendus" value={stats.suspendedMembers} />
         <StatCard label="Total inscrits" value={stats.totalUsers} />
@@ -34,12 +34,12 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Prochains événements */}
-        <div className="card p-4 sm:p-5">
-          <h3 className="font-semibold mb-4">Prochains événements</h3>
-          <div className="space-y-3">
+        <div className="card p-3 sm:p-5">
+          <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Prochains événements</h3>
+          <div className="space-y-2 sm:space-y-3">
             {upcomingEvents.map(e => (
-              <div key={e.id} className="flex items-center gap-3 text-sm">
-                <span className="text-blue font-semibold">{formatShortDate(e.date)}</span>
+              <div key={e.id} className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                <span className="text-blue font-semibold whitespace-nowrap">{formatShortDate(e.date)}</span>
                 <span className="truncate">{e.title}</span>
               </div>
             ))}
@@ -48,11 +48,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Publications récentes */}
-        <div className="card p-4 sm:p-5">
-          <h3 className="font-semibold mb-4">Publications récentes</h3>
-          <div className="space-y-3">
+        <div className="card p-3 sm:p-5">
+          <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Publications récentes</h3>
+          <div className="space-y-2 sm:space-y-3">
             {recentPosts.map(p => (
-              <div key={p.id} className="text-sm">
+              <div key={p.id} className="text-xs sm:text-sm">
                 <span className="font-medium">{p.author?.member?.companyName || p.author?.email}</span>
                 <p className="text-text-muted truncate">{p.content}</p>
               </div>
@@ -62,15 +62,15 @@ export default function AdminDashboard() {
         </div>
 
         {/* Derniers inscrits */}
-        <div className="card p-4 sm:p-5 lg:col-span-2">
-          <h3 className="font-semibold mb-4">Derniers inscrits</h3>
+        <div className="card p-3 sm:p-5 lg:col-span-2">
+          <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Derniers inscrits</h3>
           <div className="space-y-2">
             {recentUsers.map(u => (
-              <div key={u.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm gap-1 sm:gap-3">
-                <span className="truncate">{u.email}</span>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="badge bg-blue-light text-blue-dark">{u.role}</span>
-                  <span className="text-text-muted whitespace-nowrap">{formatShortDate(u.createdAt)}</span>
+              <div key={u.id} className="flex items-center justify-between text-xs sm:text-sm gap-2">
+                <span className="truncate min-w-0">{u.email}</span>
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-light text-blue-dark">{u.role}</span>
+                  <span className="text-text-muted whitespace-nowrap text-xs">{formatShortDate(u.createdAt)}</span>
                 </div>
               </div>
             ))}
@@ -83,9 +83,9 @@ export default function AdminDashboard() {
 
 function StatCard({ label, value }) {
   return (
-    <div className="card p-3 sm:p-4 text-center">
-      <p className="text-2xl sm:text-3xl font-bold text-blue">{value}</p>
-      <p className="text-xs sm:text-sm text-text-muted mt-1">{label}</p>
+    <div className="card p-2.5 sm:p-4 text-center">
+      <p className="text-xl sm:text-3xl font-bold text-blue">{value}</p>
+      <p className="text-[10px] sm:text-sm text-text-muted mt-0.5 sm:mt-1 leading-tight">{label}</p>
     </div>
   );
 }
