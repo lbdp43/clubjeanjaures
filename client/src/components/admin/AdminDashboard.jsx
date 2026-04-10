@@ -25,16 +25,16 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard label="Membres actifs" value={stats.activeMembers} />
         <StatCard label="Suspendus" value={stats.suspendedMembers} />
         <StatCard label="Total inscrits" value={stats.totalUsers} />
         <StatCard label="Demandes" value={stats.activeDemands} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Prochains événements */}
-        <div className="card p-5">
+        <div className="card p-4 sm:p-5">
           <h3 className="font-semibold mb-4">Prochains événements</h3>
           <div className="space-y-3">
             {upcomingEvents.map(e => (
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Publications récentes */}
-        <div className="card p-5">
+        <div className="card p-4 sm:p-5">
           <h3 className="font-semibold mb-4">Publications récentes</h3>
           <div className="space-y-3">
             {recentPosts.map(p => (
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Derniers inscrits */}
-        <div className="card p-5 lg:col-span-2">
+        <div className="card p-4 sm:p-5 lg:col-span-2">
           <h3 className="font-semibold mb-4">Derniers inscrits</h3>
           <div className="space-y-2">
             {recentUsers.map(u => (
@@ -83,9 +83,9 @@ export default function AdminDashboard() {
 
 function StatCard({ label, value }) {
   return (
-    <div className="card p-4 text-center">
-      <p className="text-3xl font-bold text-blue">{value}</p>
-      <p className="text-sm text-text-muted mt-1">{label}</p>
+    <div className="card p-3 sm:p-4 text-center">
+      <p className="text-2xl sm:text-3xl font-bold text-blue">{value}</p>
+      <p className="text-xs sm:text-sm text-text-muted mt-1">{label}</p>
     </div>
   );
 }

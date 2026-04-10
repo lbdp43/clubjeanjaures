@@ -57,10 +57,10 @@ export default function AdminSettings() {
   if (!settings) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Paramètres du club */}
-      <form onSubmit={handleSave} className="card p-5 space-y-4">
-        <h3 className="font-semibold">Paramètres du club</h3>
+      <form onSubmit={handleSave} className="card p-4 sm:p-5 space-y-4">
+        <h3 className="font-semibold text-sm sm:text-base">Paramètres du club</h3>
 
         <div className="flex items-center gap-4 mb-4">
           {settings.logoUrl ? (
@@ -104,8 +104,8 @@ export default function AdminSettings() {
       </form>
 
       {/* Envoyer un email */}
-      <form onSubmit={handleNotify} className="card p-5 space-y-4">
-        <h3 className="font-semibold">Envoyer un email à tous les membres</h3>
+      <form onSubmit={handleNotify} className="card p-4 sm:p-5 space-y-4">
+        <h3 className="font-semibold text-sm sm:text-base">Envoyer un email à tous les membres</h3>
         <div>
           <label className="block text-sm font-medium mb-1">Sujet</label>
           <input value={notifySubject} onChange={e => setNotifySubject(e.target.value)} className="input-field" required />

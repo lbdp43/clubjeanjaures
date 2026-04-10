@@ -20,15 +20,15 @@ export default function Admin() {
   if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
-    <div className="space-y-6 fade-in">
-      <h1 className="font-display text-2xl text-blue-dark">Administration</h1>
+    <div className="space-y-4 sm:space-y-6 fade-in">
+      <h1 className="font-display text-xl sm:text-2xl text-blue-dark">Administration</h1>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         {TABS.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
               tab === t.id ? 'bg-blue text-white' : 'bg-white text-text-muted border border-gray-200'
             }`}
           >

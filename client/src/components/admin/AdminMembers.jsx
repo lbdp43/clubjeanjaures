@@ -61,9 +61,9 @@ export default function AdminMembers() {
   return (
     <div className="space-y-6">
       {/* Invitation */}
-      <div className="card p-5">
-        <h3 className="font-semibold mb-3">Inviter un nouveau membre</h3>
-        <form onSubmit={handleInvite} className="flex gap-3">
+      <div className="card p-4 sm:p-5">
+        <h3 className="font-semibold mb-3 text-sm sm:text-base">Inviter un nouveau membre</h3>
+        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <input
             type="email"
             value={inviteEmail}
@@ -78,8 +78,8 @@ export default function AdminMembers() {
       </div>
 
       {/* Liste */}
-      <div className="card p-5">
-        <h3 className="font-semibold mb-4">Membres ({members.length})</h3>
+      <div className="card p-4 sm:p-5">
+        <h3 className="font-semibold mb-4 text-sm sm:text-base">Membres ({members.length})</h3>
         <div className="space-y-3">
           {members.map(m => (
             <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-b border-gray-50 last:border-0">
