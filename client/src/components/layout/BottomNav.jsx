@@ -5,14 +5,18 @@ const navItems = [
   { to: '/', label: 'Accueil', icon: HomeIcon },
   { to: '/annuaire', label: 'Annuaire', icon: UsersIcon },
   { to: '/agenda', label: 'Agenda', icon: CalendarIcon },
-  { to: '/fil', label: 'Fil', icon: FeedIcon, auth: true },
+  { to: '/fil', label: 'Fil', icon: FeedIcon, auth: true, showForVisitor: true },
   { to: '/profil', label: 'Profil', icon: ProfileIcon, auth: true }
 ];
 
 export default function BottomNav() {
   const { user } = useAuth();
 
-  const items = navItems.filter(item => !item.auth || user);
+  const items = navItems.filter(item => {
+    if (!item.auth) return true;
+    if (item.showForVisitor && user) return true;
+    return !!user;
+  });
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-2 z-40">
