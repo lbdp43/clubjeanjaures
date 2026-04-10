@@ -77,7 +77,7 @@ export default function Profile() {
     <div className="max-w-2xl mx-auto space-y-6 fade-in">
       <h1 className="font-display text-2xl text-blue-dark">Mon profil</h1>
 
-      <form onSubmit={handleSave} className="card p-6 space-y-5">
+      <form onSubmit={handleSave} className="card p-4 sm:p-6 space-y-5">
         {/* Logo */}
         <div className="flex items-center gap-4">
           {user.member?.logoUrl ? (
@@ -137,7 +137,7 @@ export default function Profile() {
 
         {/* Réseaux sociaux */}
         <h3 className="font-semibold text-sm text-text-muted pt-2">Réseaux sociaux</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <input
             placeholder="LinkedIn"
             value={form.socialLinks.linkedin || ''}
@@ -184,9 +184,9 @@ export default function Profile() {
       </form>
 
       {/* Photos */}
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <h3 className="font-semibold mb-4">Photos de l'entreprise</h3>
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {(user.member?.photos || []).map((url, i) => (
             <div key={i} className="relative">
               <img src={url} alt="" className="rounded-xl object-cover w-full h-24" />

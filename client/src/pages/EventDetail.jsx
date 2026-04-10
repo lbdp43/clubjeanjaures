@@ -28,7 +28,7 @@ export default function EventDetail() {
     <div className="max-w-2xl mx-auto space-y-6 fade-in">
       <Link to="/agenda" className="text-blue text-sm hover:underline">&larr; Retour à l'agenda</Link>
 
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <span className={getEventBadgeClass(event.type)}>
           {getEventTypeLabel(event.type)}
         </span>
@@ -79,7 +79,7 @@ export default function EventDetail() {
 
         <div className="mt-6 pt-4 border-t border-gray-100">
           <p className="text-sm font-medium text-text-muted mb-3">Ajouter à mon agenda</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
             <a
               href={googleCalendarUrl(event)}
               target="_blank"

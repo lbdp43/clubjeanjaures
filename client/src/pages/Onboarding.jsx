@@ -41,9 +41,9 @@ export default function Onboarding() {
   const isLast = current === slides.length - 1;
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-4 sm:p-6">
       <div className="max-w-md w-full fade-in" key={current}>
-        <div className={`${slide.color} rounded-card p-12 mb-8 text-center`}>
+        <div className={`${slide.color} rounded-card p-8 sm:p-12 mb-6 sm:mb-8 text-center`}>
           <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
             <span className="text-3xl font-display text-blue font-bold">{current + 1}</span>
           </div>

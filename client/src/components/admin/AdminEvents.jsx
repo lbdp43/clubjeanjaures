@@ -100,14 +100,14 @@ export default function AdminEvents() {
       ) : (
         <div className="space-y-3">
           {events.map(e => (
-            <div key={e.id} className="card p-4 flex items-center gap-4">
+            <div key={e.id} className="card p-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <div className="flex-1 min-w-0">
-                <p className="font-medium">{e.title}</p>
+                <p className="font-medium truncate">{e.title}</p>
                 <p className="text-sm text-text-muted">
                   {formatDate(e.date)} — {formatTime(e.timeStart)} — {getEventTypeLabel(e.type)}
                 </p>
               </div>
-              <button onClick={() => handleDelete(e.id)} className="text-sm text-red-500 hover:underline">
+              <button onClick={() => handleDelete(e.id)} className="text-sm text-red-500 hover:underline self-end sm:self-auto whitespace-nowrap">
                 Supprimer
               </button>
             </div>

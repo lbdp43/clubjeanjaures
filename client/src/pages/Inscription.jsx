@@ -55,9 +55,9 @@ export default function Inscription() {
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <div className="card max-w-md w-full p-8 fade-in">
-        <div className="text-center mb-8">
-          <h1 className="font-display text-2xl text-blue-dark mb-2">Rejoindre le club</h1>
+      <div className="card max-w-md w-full p-5 sm:p-8 fade-in">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="font-display text-xl sm:text-2xl text-blue-dark mb-2">Rejoindre le club</h1>
           <p className="text-text-muted">
             Créez votre compte pour accéder à l'annuaire, l'agenda et le fil d'actualité.
           </p>

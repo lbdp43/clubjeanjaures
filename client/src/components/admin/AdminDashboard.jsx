@@ -66,11 +66,11 @@ export default function AdminDashboard() {
           <h3 className="font-semibold mb-4">Derniers inscrits</h3>
           <div className="space-y-2">
             {recentUsers.map(u => (
-              <div key={u.id} className="flex items-center justify-between text-sm">
-                <span>{u.email}</span>
-                <div className="flex items-center gap-3">
+              <div key={u.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm gap-1 sm:gap-3">
+                <span className="truncate">{u.email}</span>
+                <div className="flex items-center gap-3 flex-shrink-0">
                   <span className="badge bg-blue-light text-blue-dark">{u.role}</span>
-                  <span className="text-text-muted">{formatShortDate(u.createdAt)}</span>
+                  <span className="text-text-muted whitespace-nowrap">{formatShortDate(u.createdAt)}</span>
                 </div>
               </div>
             ))}

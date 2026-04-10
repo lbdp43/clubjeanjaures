@@ -94,12 +94,12 @@ export default function Feed() {
       )}
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-2 flex-wrap">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
             <button
               key={p}
               onClick={() => setPage(p)}
-              className={`w-10 h-10 rounded-full text-sm ${
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-sm ${
                 p === page ? 'bg-blue text-white' : 'bg-white text-text-muted border border-gray-200'
               }`}
             >

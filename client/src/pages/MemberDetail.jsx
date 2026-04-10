@@ -52,18 +52,18 @@ export default function MemberDetail() {
     <div className="max-w-2xl mx-auto space-y-6 fade-in">
       <Link to="/annuaire" className="text-blue text-sm hover:underline">&larr; Retour à l'annuaire</Link>
 
-      <div className="card p-6">
-        <div className="flex items-start gap-4 mb-6">
+      <div className="card p-4 sm:p-6">
+        <div className="flex items-start gap-3 sm:gap-4 mb-6">
           {member.logoUrl ? (
-            <img src={member.logoUrl} alt={member.companyName} className="w-20 h-20 rounded-xl object-cover" />
+            <img src={member.logoUrl} alt={member.companyName} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover flex-shrink-0" />
           ) : (
-            <div className="w-20 h-20 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-xl sm:text-2xl flex-shrink-0">
               {member.companyName?.charAt(0)}
             </div>
           )}
-          <div className="flex-1">
-            <h1 className="font-display text-2xl text-blue-dark">{member.companyName}</h1>
-            <p className="text-text-muted">{member.jobTitle}</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-display text-xl sm:text-2xl text-blue-dark">{member.companyName}</h1>
+            <p className="text-text-muted text-sm sm:text-base">{member.jobTitle}</p>
             {member.city && <p className="text-sm text-text-muted mt-1">{member.city}</p>}
           </div>
           {isMember && user?.id !== id && (
@@ -74,24 +74,24 @@ export default function MemberDetail() {
         </div>
 
         {/* Boutons de contact */}
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mb-6">
           {member.phone && (
-            <a href={`tel:${member.phone}`} className="btn-primary text-sm py-2 px-4">
+            <a href={`tel:${member.phone}`} className="btn-primary text-sm py-2 px-4 text-center">
               Appeler
             </a>
           )}
           {member.user?.email && (
-            <a href={`mailto:${member.user.email}`} className="btn-secondary text-sm py-2 px-4">
+            <a href={`mailto:${member.user.email}`} className="btn-secondary text-sm py-2 px-4 text-center">
               Email
             </a>
           )}
           {member.phone && (
-            <a href={whatsappLink(member.phone)} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-4">
+            <a href={whatsappLink(member.phone)} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-4 text-center">
               WhatsApp
             </a>
           )}
           {member.website && (
-            <a href={member.website} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-4">
+            <a href={member.website} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm py-2 px-4 text-center">
               Site web
             </a>
           )}

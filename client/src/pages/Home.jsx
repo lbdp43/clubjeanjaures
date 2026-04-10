@@ -18,16 +18,16 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="space-y-12 fade-in">
+    <div className="space-y-8 sm:space-y-12 fade-in">
       {/* Hero */}
-      <section className="text-center py-12 lg:py-20">
-        <div className="w-20 h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-3xl mx-auto mb-6">
+      <section className="text-center py-8 sm:py-12 lg:py-20">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6">
           JJ
         </div>
-        <h1 className="font-display text-3xl lg:text-5xl text-blue-dark mb-4">
+        <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-blue-dark mb-3 sm:mb-4">
           {settings?.name || 'Club de Jean Jaurès'}
         </h1>
-        <p className="text-lg text-text-muted max-w-2xl mx-auto mb-8">
+        <p className="text-base sm:text-lg text-text-muted max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
           {settings?.description || "Club d'affaires de Saint-Étienne — Échanges, entraide et développement entre professionnels de métiers différents."}
         </p>
         {!user && (
@@ -44,8 +44,8 @@ export default function Home() {
 
       {/* Prochains événements */}
       <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl text-blue-dark">Prochains événements</h2>
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Prochains événements</h2>
           <Link to="/agenda" className="text-blue text-sm hover:underline">Voir tout</Link>
         </div>
         {events.length > 0 ? (
@@ -61,8 +61,8 @@ export default function Home() {
 
       {/* Annuaire */}
       <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl text-blue-dark">Nos membres</h2>
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Nos membres</h2>
           <Link to="/annuaire" className="text-blue text-sm hover:underline">Voir l'annuaire</Link>
         </div>
         {members.length > 0 ? (
@@ -78,8 +78,8 @@ export default function Home() {
 
       {/* CTA */}
       {!user && (
-        <section className="bg-blue rounded-card p-8 lg:p-12 text-center text-white">
-          <h2 className="font-display text-2xl lg:text-3xl mb-4">
+        <section className="bg-blue rounded-card p-6 sm:p-8 lg:p-12 text-center text-white">
+          <h2 className="font-display text-xl sm:text-2xl lg:text-3xl mb-4">
             Envie de rejoindre le club ?
           </h2>
           <p className="text-blue-light mb-6 max-w-lg mx-auto">

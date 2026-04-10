@@ -15,18 +15,18 @@ export default function Header() {
         </span>
       </Link>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {user ? (
           <>
-            <Link to="/tableau-de-bord" className="text-sm text-text-muted hover:text-blue transition-colors">
+            <Link to="/tableau-de-bord" className="text-sm text-text-muted hover:text-blue transition-colors truncate max-w-[120px] sm:max-w-[200px]">
               {user.member?.companyName || user.email}
             </Link>
-            <button onClick={logout} className="text-sm text-text-muted hover:text-red-500 transition-colors">
+            <button onClick={logout} className="text-sm text-text-muted hover:text-red-500 transition-colors whitespace-nowrap">
               Déconnexion
             </button>
           </>
         ) : (
-          <Link to="/connexion" className="btn-primary text-sm py-2 px-4">
+          <Link to="/connexion" className="btn-primary text-sm py-2 px-4 whitespace-nowrap">
             Se connecter
           </Link>
         )}

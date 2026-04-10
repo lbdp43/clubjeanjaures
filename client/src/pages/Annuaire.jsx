@@ -93,7 +93,7 @@ function MapView({ members }) {
   }
 
   return (
-    <div className="card p-0 overflow-hidden" style={{ height: '500px' }}>
+    <div className="card p-0 overflow-hidden" style={{ height: 'min(500px, 70vh)' }}>
       <MapContainer members={membersWithCoords} />
     </div>
   );
