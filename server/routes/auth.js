@@ -154,7 +154,7 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
 
     const sent = await sendMagicLink(normalizedEmail, rawToken);
     if (!sent) {
-      return res.status(500).json({ error: "Impossible d'envoyer l'email. Vérifiez la configuration EMAIL_API_KEY." });
+      return res.status(500).json({ error: "Impossible d'envoyer l'email. Le service email n'est pas configuré. Utilisez la connexion par mot de passe." });
     }
     res.json({ message: 'Lien de connexion envoyé par email.' });
   } catch (err) {
