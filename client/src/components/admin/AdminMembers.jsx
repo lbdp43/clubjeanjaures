@@ -227,6 +227,23 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
     e.target.value = '';
   };
 
+  const handleDeletePhoto = async (type) => {
+    if (!confirm(`Supprimer ${type === 'profile' ? 'la photo de profil' : 'le logo'} ?`)) return;
+    setPhotoUploading(true);
+    setPhotoMsg('');
+    try {
+      await api.deleteProfilePhoto(m.id, type);
+      const updatedMember = { ...m.member };
+      if (type === 'profile') updatedMember.photoUrl = null;
+      if (type === 'logo') updatedMember.logoUrl = null;
+      onUpdate({ id: m.id, member: updatedMember });
+      setPhotoMsg(`${type === 'profile' ? 'Photo de profil' : 'Logo'} supprimé.`);
+    } catch (err) {
+      setPhotoMsg(err.message || 'Erreur lors de la suppression');
+    }
+    setPhotoUploading(false);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setProfileMsg('');
@@ -378,14 +395,26 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                     ) : (
                       <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">Aucune</div>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => profilePhotoRef.current?.click()}
-                      className="text-sm text-blue hover:underline"
-                      disabled={photoUploading}
-                    >
-                      {photoUploading ? 'Upload...' : 'Changer'}
-                    </button>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => profilePhotoRef.current?.click()}
+                        className="text-xs sm:text-sm text-blue hover:underline text-left"
+                        disabled={photoUploading}
+                      >
+                        {photoUploading ? 'Upload...' : 'Changer'}
+                      </button>
+                      {m.member?.photoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePhoto('profile')}
+                          className="text-xs text-red-500 hover:underline text-left"
+                          disabled={photoUploading}
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                    </div>
                     <input ref={profilePhotoRef} type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'profile')} className="hidden" />
                   </div>
                 </div>
@@ -398,20 +427,32 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                     ) : (
                       <div className="w-14 h-14 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 text-xs">Aucun</div>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => logoRef.current?.click()}
-                      className="text-sm text-blue hover:underline"
-                      disabled={photoUploading}
-                    >
-                      {photoUploading ? 'Upload...' : 'Changer'}
-                    </button>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => logoRef.current?.click()}
+                        className="text-xs sm:text-sm text-blue hover:underline text-left"
+                        disabled={photoUploading}
+                      >
+                        {photoUploading ? 'Upload...' : 'Changer'}
+                      </button>
+                      {m.member?.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePhoto('logo')}
+                          className="text-xs text-red-500 hover:underline text-left"
+                          disabled={photoUploading}
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                    </div>
                     <input ref={logoRef} type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'logo')} className="hidden" />
                   </div>
                 </div>
               </div>
               {photoMsg && <p className={`text-sm ${photoMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{photoMsg}</p>}
-              <p className="text-xs text-text-muted">Les images sont redimensionnées automatiquement. Rechargez la page pour voir les changements.</p>
+              <p className="text-xs text-text-muted">Les images sont redimensionnées et orientées automatiquement.</p>
             </div>
           )}
 

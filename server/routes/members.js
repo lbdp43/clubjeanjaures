@@ -206,6 +206,27 @@ router.post('/:id/photos', requireAuth, upload.array('photos', 10), async (req, 
   }
 });
 
+// DELETE /api/members/:id/photo/:type (profile or logo)
+router.delete('/:id/photo/:type', requireAuth, async (req, res) => {
+  try {
+    if (req.user.id !== req.params.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+
+    const { type } = req.params;
+    if (type !== 'profile' && type !== 'logo') {
+      return res.status(400).json({ error: 'Type invalide (profile ou logo)' });
+    }
+
+    const data = type === 'profile' ? { photoUrl: null } : { logoUrl: null };
+    await prisma.member.update({ where: { id: req.params.id }, data });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erreur delete photo/logo:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // DELETE /api/members/:id/photos/:idx
 router.delete('/:id/photos/:idx', requireAuth, async (req, res) => {
   try {

@@ -17,6 +17,7 @@ async function uploadImage(filePath) {
 
   try {
     await sharp(filePath)
+      .rotate()
       .resize(1200, null, { withoutEnlargement: true })
       .webp({ quality: 80 })
       .toFile(webpPath);

@@ -50,6 +50,7 @@ export const api = {
     method: 'POST', body: formData
   }),
   deletePhoto: (id, idx) => apiFetch(`/members/${id}/photos/${idx}`, { method: 'DELETE' }),
+  deleteProfilePhoto: (id, type) => apiFetch(`/members/${id}/photo/${type}`, { method: 'DELETE' }),
 
   // Events
   getEvents: (params = {}) => {
