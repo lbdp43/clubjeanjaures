@@ -54,14 +54,14 @@ export default function MemberDetail() {
 
       <div className="card p-4 sm:p-6">
         {/* Photo + Logo */}
-        <div className="flex flex-col items-center gap-3 mb-5">
+        <div className="flex items-center justify-center gap-4 sm:gap-5 mb-5">
           {member.photoUrl && (
-            <img src={member.photoUrl} alt="" className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover" />
+            <img src={member.photoUrl} alt="" className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover flex-shrink-0" />
           )}
           {member.logoUrl ? (
-            <img src={member.logoUrl} alt={member.companyName} className="w-full max-w-[300px] sm:max-w-[340px] h-auto rounded-xl object-contain" />
+            <img src={member.logoUrl} alt={member.companyName} className="flex-1 min-w-0 max-w-[220px] sm:max-w-[300px] h-auto max-h-36 sm:max-h-44 rounded-xl object-contain" />
           ) : (
-            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-4xl sm:text-5xl">
+            <div className="w-32 h-32 sm:w-44 sm:h-44 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-4xl sm:text-5xl flex-shrink-0">
               {member.companyName?.charAt(0)}
             </div>
           )}
