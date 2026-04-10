@@ -18,14 +18,14 @@ export default function MemberCard({ member }) {
       className="card p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Photo + Logo en haut */}
-      <div className="flex items-center justify-center gap-3 mb-3">
+      <div className="flex flex-col items-center gap-3 mb-4">
         {member.photoUrl && (
-          <img src={member.photoUrl} alt="" className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover flex-shrink-0" />
+          <img src={member.photoUrl} alt="" className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover" />
         )}
         {member.logoUrl ? (
-          <img src={member.logoUrl} alt={member.companyName} className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-cover" />
+          <img src={member.logoUrl} alt={member.companyName} className="w-full max-w-[260px] sm:max-w-[280px] h-auto rounded-2xl object-contain" />
         ) : (
-          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-blue-light flex items-center justify-center text-blue font-bold text-4xl sm:text-5xl">
+          <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl bg-blue-light flex items-center justify-center text-blue font-bold text-5xl sm:text-6xl">
             {member.companyName?.charAt(0) || '?'}
           </div>
         )}

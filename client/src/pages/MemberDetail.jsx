@@ -53,29 +53,32 @@ export default function MemberDetail() {
       <Link to="/annuaire" className="text-blue text-sm hover:underline">&larr; Retour à l'annuaire</Link>
 
       <div className="card p-4 sm:p-6">
-        <div className="flex items-start gap-3 sm:gap-4 mb-6">
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {member.photoUrl && (
-              <img src={member.photoUrl} alt="" className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover" />
-            )}
-            {member.logoUrl ? (
-              <img src={member.logoUrl} alt={member.companyName} className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl object-cover" />
-            ) : (
-              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl sm:text-4xl">
-                {member.companyName?.charAt(0)}
-              </div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-display text-xl sm:text-2xl text-blue-dark">{member.companyName}</h1>
-            <p className="text-text-muted text-sm sm:text-base">{member.jobTitle}</p>
-            {member.city && <p className="text-sm text-text-muted mt-1">{member.city}</p>}
-          </div>
-          {isMember && user?.id !== id && (
-            <button onClick={toggleFav} className="text-2xl" title={isFav ? 'Retirer des favoris' : 'Ajouter en favori'}>
-              {isFav ? '★' : '☆'}
-            </button>
+        {/* Photo + Logo */}
+        <div className="flex flex-col items-center gap-3 mb-5">
+          {member.photoUrl && (
+            <img src={member.photoUrl} alt="" className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover" />
           )}
+          {member.logoUrl ? (
+            <img src={member.logoUrl} alt={member.companyName} className="w-full max-w-[300px] sm:max-w-[340px] h-auto rounded-xl object-contain" />
+          ) : (
+            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-4xl sm:text-5xl">
+              {member.companyName?.charAt(0)}
+            </div>
+          )}
+        </div>
+
+        {/* Nom + métier + ville */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="font-display text-xl sm:text-2xl text-blue-dark">{member.companyName}</h1>
+            {isMember && user?.id !== id && (
+              <button onClick={toggleFav} className="text-2xl" title={isFav ? 'Retirer des favoris' : 'Ajouter en favori'}>
+                {isFav ? '★' : '☆'}
+              </button>
+            )}
+          </div>
+          <p className="text-text-muted text-sm sm:text-base">{member.jobTitle}</p>
+          {member.city && <p className="text-sm text-text-muted mt-1">{member.city}</p>}
         </div>
 
         {/* Boutons de contact */}
