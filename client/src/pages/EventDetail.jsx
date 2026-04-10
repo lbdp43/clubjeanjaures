@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../utils/api';
-import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel } from '../utils/helpers';
+import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl } from '../utils/helpers';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -77,14 +77,45 @@ export default function EventDetail() {
           </div>
         )}
 
-        <div className="mt-6 flex gap-3">
-          <a
-            href={`/api/events/${event.id}/ics`}
-            download
-            className="btn-primary text-sm py-2 px-4"
-          >
-            Exporter (.ics)
-          </a>
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <p className="text-sm font-medium text-text-muted mb-3">Ajouter à mon agenda</p>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={googleCalendarUrl(event)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-blue text-sm px-4 py-2.5 rounded-full transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Google Agenda
+            </a>
+            <a
+              href={outlookCalendarUrl(event)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-blue text-sm px-4 py-2.5 rounded-full transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#0078D4" d="M24 7.387v10.478c0 .23-.08.424-.238.576a.806.806 0 01-.588.234h-8.652v-12.14h8.652c.23 0 .425.076.588.23A.774.774 0 0124 7.387zM13.727 20.794H1.455c-.4 0-.741-.14-1.023-.418A1.371 1.371 0 010 19.38V5.873c0-.398.144-.738.432-1.02a1.399 1.399 0 011.023-.417h12.272v16.358zM9.818 9.164a3.427 3.427 0 00-1.553-1.14 3.424 3.424 0 00-1.351-.268c-.944 0-1.753.345-2.427 1.035-.674.69-1.01 1.556-1.01 2.6 0 1.07.33 1.95.99 2.637.66.688 1.484 1.032 2.47 1.032.928 0 1.702-.318 2.322-.953.62-.636.93-1.45.93-2.444 0-.15-.012-.35-.035-.6H6.578v1.2h2.128c-.1.41-.335.74-.703.993a2.054 2.054 0 01-1.157.334c-.656 0-1.19-.22-1.603-.664-.413-.443-.62-1.016-.62-1.72 0-.67.215-1.227.645-1.67.43-.443.968-.665 1.614-.665.533 0 .98.162 1.34.488l1.596-.145z"/>
+              </svg>
+              Outlook
+            </a>
+            <a
+              href={`/api/events/${event.id}/ics`}
+              download
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-blue text-sm px-4 py-2.5 rounded-full transition-colors"
+            >
+              <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              Apple / Autre (.ics)
+            </a>
+          </div>
         </div>
       </div>
     </div>
