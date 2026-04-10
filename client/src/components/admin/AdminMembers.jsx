@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../../utils/api';
 
 export default function AdminMembers() {
@@ -156,6 +156,10 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
   const [profileMsg, setProfileMsg] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState('');
+  const profilePhotoRef = useRef();
+  const logoRef = useRef();
 
   const initProfileForm = () => {
     setProfileForm({
@@ -196,6 +200,31 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
       setPwMsg(err.message);
     }
     setPwLoading(false);
+  };
+
+  const handlePhotoUpload = async (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoUploading(true);
+    setPhotoMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('photos', file);
+      formData.append('type', type);
+      const result = await api.uploadPhotos(m.id, formData);
+      const url = result.urls?.[0];
+      if (url) {
+        const updatedMember = { ...m.member };
+        if (type === 'profile') updatedMember.photoUrl = url;
+        if (type === 'logo') updatedMember.logoUrl = url;
+        onUpdate({ id: m.id, member: updatedMember });
+      }
+      setPhotoMsg(`${type === 'profile' ? 'Photo de profil' : 'Logo'} mis à jour.`);
+    } catch (err) {
+      setPhotoMsg(err.message || "Erreur lors de l'upload");
+    }
+    setPhotoUploading(false);
+    e.target.value = '';
   };
 
   const handleSaveProfile = async (e) => {
@@ -270,6 +299,14 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
               Profil
             </button>
             <button
+              onClick={() => setActiveTab('photos')}
+              className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'photos' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
+              }`}
+            >
+              Photos
+            </button>
+            <button
               onClick={() => setActiveTab('password')}
               className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'password' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
@@ -327,6 +364,56 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                 {profileLoading ? 'Sauvegarde...' : 'Enregistrer le profil'}
               </button>
             </form>
+          )}
+
+          {/* Photos tab */}
+          {activeTab === 'photos' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Photo de profil */}
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Photo de profil</p>
+                  <div className="flex items-center gap-3">
+                    {m.member?.photoUrl ? (
+                      <img src={m.member.photoUrl} alt="Profil" className="w-14 h-14 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">Aucune</div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => profilePhotoRef.current?.click()}
+                      className="text-sm text-blue hover:underline"
+                      disabled={photoUploading}
+                    >
+                      {photoUploading ? 'Upload...' : 'Changer'}
+                    </button>
+                    <input ref={profilePhotoRef} type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'profile')} className="hidden" />
+                  </div>
+                </div>
+                {/* Logo entreprise */}
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Logo entreprise</p>
+                  <div className="flex items-center gap-3">
+                    {m.member?.logoUrl ? (
+                      <img src={m.member.logoUrl} alt="Logo" className="w-14 h-14 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 text-xs">Aucun</div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => logoRef.current?.click()}
+                      className="text-sm text-blue hover:underline"
+                      disabled={photoUploading}
+                    >
+                      {photoUploading ? 'Upload...' : 'Changer'}
+                    </button>
+                    <input ref={logoRef} type="file" accept="image/*" onChange={e => handlePhotoUpload(e, 'logo')} className="hidden" />
+                  </div>
+                </div>
+              </div>
+              {photoMsg && <p className={`text-sm ${photoMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{photoMsg}</p>}
+              <p className="text-xs text-text-muted">Les images sont redimensionnées automatiquement. Rechargez la page pour voir les changements.</p>
+            </div>
           )}
 
           {/* Password tab */}
