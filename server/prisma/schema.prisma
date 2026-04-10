@@ -69,6 +69,7 @@ model Member {
   latitude    Float?
   longitude   Float?
   logoUrl     String?  @map("logo_url")
+  photoUrl    String?  @map("photo_url")
   photos      Json     @default("[]")
   website     String?
   socialLinks Json     @default("{}") @map("social_links")

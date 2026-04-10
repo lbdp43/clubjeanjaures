@@ -15,10 +15,13 @@ export default function MemberCard({ member }) {
   return (
     <div
       onClick={() => navigate(`/annuaire/${member.id}`)}
-      className="card hover:shadow-md transition-shadow cursor-pointer"
+      className="card p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
     >
-      {/* Logo centré en haut */}
-      <div className="flex justify-center mb-3">
+      {/* Photo + Logo en haut */}
+      <div className="flex items-center justify-center gap-3 mb-3">
+        {member.photoUrl && (
+          <img src={member.photoUrl} alt="" className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover flex-shrink-0" />
+        )}
         {member.logoUrl ? (
           <img src={member.logoUrl} alt={member.companyName} className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-cover" />
         ) : (

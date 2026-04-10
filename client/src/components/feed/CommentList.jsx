@@ -57,10 +57,10 @@ export default function CommentList({ comments, postId, onNewComment, onDeleteCo
           value={content}
           onChange={e => setContent(e.target.value)}
           placeholder="Écrire un commentaire..."
-          className="input-field text-sm py-2"
+          className="input-field text-sm py-2 min-w-0"
         />
-        <button type="submit" disabled={loading || !content.trim()} className="btn-primary text-sm py-2 px-4">
-          Envoyer
+        <button type="submit" disabled={loading || !content.trim()} className="btn-primary text-sm py-2 px-3 sm:px-4 flex-shrink-0 whitespace-nowrap">
+          {loading ? '...' : 'Envoyer'}
         </button>
       </form>
     </div>

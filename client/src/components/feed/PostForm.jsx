@@ -29,7 +29,7 @@ export default function PostForm({ onCreated }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card p-5 space-y-3">
+    <form onSubmit={handleSubmit} className="card p-4 sm:p-5 space-y-3">
       <div className="flex gap-2 mb-2">
         <button
           type="button"

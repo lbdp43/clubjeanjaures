@@ -16,7 +16,7 @@ export default function EventCard({ event }) {
   return (
     <div
       onClick={() => navigate(`/agenda/${event.id}`)}
-      className="card hover:shadow-md transition-shadow cursor-pointer"
+      className="card p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
     >
       <div className="flex gap-3 sm:gap-4">
         <div className="flex-shrink-0 w-12 sm:w-14 text-center">

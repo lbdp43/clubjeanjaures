@@ -54,13 +54,18 @@ export default function MemberDetail() {
 
       <div className="card p-4 sm:p-6">
         <div className="flex items-start gap-3 sm:gap-4 mb-6">
-          {member.logoUrl ? (
-            <img src={member.logoUrl} alt={member.companyName} className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl object-cover flex-shrink-0" />
-          ) : (
-            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl sm:text-4xl flex-shrink-0">
-              {member.companyName?.charAt(0)}
-            </div>
-          )}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {member.photoUrl && (
+              <img src={member.photoUrl} alt="" className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover" />
+            )}
+            {member.logoUrl ? (
+              <img src={member.logoUrl} alt={member.companyName} className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl object-cover" />
+            ) : (
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl sm:text-4xl">
+                {member.companyName?.charAt(0)}
+              </div>
+            )}
+          </div>
           <div className="flex-1 min-w-0">
             <h1 className="font-display text-xl sm:text-2xl text-blue-dark">{member.companyName}</h1>
             <p className="text-text-muted text-sm sm:text-base">{member.jobTitle}</p>
@@ -175,11 +180,11 @@ export default function MemberDetail() {
 
       {/* Galerie photos */}
       {photos.length > 0 && (
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <h3 className="font-semibold mb-4">Photos</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {photos.map((url, i) => (
-              <img key={i} src={url} alt="" className="rounded-xl object-cover w-full h-32" />
+              <img key={i} src={url} alt="" className="rounded-xl object-cover w-full h-24 sm:h-32" />
             ))}
           </div>
         </div>

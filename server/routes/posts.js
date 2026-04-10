@@ -21,12 +21,12 @@ router.get('/', requireAuth, requireMember, async (req, res) => {
         where,
         include: {
           author: {
-            select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true } } }
+            select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }
           },
           comments: {
             include: {
               author: {
-                select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true } } }
+                select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }
               }
             },
             orderBy: { createdAt: 'asc' }
@@ -78,7 +78,7 @@ router.post('/', requireAuth, requireMember, upload.array('attachments', 5), asy
       },
       include: {
         author: {
-          select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true } } }
+          select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }
         },
         comments: true,
         likes: { select: { userId: true } },
@@ -148,7 +148,7 @@ router.post('/:id/comments', requireAuth, requireMember, async (req, res) => {
       },
       include: {
         author: {
-          select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true } } }
+          select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }
         }
       }
     });

@@ -44,10 +44,12 @@ export default function PostCard({ post, onDelete }) {
   const attachments = Array.isArray(post.attachments) ? post.attachments : [];
 
   return (
-    <div className="card p-5 slide-up">
+    <div className="card p-4 sm:p-5 slide-up">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        {post.author?.member?.logoUrl ? (
+        {post.author?.member?.photoUrl ? (
+          <img src={post.author.member.photoUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+        ) : post.author?.member?.logoUrl ? (
           <img src={post.author.member.logoUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-blue-light flex items-center justify-center text-blue font-bold">

@@ -17,6 +17,7 @@ export default function Profile() {
   const [uploadMsg, setUploadMsg] = useState('');
   const [uploading, setUploading] = useState(false);
   const logoRef = useRef();
+  const profilePhotoRef = useRef();
 
   useEffect(() => {
     if (user?.member) {
@@ -70,6 +71,24 @@ export default function Profile() {
     setUploading(false);
   };
 
+  const handleProfilePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadMsg('');
+    const formData = new FormData();
+    formData.append('photos', file);
+    formData.append('type', 'profile');
+    try {
+      await api.uploadPhotos(user.id, formData);
+      await refreshUser();
+      setUploadMsg('Photo de profil mise à jour.');
+    } catch (err) {
+      setUploadMsg(`Erreur photo : ${err.message}`);
+    }
+    setUploading(false);
+  };
+
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -93,31 +112,65 @@ export default function Profile() {
       <h1 className="font-display text-2xl text-blue-dark">Mon profil</h1>
 
       <form onSubmit={handleSave} className="card p-4 sm:p-6 space-y-5">
-        {/* Logo */}
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            {user.member?.logoUrl ? (
-              <img src={user.member.logoUrl} alt="" className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover" />
-            ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl">
-                {form.companyName?.charAt(0) || '?'}
-              </div>
-            )}
-            {uploading && (
-              <div className="absolute inset-0 bg-white/80 rounded-xl flex items-center justify-center">
-                <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
-              </div>
-            )}
+        {/* Photo de profil + Logo */}
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          {/* Photo de profil */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              {user.member?.photoUrl ? (
+                <img src={user.member.photoUrl} alt="" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover" />
+              ) : (
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+                  </svg>
+                </div>
+              )}
+              {uploading && (
+                <div className="absolute inset-0 bg-white/80 rounded-full flex items-center justify-center">
+                  <div className="animate-spin w-6 h-6 border-3 border-blue border-t-transparent rounded-full" />
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-text-muted mb-1">Photo de profil</p>
+              <button type="button" onClick={() => profilePhotoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                {user.member?.photoUrl ? 'Changer' : 'Ajouter'}
+              </button>
+              {uploadMsg && uploadMsg.includes('profil') && (
+                <p className={`text-xs mt-1 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
+              )}
+            </div>
+            <input ref={profilePhotoRef} type="file" accept="image/*" onChange={handleProfilePhotoUpload} className="hidden" />
           </div>
-          <div>
-            <button type="button" onClick={() => logoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-              Modifier le logo
-            </button>
-            {uploadMsg && uploadMsg.includes('Logo') && (
-              <p className={`text-xs mt-1 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
-            )}
+
+          {/* Logo entreprise */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              {user.member?.logoUrl ? (
+                <img src={user.member.logoUrl} alt="" className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover" />
+              ) : (
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl">
+                  {form.companyName?.charAt(0) || '?'}
+                </div>
+              )}
+              {uploading && (
+                <div className="absolute inset-0 bg-white/80 rounded-xl flex items-center justify-center">
+                  <div className="animate-spin w-6 h-6 border-3 border-blue border-t-transparent rounded-full" />
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-text-muted mb-1">Logo entreprise</p>
+              <button type="button" onClick={() => logoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                {user.member?.logoUrl ? 'Changer' : 'Ajouter'}
+              </button>
+              {uploadMsg && uploadMsg.includes('Logo') && (
+                <p className={`text-xs mt-1 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
+              )}
+            </div>
+            <input ref={logoRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
           </div>
-          <input ref={logoRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
         </div>
 
         {/* Champs obligatoires */}
@@ -164,7 +217,7 @@ export default function Profile() {
 
         {/* Réseaux sociaux */}
         <h3 className="font-semibold text-sm text-text-muted pt-2">Réseaux sociaux</h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <input
             placeholder="LinkedIn"
             value={form.socialLinks.linkedin || ''}
@@ -181,7 +234,7 @@ export default function Profile() {
             placeholder="Instagram"
             value={form.socialLinks.instagram || ''}
             onChange={e => setForm({...form, socialLinks: {...form.socialLinks, instagram: e.target.value}})}
-            className="input-field text-sm"
+            className="input-field text-sm sm:col-span-2"
           />
         </div>
 

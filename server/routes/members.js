@@ -26,6 +26,7 @@ router.get('/public', optionalAuth, async (req, res) => {
         city: m.city,
         address: m.address,
         logoUrl: m.logoUrl,
+        photoUrl: m.photoUrl,
         description: m.description,
         lookingFor: m.lookingFor,
         canOffer: m.canOffer,
@@ -179,11 +180,16 @@ router.post('/:id/photos', requireAuth, upload.array('photos', 10), async (req, 
       }
     }
 
-    const field = req.body.type === 'logo' ? 'logoUrl' : 'photos';
-    if (field === 'logoUrl') {
+    const photoType = req.body.type;
+    if (photoType === 'logo') {
       await prisma.member.update({
         where: { id: req.params.id },
         data: { logoUrl: processedFiles[0] }
+      });
+    } else if (photoType === 'profile') {
+      await prisma.member.update({
+        where: { id: req.params.id },
+        data: { photoUrl: processedFiles[0] }
       });
     } else {
       const currentPhotos = Array.isArray(member.photos) ? member.photos : [];
