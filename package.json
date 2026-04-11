@@ -6,7 +6,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && node --watch index.js",
     "dev:client": "cd client && npx vite",
-    "build": "npx prisma generate && npx prisma db push || true && node server/prisma/seed-events.js || true && cd client && npm install && npx vite build",
+    "build": "npx prisma generate && npx prisma db push || true && cd client && npm install && npx vite build",
     "start": "node server/index.js",
     "postinstall": "npx prisma generate || true",
     "db:push": "npx prisma db push",
