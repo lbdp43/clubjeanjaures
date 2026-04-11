@@ -65,6 +65,8 @@ router.get('/public', readLimiter, optionalAuth, async (req, res) => {
     const isAuthenticated = !!req.user;
     const result = members.map(m => {
       const visibility = m.visibility || {};
+      const phoneVisible = isAuthenticated || visibility.phone !== 'members';
+      const emailVisible = isAuthenticated || visibility.email !== 'members';
       return {
         id: m.id,
         companyName: m.companyName,
@@ -78,14 +80,14 @@ router.get('/public', readLimiter, optionalAuth, async (req, res) => {
         canOffer: m.canOffer,
         sector: m.sector,
         website: m.website,
-        phone: (isAuthenticated || visibility.phone === 'public') ? m.phone : null,
-        email: (isAuthenticated || visibility.email === 'public') ? m.user.email : null,
+        phone: phoneVisible ? m.phone : null,
+        email: emailVisible ? (m.user?.email || null) : null,
         latitude: m.latitude,
         longitude: m.longitude
       };
     });
 
-    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    res.set('Cache-Control', 'no-cache');
     res.json(result);
   } catch (err) {
     logger.error('Erreur members/public', { error: err.message, stack: err.stack });
@@ -156,10 +158,13 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const visibility = member.visibility || {};
 
     if (!isAuthenticated) {
-      if (visibility.phone !== 'public') member.phone = null;
-      if (visibility.email !== 'public') member.user.email = null;
+      if (visibility.phone === 'members') member.phone = null;
+      if (visibility.email === 'members') {
+        if (member.user) member.user.email = null;
+      }
     }
 
+    res.set('Cache-Control', 'no-cache');
     res.json(member);
   } catch (err) {
     logger.error('Erreur member detail', { error: err.message, stack: err.stack });
