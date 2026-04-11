@@ -42,6 +42,7 @@ export default function App() {
         <Routes>
           {/* Auth routes — outside Layout, loaded eagerly */}
           <Route path="/connexion" element={<Login />} />
+          <Route path="/verify" element={<Verify />} />
           <Route path="/auth/verify" element={<Verify />} />
           <Route path="/inscription" element={<Inscription />} />
           <Route path="/onboarding" element={<Onboarding />} />

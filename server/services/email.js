@@ -46,7 +46,7 @@ async function sendEmail(to, subject, html) {
 
 // ─── Magic Link ───
 async function sendMagicLink(email, token) {
-  const link = `${APP_URL}/auth/verify?token=${token}`;
+  const link = `${APP_URL}/verify?token=${token}`;
 
   return sendEmail(
     email,
