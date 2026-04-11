@@ -23,7 +23,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/verify/, /^\/auth\/verify/],
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
