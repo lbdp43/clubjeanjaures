@@ -1,45 +1,41 @@
-const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
 const APP_URL = process.env.APP_URL || 'http://localhost:5173';
+const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Club Jean Jaurès';
+const FROM_EMAIL = process.env.EMAIL_FROM || process.env.SMTP_USER || 'contact@clubjeanjaures.fr';
 
-// ─── Configuration du transporteur ───
-let transporter = null;
-
-if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
+// ─── Envoi via Brevo (ex-Sendinblue) API HTTP — fonctionne sur Railway ───
+async function sendViaBrevo(to, subject, html) {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+      sender: { name: FROM_NAME, email: FROM_EMAIL },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    })
   });
 
-  // Vérifier la connexion au démarrage
-  transporter.verify()
-    .then(() => logger.info('Connexion SMTP Gmail OK'))
-    .catch(err => logger.error('Erreur connexion SMTP', { error: err.message }));
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Brevo erreur ${res.status}`);
+  }
 }
 
-const FROM = process.env.SMTP_FROM || `Club Jean Jaurès <${process.env.SMTP_USER || 'noreply@clubjeanjaures.fr'}>`;
-
-// ─── Envoi principal (avec timeout 15s) ───
+// ─── Envoi principal ───
 async function sendEmail(to, subject, html) {
-  if (!transporter) {
-    logger.warn(`Email non envoyé (SMTP non configuré)`, { to, subject });
-    return { ok: false, error: 'Email non configuré. Ajoutez SMTP_USER et SMTP_PASS dans les variables Railway.' };
+  if (!process.env.BREVO_API_KEY) {
+    logger.warn('Email non envoyé (BREVO_API_KEY non configurée)', { to, subject });
+    return { ok: false, error: 'Email non configuré. Ajoutez BREVO_API_KEY dans les variables Railway.' };
   }
 
   try {
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout: le serveur email ne répond pas')), 15000)
-    );
-    await Promise.race([
-      transporter.sendMail({ from: FROM, to, subject, html }),
-      timeout
-    ]);
+    await sendViaBrevo(to, subject, html);
     logger.info(`Email envoyé à ${to}`);
     return { ok: true };
   } catch (err) {
