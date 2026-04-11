@@ -70,6 +70,34 @@ export default function Annuaire() {
         </svg>
       </div>
 
+      {sectors.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <button
+            onClick={() => setSelectedSector('')}
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
+              !selectedSector
+                ? 'bg-blue text-white'
+                : 'bg-white text-text-muted border border-gray-200 hover:border-blue'
+            }`}
+          >
+            Tous les métiers
+          </button>
+          {sectors.map(s => (
+            <button
+              key={s}
+              onClick={() => setSelectedSector(s === selectedSector ? '' : s)}
+              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
+                selectedSector === s
+                  ? 'bg-blue text-white'
+                  : 'bg-white text-text-muted border border-gray-200 hover:border-blue'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
       {error && (
         <p className="text-center text-red-500 text-sm py-4">
           Impossible de charger les données. Vérifiez votre connexion.

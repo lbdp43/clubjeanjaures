@@ -4,10 +4,19 @@ import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { whatsappLink, mapsUrl } from '../utils/helpers';
 
+const SECTORS = [
+  'Artisanat', 'Automobile', 'BTP / Construction', 'Commerce', 'Communication / Marketing',
+  'Comptabilité / Finance', 'Conseil', 'Culture / Loisirs', 'Droit / Juridique',
+  'Éducation / Formation', 'Environnement', 'Immobilier', 'Industrie',
+  'Informatique / Digital', 'Médical / Santé', 'Restauration / Hôtellerie',
+  'Services aux entreprises', 'Services à la personne', 'Sport / Bien-être',
+  'Transport / Logistique', 'Autre'
+];
+
 export default function Profile() {
   const { user, refreshUser } = useAuth();
   const [form, setForm] = useState({
-    companyName: '', jobTitle: '', phone: '', address: '', city: '',
+    companyName: '', jobTitle: '', sector: '', phone: '', address: '', city: '',
     website: '', description: '', lookingFor: '', canOffer: '',
     socialLinks: { linkedin: '', facebook: '', instagram: '' },
     visibility: { phone: 'public', email: 'public' }
@@ -24,6 +33,7 @@ export default function Profile() {
       setForm({
         companyName: user.member.companyName || '',
         jobTitle: user.member.jobTitle || '',
+        sector: user.member.sector || '',
         phone: user.member.phone || '',
         address: user.member.address || '',
         city: user.member.city || '',
@@ -182,6 +192,19 @@ export default function Profile() {
           <div>
             <label className="block text-sm font-medium mb-1">Métier / Activité *</label>
             <input value={form.jobTitle} onChange={e => setForm({...form, jobTitle: e.target.value})} className="input-field" required />
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium mb-1">Secteur d'activité</label>
+            <select
+              value={form.sector || ''}
+              onChange={e => setForm({...form, sector: e.target.value || null})}
+              className="input-field text-sm"
+            >
+              <option value="">Choisir un secteur...</option>
+              {SECTORS.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Téléphone *</label>
