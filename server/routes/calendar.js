@@ -9,7 +9,12 @@ router.get('/export', async (req, res) => {
   try {
     const events = await prisma.event.findMany({
       where: { date: { gte: new Date() } },
-      orderBy: { date: 'asc' }
+      orderBy: { date: 'asc' },
+      include: {
+        rsvps: {
+          include: { user: { select: { email: true, member: { select: { companyName: true, jobTitle: true } } } } }
+        }
+      }
     });
 
     const cal = createCalendar(events);
@@ -29,7 +34,12 @@ router.get('/feed.ics', async (req, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
     const events = await prisma.event.findMany({
       where: { date: { gte: sixMonthsAgo } },
-      orderBy: { date: 'asc' }
+      orderBy: { date: 'asc' },
+      include: {
+        rsvps: {
+          include: { user: { select: { email: true, member: { select: { companyName: true, jobTitle: true } } } } }
+        }
+      }
     });
     const cal = createCalendar(events);
     res.set('Content-Type', 'text/calendar; charset=utf-8');
