@@ -118,7 +118,7 @@ const server = app.listen(PORT, () => {
 });
 
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, shutting down gracefully...');
   server.close(() => {
     prisma.$disconnect().then(() => process.exit(0));
   });

@@ -48,7 +48,7 @@ router.get('/', requireAuth, requireMember, async (req, res) => {
     res.set('X-Total-Count', total.toString());
     res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / take) });
   } catch (err) {
-    console.error('Erreur posts:', err);
+    logger.error('Erreur posts', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -93,7 +93,7 @@ router.post('/', requireAuth, requireMember, upload.array('attachments', 5), asy
 
     res.status(201).json(post);
   } catch (err) {
-    console.error('Erreur create post:', err);
+    logger.error('Erreur create post', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -111,7 +111,7 @@ router.delete('/comments/:id', requireAuth, async (req, res) => {
     await prisma.comment.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   } catch (err) {
-    console.error('Erreur delete comment:', err);
+    logger.error('Erreur delete comment', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -129,7 +129,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     await prisma.post.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   } catch (err) {
-    console.error('Erreur delete post:', err);
+    logger.error('Erreur delete post', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -160,7 +160,7 @@ router.post('/:id/comments', requireAuth, requireMember, async (req, res) => {
 
     res.status(201).json(comment);
   } catch (err) {
-    console.error('Erreur create comment:', err);
+    logger.error('Erreur create comment', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -182,7 +182,7 @@ router.post('/:id/like', requireAuth, requireMember, async (req, res) => {
       res.json({ liked: true });
     }
   } catch (err) {
-    console.error('Erreur like:', err);
+    logger.error('Erreur like', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

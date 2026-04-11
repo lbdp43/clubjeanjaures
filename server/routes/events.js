@@ -43,7 +43,7 @@ router.get('/', readLimiter, async (req, res) => {
     res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json(events);
   } catch (err) {
-    console.error('Erreur events:', err);
+    logger.error('Erreur events', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -56,7 +56,7 @@ router.get('/:id', async (req, res) => {
     res.set('Cache-Control', 'public, max-age=60');
     res.json(event);
   } catch (err) {
-    console.error('Erreur event detail:', err);
+    logger.error('Erreur event detail', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -72,7 +72,7 @@ router.get('/:id/ics', async (req, res) => {
     res.set('Content-Disposition', `attachment; filename="${event.title}.ics"`);
     res.send(cal.toString());
   } catch (err) {
-    console.error('Erreur ics:', err);
+    logger.error('Erreur ics', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -101,7 +101,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 
     res.status(201).json(event);
   } catch (err) {
-    console.error('Erreur create event:', err);
+    logger.error('Erreur create event', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -137,7 +137,7 @@ router.post('/batch', requireAuth, requireAdmin, async (req, res) => {
 
     res.status(201).json({ count: created.count, recurrenceGroup });
   } catch (err) {
-    console.error('Erreur batch events:', err);
+    logger.error('Erreur batch events', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -157,7 +157,7 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
     const event = await prisma.event.update({ where: { id: req.params.id }, data });
     res.json(event);
   } catch (err) {
-    console.error('Erreur update event:', err);
+    logger.error('Erreur update event', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -168,7 +168,7 @@ router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
     await prisma.event.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   } catch (err) {
-    console.error('Erreur delete event:', err);
+    logger.error('Erreur delete event', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

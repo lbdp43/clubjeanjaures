@@ -110,7 +110,7 @@ router.get('/', readLimiter, requireAuth, requireMember, async (req, res) => {
     res.set('Cache-Control', 'private, max-age=60');
     res.json(members);
   } catch (err) {
-    console.error('Erreur members:', err);
+    logger.error('Erreur members', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -135,7 +135,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
     res.json(member);
   } catch (err) {
-    console.error('Erreur member detail:', err);
+    logger.error('Erreur member detail', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -216,7 +216,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 
     res.json(member);
   } catch (err) {
-    console.error('Erreur update member:', err);
+    logger.error('Erreur update member', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -268,7 +268,7 @@ router.post('/:id/photos', requireAuth, uploadLimiter, upload.array('photos', 10
 
     res.json({ urls: processedFiles });
   } catch (err) {
-    console.error('Erreur upload photos:', err);
+    logger.error('Erreur upload photos', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -289,7 +289,7 @@ router.delete('/:id/photo/:type', requireAuth, async (req, res) => {
     await prisma.member.update({ where: { id: req.params.id }, data });
     res.json({ success: true });
   } catch (err) {
-    console.error('Erreur delete photo/logo:', err);
+    logger.error('Erreur delete photo/logo', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -314,7 +314,7 @@ router.delete('/:id/photos/:idx', requireAuth, async (req, res) => {
     await prisma.member.update({ where: { id: req.params.id }, data: { photos } });
     res.json({ success: true });
   } catch (err) {
-    console.error('Erreur delete photo:', err);
+    logger.error('Erreur delete photo', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
