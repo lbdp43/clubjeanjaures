@@ -99,6 +99,25 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Public settings (no auth required)
+app.get('/api/settings/public', async (req, res) => {
+  try {
+    let settings = await prisma.clubSettings.findUnique({ where: { id: 1 } });
+    if (!settings) {
+      settings = { name: 'Club de Jean Jaurès', description: '', logoUrl: null, publicAgenda: true };
+    }
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json({
+      name: settings.name,
+      description: settings.description,
+      logoUrl: settings.logoUrl,
+      publicAgenda: settings.publicAgenda
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Serve frontend in production
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
 app.use(express.static(clientDist, {

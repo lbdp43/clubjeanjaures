@@ -185,6 +185,7 @@ router.put('/settings', requireAuth, requireAdmin, async (req, res) => {
     if (contactEmail !== undefined) data.contactEmail = contactEmail;
     if (contactPhone !== undefined) data.contactPhone = contactPhone;
     if (address !== undefined) data.address = xss(address);
+    if (req.body.publicAgenda !== undefined) data.publicAgenda = !!req.body.publicAgenda;
 
     const settings = await prisma.clubSettings.upsert({
       where: { id: 1 },

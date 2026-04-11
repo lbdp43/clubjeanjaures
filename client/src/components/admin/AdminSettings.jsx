@@ -13,7 +13,7 @@ export default function AdminSettings() {
   const [emailMsg, setEmailMsg] = useState('');
 
   useEffect(() => {
-    api.getSettings().then(setSettings).catch(() => {}).finally(() => setLoading(false));
+    api.getSettings().then(data => setSettings({ ...data, publicAgenda: data.publicAgenda ?? true })).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const handleSave = async (e) => {
@@ -100,6 +100,24 @@ export default function AdminSettings() {
         <div>
           <label className="block text-xs sm:text-sm font-medium mb-1">Adresse</label>
           <input value={settings.address || ''} onChange={e => setSettings({...settings, address: e.target.value})} className="input-field text-sm" />
+        </div>
+
+        <div className="flex items-center justify-between py-3 border-b border-gray-100">
+          <div>
+            <p className="text-sm font-medium">Agenda public</p>
+            <p className="text-xs text-text-muted">Les visiteurs non-membres peuvent voir l'agenda</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSettings({...settings, publicAgenda: !settings.publicAgenda})}
+            className={`relative w-11 h-6 rounded-full transition-colors ${
+              settings.publicAgenda ? 'bg-blue' : 'bg-gray-300'
+            }`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${
+              settings.publicAgenda ? 'translate-x-5' : ''
+            }`} />
+          </button>
         </div>
 
         {msg && <p className="text-sm text-green-600">{msg}</p>}

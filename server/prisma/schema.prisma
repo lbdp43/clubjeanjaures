@@ -179,6 +179,7 @@ model ClubSettings {
   contactEmail String? @map("contact_email")
   contactPhone String? @map("contact_phone")
   address      String?
+  publicAgenda Boolean @default(true) @map("public_agenda")
 
   @@map("club_settings")
 }

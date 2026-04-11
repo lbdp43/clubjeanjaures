@@ -115,6 +115,7 @@ export const api = {
   adminUpdateProfile: (id, data) => apiFetch(`/admin/members/${id}/profile`, {
     method: 'PUT', body: JSON.stringify(data)
   }),
+  getPublicSettings: () => apiFetch('/settings/public'),
   getSettings: () => apiFetch('/admin/settings'),
   updateSettings: (data) => apiFetch('/admin/settings', {
     method: 'PUT', body: JSON.stringify(data)

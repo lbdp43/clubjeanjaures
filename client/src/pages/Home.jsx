@@ -13,9 +13,9 @@ export default function Home() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    api.getPublicSettings().then(setSettings).catch(() => {}); // Settings failure is silent
     api.getEvents().then(setEvents).catch(() => setError(true));
     api.getPublicMembers().then(setMembers).catch(() => setError(true));
-    api.getSettings().then(setSettings).catch(() => setError(true));
   }, []);
 
   return (

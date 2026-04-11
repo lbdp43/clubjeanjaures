@@ -1,7 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../prisma/db');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const { createSingleEvent } = require('../services/ical');
 const xss = require('xss');
@@ -16,8 +16,16 @@ const readLimiter = rateLimit({
 });
 
 // GET /api/events
-router.get('/', readLimiter, async (req, res) => {
+router.get('/', readLimiter, optionalAuth, async (req, res) => {
   try {
+    // Check if non-members can see the agenda
+    if (!req.user) {
+      const settings = await prisma.clubSettings.findUnique({ where: { id: 1 } });
+      if (settings && !settings.publicAgenda) {
+        return res.status(403).json({ error: 'L\'agenda n\'est accessible qu\'aux membres' });
+      }
+    }
+
     const { past, type } = req.query;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -50,8 +58,16 @@ router.get('/', readLimiter, async (req, res) => {
 });
 
 // GET /api/events/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
+    // Check if non-members can see the agenda
+    if (!req.user) {
+      const settings = await prisma.clubSettings.findUnique({ where: { id: 1 } });
+      if (settings && !settings.publicAgenda) {
+        return res.status(403).json({ error: 'L\'agenda n\'est accessible qu\'aux membres' });
+      }
+    }
+
     const event = await prisma.event.findUnique({
       where: { id: req.params.id },
       include: {
