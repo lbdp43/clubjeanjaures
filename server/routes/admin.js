@@ -260,6 +260,13 @@ router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) =
     if (lookingFor !== undefined) data.lookingFor = xss(lookingFor);
     if (canOffer !== undefined) data.canOffer = xss(canOffer);
 
+    if (req.body.visibility) {
+      const vis = req.body.visibility;
+      if (typeof vis === 'object' && !Array.isArray(vis)) {
+        data.visibility = vis;
+      }
+    }
+
     const member = await prisma.member.upsert({
       where: { id: req.params.id },
       update: data,

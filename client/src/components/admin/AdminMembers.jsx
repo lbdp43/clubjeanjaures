@@ -172,7 +172,8 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
       website: m.member?.website || '',
       description: m.member?.description || '',
       lookingFor: m.member?.lookingFor || '',
-      canOffer: m.member?.canOffer || ''
+      canOffer: m.member?.canOffer || '',
+      visibility: m.member?.visibility || { phone: 'public', email: 'public' }
     });
   };
 
@@ -374,6 +375,33 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Ce que je peux apporter</label>
                   <textarea value={profileForm.canOffer || ''} onChange={e => setProfileForm({...profileForm, canOffer: e.target.value})} className="input-field text-sm resize-none" rows={2} />
+                </div>
+              </div>
+              <div className="pt-3 border-t border-gray-100">
+                <p className="text-xs font-medium text-gray-600 mb-2">Visibilité pour les non-membres</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Téléphone</label>
+                    <select
+                      value={profileForm.visibility?.phone || 'public'}
+                      onChange={e => setProfileForm({...profileForm, visibility: {...(profileForm.visibility || {}), phone: e.target.value}})}
+                      className="input-field text-sm"
+                    >
+                      <option value="public">Visible publiquement</option>
+                      <option value="members">Membres uniquement</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Email</label>
+                    <select
+                      value={profileForm.visibility?.email || 'public'}
+                      onChange={e => setProfileForm({...profileForm, visibility: {...(profileForm.visibility || {}), email: e.target.value}})}
+                      className="input-field text-sm"
+                    >
+                      <option value="public">Visible publiquement</option>
+                      <option value="members">Membres uniquement</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               {profileMsg && <p className={`text-sm ${profileMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{profileMsg}</p>}

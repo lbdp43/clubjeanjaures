@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
@@ -8,19 +8,32 @@ function EventCard({ event, onRsvpChange }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [localParticipating, setLocalParticipating] = useState(false);
+  const [localCount, setLocalCount] = useState(0);
 
-  const rsvpCount = event._count?.rsvps || 0;
-  const isParticipating = user && event.rsvps?.some(r => r.userId === user.id);
+  useEffect(() => {
+    setLocalParticipating(user && event.rsvps?.some(r => r.userId === user.id));
+    setLocalCount(event._count?.rsvps || 0);
+  }, [event, user]);
 
   const handleRsvp = async (e) => {
     e.stopPropagation();
     if (!user || rsvpLoading) return;
+
+    const was = localParticipating;
+    setLocalParticipating(!was);
+    setLocalCount(c => was ? c - 1 : c + 1);
+
     setRsvpLoading(true);
     try {
       await api.toggleRsvp(event.id);
       if (onRsvpChange) onRsvpChange();
-    } catch {}
-    setRsvpLoading(false);
+    } catch {
+      setLocalParticipating(was);
+      setLocalCount(c => was ? c + 1 : c - 1);
+    } finally {
+      setRsvpLoading(false);
+    }
   };
 
   const dateObj = new Date(event.date);
@@ -77,12 +90,12 @@ function EventCard({ event, onRsvpChange }) {
 
           {/* Participants + RSVP */}
           <div className="flex items-center gap-3 mt-2">
-            {rsvpCount > 0 && (
+            {localCount > 0 && (
               <span className="text-xs text-text-muted flex items-center gap-1">
                 <svg className="w-3.5 h-3.5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128H5.228A2 2 0 013 17.16V17a6.003 6.003 0 017.212-5.876M15 19.128a9.38 9.38 0 002.625.372" />
                 </svg>
-                {rsvpCount} participant{rsvpCount !== 1 ? 's' : ''}
+                {localCount} participant{localCount !== 1 ? 's' : ''}
               </span>
             )}
             {user && (
@@ -90,12 +103,12 @@ function EventCard({ event, onRsvpChange }) {
                 onClick={handleRsvp}
                 disabled={rsvpLoading}
                 className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
-                  isParticipating
-                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  localParticipating
+                    ? 'bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600'
                     : 'bg-blue-light text-blue-dark hover:bg-blue/10'
                 } ${rsvpLoading ? 'opacity-50' : ''}`}
               >
-                {isParticipating ? 'Je participe ✓' : 'Participer'}
+                {localParticipating ? 'Je participe ✓' : 'Participer'}
               </button>
             )}
           </div>
