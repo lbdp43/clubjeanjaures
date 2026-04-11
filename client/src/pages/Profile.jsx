@@ -25,6 +25,9 @@ export default function Profile() {
   const [msg, setMsg] = useState('');
   const [uploadMsg, setUploadMsg] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState('');
   const logoRef = useRef();
   const profilePhotoRef = useRef();
 
@@ -46,6 +49,28 @@ export default function Profile() {
       });
     }
   }, [user]);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwMsg('');
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      setPwMsg('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    if (pwForm.newPassword.length < 8) {
+      setPwMsg('Le nouveau mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+    setPwSaving(true);
+    try {
+      const res = await api.changePassword(pwForm.currentPassword, pwForm.newPassword);
+      setPwMsg(res.message || 'Mot de passe modifié.');
+      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      setPwMsg(err.message || 'Erreur lors du changement.');
+    }
+    setPwSaving(false);
+  };
 
   if (!user) return <Navigate to="/connexion" replace />;
 
@@ -319,6 +344,52 @@ export default function Profile() {
           <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
         </label>
       </div>
+
+      {/* Mot de passe */}
+      <form onSubmit={handleChangePassword} className="card p-4 sm:p-6 space-y-4">
+        <h3 className="font-semibold">Changer mon mot de passe</h3>
+        <div>
+          <label className="block text-sm font-medium mb-1">Mot de passe actuel</label>
+          <input
+            type="password"
+            value={pwForm.currentPassword}
+            onChange={e => setPwForm({...pwForm, currentPassword: e.target.value})}
+            className="input-field"
+            required
+            autoComplete="current-password"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Nouveau mot de passe</label>
+          <input
+            type="password"
+            value={pwForm.newPassword}
+            onChange={e => setPwForm({...pwForm, newPassword: e.target.value})}
+            className="input-field"
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Confirmer le nouveau mot de passe</label>
+          <input
+            type="password"
+            value={pwForm.confirmPassword}
+            onChange={e => setPwForm({...pwForm, confirmPassword: e.target.value})}
+            className="input-field"
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
+        </div>
+        {pwMsg && (
+          <p className={`text-sm ${pwMsg.includes('modifié') ? 'text-green-600' : 'text-red-500'}`}>{pwMsg}</p>
+        )}
+        <button type="submit" className="btn-secondary text-sm" disabled={pwSaving}>
+          {pwSaving ? 'Modification...' : 'Modifier le mot de passe'}
+        </button>
+      </form>
 
       {/* Aperçu des liens de contact */}
       {(form.phone || user?.email || form.website || form.socialLinks?.linkedin || form.socialLinks?.facebook || form.socialLinks?.instagram || form.address) && (

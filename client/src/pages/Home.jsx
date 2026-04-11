@@ -12,11 +12,18 @@ export default function Home() {
   const [settings, setSettings] = useState(null);
   const [error, setError] = useState(false);
 
+  const showEvents = user || !settings || settings.publicAgenda !== false;
+
   useEffect(() => {
-    api.getPublicSettings().then(setSettings).catch(() => {}); // Settings failure is silent
-    api.getEvents().then(setEvents).catch(() => setError(true));
+    api.getPublicSettings().then(setSettings).catch(() => {});
     api.getPublicMembers().then(setMembers).catch(() => setError(true));
   }, []);
+
+  useEffect(() => {
+    if (showEvents) {
+      api.getEvents().then(setEvents).catch(() => {});
+    }
+  }, [showEvents]);
 
   return (
     <div className="space-y-8 sm:space-y-12 fade-in">
@@ -50,21 +57,30 @@ export default function Home() {
       )}
 
       {/* Prochains événements */}
-      <section>
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Prochains événements</h2>
-          <Link to="/agenda" className="text-blue text-sm hover:underline">Voir tout</Link>
-        </div>
-        {events.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {events.slice(0, 6).map(event => (
-              <EventCard key={event.id} event={event} />
-            ))}
+      {showEvents ? (
+        <section>
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Prochains événements</h2>
+            <Link to="/agenda" className="text-blue text-sm hover:underline">Voir tout</Link>
           </div>
-        ) : (
-          <p className="text-text-muted">Aucun événement à venir.</p>
-        )}
-      </section>
+          {events.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {events.slice(0, 6).map(event => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-text-muted">Aucun événement à venir.</p>
+          )}
+        </section>
+      ) : (
+        <section className="text-center py-8">
+          <p className="text-text-muted text-sm">
+            L'agenda est réservé aux membres.{' '}
+            <Link to="/connexion" className="text-blue hover:underline">Connectez-vous</Link> pour voir les événements.
+          </p>
+        </section>
+      )}
 
       {/* Annuaire */}
       <section>

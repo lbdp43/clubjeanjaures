@@ -106,12 +106,12 @@ app.get('/api/settings/public', async (req, res) => {
     if (!settings) {
       settings = { name: 'Club de Jean Jaurès', description: '', logoUrl: null, publicAgenda: true };
     }
-    res.set('Cache-Control', 'public, max-age=300');
+    res.set('Cache-Control', 'no-cache');
     res.json({
       name: settings.name,
       description: settings.description,
       logoUrl: settings.logoUrl,
-      publicAgenda: settings.publicAgenda
+      publicAgenda: settings.publicAgenda ?? true
     });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });

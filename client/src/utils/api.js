@@ -37,6 +37,9 @@ export const api = {
   verifyToken: (token) => apiFetch(`/auth/verify?token=${encodeURIComponent(token)}`),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
   getMe: () => apiFetch('/auth/me'),
+  changePassword: (currentPassword, newPassword) => apiFetch('/auth/password', {
+    method: 'PUT', body: JSON.stringify({ currentPassword, newPassword })
+  }),
   completeOnboarding: () => apiFetch('/auth/onboarding', { method: 'PUT' }),
 
   // Members

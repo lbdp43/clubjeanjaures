@@ -46,7 +46,10 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
       where,
       orderBy: { date: past === 'true' ? 'desc' : 'asc' },
       take: limit,
-      include: { _count: { select: { rsvps: true } } }
+      include: {
+        _count: { select: { rsvps: true } },
+        rsvps: { select: { userId: true } }
+      }
     });
 
     res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
