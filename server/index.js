@@ -43,7 +43,7 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "blob:"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com"],
       connectSrc: ["'self'"],
     }
   }
@@ -70,8 +70,13 @@ app.use((req, res, next) => {
 const allowedOrigins = [process.env.APP_URL, 'http://localhost:5173'].filter(Boolean);
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
+    // Pas d'origin = requête same-origin ou serveur-to-serveur
+    if (!origin) return cb(null, true);
+    // Origin dans la liste configurée
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    // Accepter tout sous-domaine Railway
+    if (origin.endsWith('.up.railway.app')) return cb(null, true);
+    cb(null, false);
   },
   credentials: true
 }));
