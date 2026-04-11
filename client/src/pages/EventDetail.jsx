@@ -283,21 +283,23 @@ export default function EventDetail() {
                     disabled={rsvpLoading}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                       participating
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-blue text-white hover:bg-blue-dark'
+                        ? 'bg-green-100 text-green-700 ring-1 ring-green-300'
+                        : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'
                     }`}
                   >
-                    {rsvpLoading ? '...' : participating ? 'Je participe ✓' : 'Je participe'}
+                    {rsvpLoading ? '...' : '✓ Je participe'}
                   </button>
-                  {participating && (
-                    <button
-                      onClick={handleRsvp}
-                      disabled={rsvpLoading}
-                      className="px-3 py-2 rounded-full text-sm text-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
-                    >
-                      Annuler
-                    </button>
-                  )}
+                  <button
+                    onClick={() => { if (participating) handleRsvp(); }}
+                    disabled={rsvpLoading}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      !participating
+                        ? 'bg-red-50 text-red-500 ring-1 ring-red-200'
+                        : 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500'
+                    }`}
+                  >
+                    {rsvpLoading ? '...' : '✗ Je ne peux pas'}
+                  </button>
                 </div>
               )}
             </div>
