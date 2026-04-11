@@ -125,6 +125,8 @@ app.get('/api/settings/public', async (req, res) => {
 
 // Serve frontend in production
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
+const indexHtml = path.join(clientDist, 'index.html');
+
 app.use(express.static(clientDist, {
   maxAge: '1d',
   setHeaders: (res, filePath) => {
@@ -133,10 +135,18 @@ app.use(express.static(clientDist, {
     }
   }
 }));
-app.get('*', (req, res) => {
+
+// SPA fallback — serve index.html for all frontend routes
+const serveIndex = (req, res) => {
   res.set('Cache-Control', 'no-cache');
-  res.sendFile(path.join(clientDist, 'index.html'));
-});
+  res.sendFile(indexHtml, (err) => {
+    if (err) {
+      logger.error('index.html introuvable', { path: indexHtml, error: err.message });
+      res.status(500).send('Build frontend introuvable. Vérifiez le build.');
+    }
+  });
+};
+app.get('*', serveIndex);
 
 const server = app.listen(PORT, () => {
   logger.info(`Serveur démarré sur le port ${PORT}`);
