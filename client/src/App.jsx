@@ -4,6 +4,9 @@ import { useAuth } from './hooks/useAuth';
 import { useOnline } from './hooks/useOnline';
 import Layout from './components/layout/Layout';
 import Verify from './pages/Verify';
+import Login from './pages/Login';
+import Inscription from './pages/Inscription';
+import Onboarding from './pages/Onboarding';
 
 const Home = lazy(() => import('./pages/Home'));
 const Annuaire = lazy(() => import('./pages/Annuaire'));
@@ -14,10 +17,6 @@ const Feed = lazy(() => import('./pages/Feed'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Profile = lazy(() => import('./pages/Profile'));
 const MemberDashboard = lazy(() => import('./pages/MemberDashboard'));
-const Login = lazy(() => import('./pages/Login'));
-// Verify loaded eagerly (not lazy) — critical for magic link auth
-const Onboarding = lazy(() => import('./pages/Onboarding'));
-const Inscription = lazy(() => import('./pages/Inscription'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
@@ -41,10 +40,13 @@ export default function App() {
         </div>
       }>
         <Routes>
+          {/* Auth routes — outside Layout, loaded eagerly */}
           <Route path="/connexion" element={<Login />} />
           <Route path="/auth/verify" element={<Verify />} />
           <Route path="/inscription" element={<Inscription />} />
           <Route path="/onboarding" element={<Onboarding />} />
+
+          {/* App routes — inside Layout */}
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/annuaire" element={<Annuaire />} />
@@ -55,8 +57,10 @@ export default function App() {
             <Route path="/admin/*" element={<Admin />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/tableau-de-bord" element={<MemberDashboard />} />
-            <Route path="*" element={<NotFound />} />
           </Route>
+
+          {/* Catch-all 404 — OUTSIDE Layout to avoid matching conflicts */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </>

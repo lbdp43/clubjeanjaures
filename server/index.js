@@ -134,6 +134,7 @@ app.use(express.static(clientDist, {
   }
 }));
 app.get('*', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
   res.sendFile(path.join(clientDist, 'index.html'));
 });
 
