@@ -56,8 +56,9 @@ export default function AdminSettings() {
       setEmailMessage('');
     } catch (err) {
       setEmailMsg(err.message || "Erreur lors de l'envoi.");
+    } finally {
+      setEmailSending(false);
     }
-    setEmailSending(false);
   };
 
   if (!settings) return null;

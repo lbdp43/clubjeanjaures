@@ -66,8 +66,9 @@ export default function AdminMembers() {
       setInviteEmail('');
     } catch (err) {
       setInviteMsg(err.message || "Erreur lors de l'envoi");
+    } finally {
+      setInviteLoading(false);
     }
-    setInviteLoading(false);
   };
 
   if (loading) {

@@ -25,15 +25,21 @@ if (process.env.SMTP_USER && process.env.SMTP_PASS) {
 
 const FROM = process.env.SMTP_FROM || `Club Jean Jaurès <${process.env.SMTP_USER || 'noreply@clubjeanjaures.fr'}>`;
 
-// ─── Envoi principal ───
+// ─── Envoi principal (avec timeout 15s) ───
 async function sendEmail(to, subject, html) {
   if (!transporter) {
     logger.warn(`Email non envoyé (SMTP non configuré)`, { to, subject });
-    return { ok: false, error: 'Email non configuré. Ajoutez SMTP_USER et SMTP_PASS dans Railway.' };
+    return { ok: false, error: 'Email non configuré. Ajoutez SMTP_USER et SMTP_PASS dans les variables Railway.' };
   }
 
   try {
-    await transporter.sendMail({ from: FROM, to, subject, html });
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout: le serveur email ne répond pas')), 15000)
+    );
+    await Promise.race([
+      transporter.sendMail({ from: FROM, to, subject, html }),
+      timeout
+    ]);
     logger.info(`Email envoyé à ${to}`);
     return { ok: true };
   } catch (err) {
