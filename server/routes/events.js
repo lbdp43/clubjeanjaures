@@ -52,7 +52,7 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
       }
     });
 
-    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    res.set('Cache-Control', 'no-cache');
     res.json(events);
   } catch (err) {
     logger.error('Erreur events', { error: err.message, stack: err.stack });
@@ -79,7 +79,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       }
     });
     if (!event) return res.status(404).json({ error: 'Événement introuvable' });
-    res.set('Cache-Control', 'public, max-age=60');
+    res.set('Cache-Control', 'no-cache');
     res.json(event);
   } catch (err) {
     logger.error('Erreur event detail', { error: err.message, stack: err.stack });
