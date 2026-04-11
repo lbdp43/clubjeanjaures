@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
@@ -121,6 +122,56 @@ app.get('/api/settings/public', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
+});
+
+// ─── Magic link verification — server-side (bypasses SPA routing) ───
+const MAGIC_SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 jours
+app.get('/verify', async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.redirect('/?error=token_missing');
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await prisma.user.findFirst({
+      where: {
+        magicToken: hashedToken,
+        magicTokenExpires: { gt: new Date() }
+      }
+    });
+
+    if (!user) {
+      return res.redirect('/connexion?error=token_invalid');
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { magicToken: null, magicTokenExpires: null, lastLogin: new Date() }
+    });
+
+    const session = await prisma.session.create({
+      data: { userId: user.id, expiresAt: new Date(Date.now() + MAGIC_SESSION_DURATION) }
+    });
+
+    res.cookie('session_id', session.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: MAGIC_SESSION_DURATION
+    });
+
+    res.redirect('/');
+  } catch (err) {
+    logger.error('Erreur verification magic link', { error: err.message, stack: err.stack });
+    res.redirect('/connexion?error=server_error');
+  }
+});
+
+// Also handle /auth/verify for any old emails
+app.get('/auth/verify', (req, res) => {
+  const token = req.query.token || '';
+  res.redirect(`/verify?token=${encodeURIComponent(token)}`);
 });
 
 // Serve frontend in production
