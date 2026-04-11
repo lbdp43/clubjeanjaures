@@ -123,8 +123,10 @@ export default function Agenda() {
       )}
 
       {/* Onglets */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+      <div role="tablist" aria-label="Filtrer par période" className="flex gap-1 bg-gray-100 rounded-xl p-1">
         <button
+          role="tab"
+          aria-selected={tab === 'upcoming'}
           onClick={() => setTab('upcoming')}
           className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-medium transition-colors ${
             tab === 'upcoming' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
@@ -133,6 +135,8 @@ export default function Agenda() {
           À venir
         </button>
         <button
+          role="tab"
+          aria-selected={tab === 'past'}
           onClick={() => setTab('past')}
           className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-medium transition-colors ${
             tab === 'past' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
@@ -148,6 +152,7 @@ export default function Agenda() {
           <button
             key={t.value}
             onClick={() => setFilter(t.value)}
+            aria-pressed={filter === t.value}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
               filter === t.value
                 ? 'bg-blue text-white'

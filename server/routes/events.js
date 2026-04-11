@@ -1,14 +1,22 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const prisma = require('../prisma/db');
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const { createSingleEvent } = require('../services/ical');
 const xss = require('xss');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
+const readLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Trop de requêtes, réessayez plus tard' }
+});
+
 // GET /api/events
-router.get('/', async (req, res) => {
+router.get('/', readLimiter, async (req, res) => {
   try {
     const { past, type } = req.query;
     const now = new Date();
@@ -32,6 +40,7 @@ router.get('/', async (req, res) => {
       take: limit
     });
 
+    res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json(events);
   } catch (err) {
     console.error('Erreur events:', err);
@@ -44,6 +53,7 @@ router.get('/:id', async (req, res) => {
   try {
     const event = await prisma.event.findUnique({ where: { id: req.params.id } });
     if (!event) return res.status(404).json({ error: 'Événement introuvable' });
+    res.set('Cache-Control', 'public, max-age=60');
     res.json(event);
   } catch (err) {
     console.error('Erreur event detail:', err);

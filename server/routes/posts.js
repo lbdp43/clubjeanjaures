@@ -5,6 +5,7 @@ const { requireMember } = require('../middleware/roles');
 const upload = require('../middleware/upload');
 const { uploadImage, uploadFile } = require('../services/cloudinaryUpload');
 const xss = require('xss');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -24,16 +25,18 @@ router.get('/', requireAuth, requireMember, async (req, res) => {
             select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }
           },
           comments: {
-            take: 30,
+            take: 3,
+            orderBy: { createdAt: 'desc' },
             include: {
               author: {
-                select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }
+                select: { id: true, email: true, member: { select: { companyName: true } } }
               }
-            },
-            orderBy: { createdAt: 'asc' }
+            }
           },
-          likes: { select: { userId: true } },
-          _count: { select: { likes: true, comments: true } }
+          _count: { select: { comments: true, likes: true } },
+          likes: {
+            select: { userId: true }
+          }
         },
         orderBy: { createdAt: 'desc' },
         take,
@@ -42,6 +45,7 @@ router.get('/', requireAuth, requireMember, async (req, res) => {
       prisma.post.count({ where })
     ]);
 
+    res.set('X-Total-Count', total.toString());
     res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / take) });
   } catch (err) {
     console.error('Erreur posts:', err);

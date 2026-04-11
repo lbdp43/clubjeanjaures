@@ -9,6 +9,11 @@
   h1, h2, h3 {
     @apply font-display;
   }
+  *:focus-visible {
+    outline: 2px solid #2B5C8A;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 @layer components {
@@ -83,4 +88,13 @@
 /* Mode hors-ligne */
 .offline-banner {
   @apply fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 text-sm font-medium z-50;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .slide-up {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }

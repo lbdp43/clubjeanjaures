@@ -57,6 +57,8 @@ model User {
   eventsCreated Event[]
 
   @@map("users")
+  @@index([status])
+  @@index([role])
 }
 
 model Member {
@@ -76,7 +78,7 @@ model Member {
   description String?
   lookingFor  String?  @map("looking_for")
   canOffer    String?  @map("can_offer")
-  visibility  Json     @default("{\"phone\":\"public\",\"email\":\"public\"}")
+  visibility  Json     @default("{\"phone\":\"private\",\"email\":\"private\"}")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [id], references: [id], onDelete: Cascade)

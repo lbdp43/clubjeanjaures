@@ -21,12 +21,13 @@ export default function BottomNav() {
   });
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-2 z-40 safe-bottom">
+    <nav role="navigation" aria-label="Navigation principale" className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-2 z-40 safe-bottom">
       {items.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
           to={to}
           end={to === '/'}
+          aria-label={label}
           className={({ isActive }) =>
             `flex flex-col items-center gap-0.5 px-1.5 py-1 text-[10px] sm:text-xs transition-colors ${
               isActive ? 'text-blue' : 'text-text-muted'

@@ -17,6 +17,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Verify = lazy(() => import('./pages/Verify'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const Inscription = lazy(() => import('./pages/Inscription'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
   const { loading } = useAuth();
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/admin/*" element={<Admin />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/tableau-de-bord" element={<MemberDashboard />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </Suspense>

@@ -21,7 +21,7 @@ export default function Header() {
             <Link to="/tableau-de-bord" className="text-sm text-text-muted hover:text-blue transition-colors truncate max-w-[120px] sm:max-w-[200px]">
               {user.member?.companyName || user.email}
             </Link>
-            <button onClick={logout} className="text-sm text-text-muted hover:text-red-500 transition-colors whitespace-nowrap">
+            <button onClick={logout} aria-label="Déconnexion" className="text-sm text-text-muted hover:text-red-500 transition-colors whitespace-nowrap">
               Déconnexion
             </button>
           </>

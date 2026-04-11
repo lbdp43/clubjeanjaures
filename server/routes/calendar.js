@@ -25,7 +25,12 @@ router.get('/export', async (req, res) => {
 // GET /api/calendar/feed.ics — flux iCal (abonnement webcal://)
 router.get('/feed.ics', async (req, res) => {
   try {
-    const events = await prisma.event.findMany({ orderBy: { date: 'asc' } });
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const events = await prisma.event.findMany({
+      where: { date: { gte: sixMonthsAgo } },
+      orderBy: { date: 'asc' }
+    });
     const cal = createCalendar(events);
     res.set('Content-Type', 'text/calendar; charset=utf-8');
     res.set('Cache-Control', 'public, max-age=3600');

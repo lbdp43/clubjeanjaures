@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const prisma = require('../prisma/db');
 const { sendMagicLink } = require('../services/email');
 const { requireAuth } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -55,6 +56,11 @@ router.post('/register', authLimiter, async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'Format d\'email invalide' });
+    }
+
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing && existing.passwordHash) {
       return res.status(409).json({ error: 'Un compte existe déjà avec cet email.' });
@@ -77,7 +83,7 @@ router.post('/register', authLimiter, async (req, res) => {
     await createSession(res, user.id);
     res.status(201).json({ success: true, userId: user.id });
   } catch (err) {
-    console.error('Erreur register:', err);
+    logger.error('Erreur register', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -92,6 +98,12 @@ router.post('/login', authLimiter, async (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'Format d\'email invalide' });
+    }
+
     const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
     if (!user || !user.passwordHash) {
@@ -115,7 +127,7 @@ router.post('/login', authLimiter, async (req, res) => {
     await createSession(res, user.id);
     res.json({ success: true, userId: user.id });
   } catch (err) {
-    console.error('Erreur login:', err);
+    logger.error('Erreur login', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -128,6 +140,11 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email requis' });
 
     const normalizedEmail = email.toLowerCase().trim();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'Format d\'email invalide' });
+    }
 
     let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
@@ -157,7 +174,7 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
     }
     res.json({ message: 'Lien de connexion envoyé par email.' });
   } catch (err) {
-    console.error('Erreur magic-link:', err);
+    logger.error('Erreur magic-link', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -188,7 +205,7 @@ router.get('/verify', async (req, res) => {
     await createSession(res, user.id);
     res.json({ success: true, userId: user.id });
   } catch (err) {
-    console.error('Erreur verify:', err);
+    logger.error('Erreur verify', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

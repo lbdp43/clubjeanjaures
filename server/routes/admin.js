@@ -8,6 +8,7 @@ const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
 const { sendInvitation, sendBulkEmail } = require('../services/email');
 const xss = require('xss');
+const logger = require('../utils/logger');
 
 const SALT_ROUNDS = 10;
 
@@ -46,8 +47,12 @@ router.get('/dashboard', requireAuth, requireAdmin, async (req, res) => {
         take: 5
       }),
       prisma.post.findMany({
-        include: {
-          author: { select: { email: true, member: { select: { companyName: true } } } }
+        select: {
+          id: true,
+          content: true,
+          createdAt: true,
+          author: { select: { email: true, member: { select: { companyName: true } } } },
+          _count: { select: { comments: true, likes: true } }
         },
         orderBy: { createdAt: 'desc' },
         take: 5
@@ -60,6 +65,7 @@ router.get('/dashboard', requireAuth, requireAdmin, async (req, res) => {
       })
     ]);
 
+    res.set('Cache-Control', 'private, max-age=30');
     res.json({
       stats: { activeMembers, suspendedMembers, totalUsers, activeDemands },
       upcomingEvents,
@@ -67,7 +73,7 @@ router.get('/dashboard', requireAuth, requireAdmin, async (req, res) => {
       recentUsers
     });
   } catch (err) {
-    console.error('Erreur dashboard:', err);
+    logger.error('Erreur dashboard', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -89,7 +95,7 @@ router.get('/members', requireAuth, requireAdmin, async (req, res) => {
     const safeUsers = users.map(({ magicToken, magicTokenExpires, ...u }) => u);
     res.json(safeUsers);
   } catch (err) {
-    console.error('Erreur admin members:', err);
+    logger.error('Erreur admin members', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -109,7 +115,7 @@ router.put('/members/:id/role', requireAuth, requireAdmin, adminActionLimiter, a
 
     res.json({ id: user.id, role: user.role });
   } catch (err) {
-    console.error('Erreur update role:', err);
+    logger.error('Erreur update role', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -129,7 +135,7 @@ router.put('/members/:id/status', requireAuth, requireAdmin, adminActionLimiter,
 
     res.json({ id: user.id, status: user.status });
   } catch (err) {
-    console.error('Erreur update status:', err);
+    logger.error('Erreur update status', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -150,7 +156,7 @@ router.delete('/members/:id', requireAuth, requireAdmin, adminActionLimiter, asy
     ]);
     res.json({ success: true });
   } catch (err) {
-    console.error('Erreur delete member:', err);
+    logger.error('Erreur delete member', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -164,7 +170,7 @@ router.get('/settings', requireAuth, requireAdmin, async (req, res) => {
     }
     res.json(settings);
   } catch (err) {
-    console.error('Erreur get settings:', err);
+    logger.error('Erreur get settings', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -188,7 +194,7 @@ router.put('/settings', requireAuth, requireAdmin, async (req, res) => {
 
     res.json(settings);
   } catch (err) {
-    console.error('Erreur update settings:', err);
+    logger.error('Erreur update settings', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -208,7 +214,7 @@ router.post('/settings/logo', requireAuth, requireAdmin, upload.single('logo'), 
 
     res.json({ logoUrl });
   } catch (err) {
-    console.error('Erreur upload logo:', err);
+    logger.error('Erreur upload logo', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -229,7 +235,7 @@ router.put('/members/:id/password', requireAuth, requireAdmin, adminActionLimite
 
     res.json({ success: true });
   } catch (err) {
-    console.error('Erreur reset password:', err);
+    logger.error('Erreur reset password', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -268,7 +274,7 @@ router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) =
 
     res.json(member);
   } catch (err) {
-    console.error('Erreur edit profile:', err);
+    logger.error('Erreur edit profile', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -287,7 +293,7 @@ router.post('/invite', requireAuth, requireAdmin, emailLimiter, async (req, res)
     }
     res.json({ success: true, message: 'Invitation envoyée.' });
   } catch (err) {
-    console.error('Erreur invite:', err);
+    logger.error('Erreur invite', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -332,7 +338,7 @@ router.post('/notify', requireAuth, requireAdmin, emailLimiter, async (req, res)
     }
     res.json({ sent, total: emails.length, message: `Email envoyé à ${sent}/${emails.length} membres.` });
   } catch (err) {
-    console.error('Erreur notify:', err);
+    logger.error('Erreur notify', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

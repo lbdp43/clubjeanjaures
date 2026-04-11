@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 const prisma = require('./prisma/db');
+const logger = require('./utils/logger');
 
 const authRoutes = require('./routes/auth');
 const memberRoutes = require('./routes/members');
@@ -14,6 +15,23 @@ const adminRoutes = require('./routes/admin');
 const calendarRoutes = require('./routes/calendar');
 const favoriteRoutes = require('./routes/favorites');
 const uploadRoutes = require('./routes/uploads');
+
+// Validation des variables d'environnement
+const requiredEnvVars = ['DATABASE_URL'];
+const optionalEnvVars = ['APP_URL', 'RESEND_API_KEY', 'SESSION_SECRET', 'PORT'];
+
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`ERREUR: Variable d'environnement ${envVar} manquante`);
+    process.exit(1);
+  }
+}
+
+for (const envVar of optionalEnvVars) {
+  if (!process.env[envVar]) {
+    console.warn(`AVERTISSEMENT: Variable ${envVar} non définie, utilisation de la valeur par défaut`);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,10 +49,28 @@ app.use(helmet({
   }
 }));
 app.use(compression());
+
+// Request logging
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 1000 || res.statusCode >= 400) {
+      logger.warn('Slow or error request', {
+        method: req.method,
+        url: req.originalUrl,
+        status: res.statusCode,
+        duration: `${duration}ms`
+      });
+    }
+  });
+  next();
+});
+
 const allowedOrigins = [process.env.APP_URL, 'http://localhost:5173'].filter(Boolean);
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true
@@ -65,13 +101,20 @@ app.get('/api/health', async (req, res) => {
 
 // Serve frontend in production
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
-app.use(express.static(clientDist));
+app.use(express.static(clientDist, {
+  maxAge: '1d',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
+  logger.info(`Serveur démarré sur le port ${PORT}`);
 });
 
 process.on('SIGTERM', () => {

@@ -48,9 +48,9 @@ function PostCard({ post, onDelete }) {
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         {post.author?.member?.photoUrl ? (
-          <img src={post.author.member.photoUrl} alt="" loading="lazy" className="w-10 h-10 rounded-full object-cover" />
+          <img src={post.author.member.photoUrl} alt={post.author?.member?.companyName || 'Photo auteur'} loading="lazy" className="w-10 h-10 rounded-full object-cover" />
         ) : post.author?.member?.logoUrl ? (
-          <img src={post.author.member.logoUrl} alt="" loading="lazy" className="w-10 h-10 rounded-full object-cover" />
+          <img src={post.author.member.logoUrl} alt="Logo" loading="lazy" className="w-10 h-10 rounded-full object-cover" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-blue-light flex items-center justify-center text-blue font-bold">
             {authorName?.charAt(0) || '?'}
@@ -64,7 +64,7 @@ function PostCard({ post, onDelete }) {
           <span className="badge-demande">Demande</span>
         )}
         {canDelete && (
-          <button onClick={handleDelete} className="text-text-muted hover:text-red-500 text-sm">
+          <button onClick={handleDelete} aria-label="Supprimer" className="text-text-muted hover:text-red-500 text-sm">
             Supprimer
           </button>
         )}
@@ -82,7 +82,7 @@ function PostCard({ post, onDelete }) {
                 Document PDF
               </a>
             ) : (
-              <img key={i} src={url} alt="" loading="lazy" className="rounded-xl object-cover w-full h-40" />
+              <img key={i} src={url} alt="Photo publiée" loading="lazy" className="rounded-xl object-cover w-full h-40" />
             )
           ))}
         </div>
@@ -92,12 +92,14 @@ function PostCard({ post, onDelete }) {
       <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
         <button
           onClick={handleLike}
+          aria-label={liked ? 'Ne plus aimer' : 'Aimer'}
           className={`flex items-center gap-1 text-sm transition-colors ${liked ? 'text-blue font-semibold' : 'text-text-muted hover:text-blue'}`}
         >
           {liked ? '♥' : '♡'} {likeCount}
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
+          aria-label="Commenter"
           className="flex items-center gap-1 text-sm text-text-muted hover:text-blue transition-colors"
         >
           💬 {comments.length}

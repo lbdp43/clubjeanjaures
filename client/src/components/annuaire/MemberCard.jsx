@@ -21,10 +21,10 @@ function MemberCard({ member }) {
       {/* Photo + Logo en haut */}
       <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4">
         {member.photoUrl && (
-          <img src={member.photoUrl} alt="" loading="lazy" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover flex-shrink-0" />
+          <img src={member.photoUrl} alt={member.companyName || 'Photo de profil'} loading="lazy" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover flex-shrink-0" />
         )}
         {member.logoUrl ? (
-          <img src={member.logoUrl} alt={member.companyName} loading="lazy" className="flex-1 min-w-0 max-w-[200px] sm:max-w-[260px] h-auto max-h-32 sm:max-h-40 rounded-2xl object-contain" />
+          <img src={member.logoUrl} alt={member.companyName ? `Logo ${member.companyName}` : 'Logo entreprise'} loading="lazy" className="flex-1 min-w-0 max-w-[200px] sm:max-w-[260px] h-auto max-h-32 sm:max-h-40 rounded-2xl object-contain" />
         ) : (
           <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-2xl bg-blue-light flex items-center justify-center text-blue font-bold text-4xl sm:text-6xl flex-shrink-0">
             {member.companyName?.charAt(0) || '?'}
