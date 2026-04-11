@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useOnline } from './hooks/useOnline';
 import Layout from './components/layout/Layout';
+import Verify from './pages/Verify';
 
 const Home = lazy(() => import('./pages/Home'));
 const Annuaire = lazy(() => import('./pages/Annuaire'));
@@ -14,7 +15,7 @@ const Admin = lazy(() => import('./pages/Admin'));
 const Profile = lazy(() => import('./pages/Profile'));
 const MemberDashboard = lazy(() => import('./pages/MemberDashboard'));
 const Login = lazy(() => import('./pages/Login'));
-const Verify = lazy(() => import('./pages/Verify'));
+// Verify loaded eagerly (not lazy) — critical for magic link auth
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const Inscription = lazy(() => import('./pages/Inscription'));
 const NotFound = lazy(() => import('./pages/NotFound'));
