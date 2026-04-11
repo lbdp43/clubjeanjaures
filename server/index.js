@@ -18,7 +18,7 @@ const uploadRoutes = require('./routes/uploads');
 
 // Validation des variables d'environnement
 const requiredEnvVars = ['DATABASE_URL'];
-const optionalEnvVars = ['APP_URL', 'RESEND_API_KEY', 'SESSION_SECRET', 'PORT'];
+const optionalEnvVars = ['APP_URL', 'SMTP_USER', 'SMTP_PASS', 'SESSION_SECRET', 'PORT'];
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
