@@ -21,7 +21,7 @@ export default function Verify() {
     api.verifyToken(token)
       .then(async () => {
         await refreshUser();
-        navigate('/tableau-de-bord', { replace: true });
+        navigate('/', { replace: true });
       })
       .catch(err => {
         setError(err.message || 'Lien invalide ou expiré.');

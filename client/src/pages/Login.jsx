@@ -20,7 +20,7 @@ export default function Login() {
     try {
       await api.login(email, password);
       await refreshUser();
-      navigate('/tableau-de-bord', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
