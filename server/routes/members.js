@@ -46,7 +46,7 @@ router.get('/public', readLimiter, optionalAuth, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const skip = (page - 1) * limit;
 
-    const where = { user: { status: 'active', role: { in: ['member', 'moderator'] } } };
+    const where = { user: { status: 'active', role: { not: 'visitor' }, email: { not: 'admin@clubjeanjaures.fr' } } };
 
     if (sector) {
       where.sector = sector;
@@ -104,11 +104,11 @@ router.get('/', readLimiter, requireAuth, requireMember, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const skip = (page - 1) * limit;
 
-    let where = { user: { status: 'active', role: { in: ['member', 'moderator'] } } };
+    let where = { user: { status: 'active', role: { not: 'visitor' }, email: { not: 'admin@clubjeanjaures.fr' } } };
 
     if (search) {
       where = {
-        user: { status: 'active', role: { in: ['member', 'moderator'] } },
+        user: { status: 'active', role: { not: 'visitor' }, email: { not: 'admin@clubjeanjaures.fr' } },
         OR: [
           { companyName: { contains: search, mode: 'insensitive' } },
           { jobTitle: { contains: search, mode: 'insensitive' } },
