@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const prisma = require('../prisma/db');
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
@@ -9,6 +10,18 @@ const { sendInvitation, sendBulkEmail } = require('../services/email');
 const xss = require('xss');
 
 const SALT_ROUNDS = 10;
+
+const adminActionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 30,
+  message: { error: 'Trop de requêtes, réessayez plus tard' }
+});
+
+const emailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  message: { error: 'Limite d\'envoi atteinte, réessayez plus tard' }
+});
 
 const router = express.Router();
 
@@ -62,9 +75,15 @@ router.get('/dashboard', requireAuth, requireAdmin, async (req, res) => {
 // GET /api/admin/members
 router.get('/members', requireAuth, requireAdmin, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 200, 500);
+    const skip = (page - 1) * limit;
+
     const users = await prisma.user.findMany({
       include: { member: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip
     });
 
     const safeUsers = users.map(({ magicToken, magicTokenExpires, ...u }) => u);
@@ -76,7 +95,7 @@ router.get('/members', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // PUT /api/admin/members/:id/role
-router.put('/members/:id/role', requireAuth, requireAdmin, async (req, res) => {
+router.put('/members/:id/role', requireAuth, requireAdmin, adminActionLimiter, async (req, res) => {
   try {
     const { role } = req.body;
     if (!['visitor', 'member', 'moderator', 'admin'].includes(role)) {
@@ -96,7 +115,7 @@ router.put('/members/:id/role', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // PUT /api/admin/members/:id/status
-router.put('/members/:id/status', requireAuth, requireAdmin, async (req, res) => {
+router.put('/members/:id/status', requireAuth, requireAdmin, adminActionLimiter, async (req, res) => {
   try {
     const { status } = req.body;
     if (!['active', 'suspended'].includes(status)) {
@@ -116,17 +135,19 @@ router.put('/members/:id/status', requireAuth, requireAdmin, async (req, res) =>
 });
 
 // DELETE /api/admin/members/:id
-router.delete('/members/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/members/:id', requireAuth, requireAdmin, adminActionLimiter, async (req, res) => {
   try {
     if (req.params.id === req.user.id) {
       return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
     }
     const uid = req.params.id;
     // Nettoyer les données liées avant suppression
-    await prisma.session.deleteMany({ where: { userId: uid } });
-    await prisma.event.updateMany({ where: { createdBy: uid }, data: { createdBy: null } });
-    await prisma.favorite.deleteMany({ where: { OR: [{ userId: uid }, { memberId: uid }] } });
-    await prisma.user.delete({ where: { id: uid } });
+    await prisma.$transaction([
+      prisma.session.deleteMany({ where: { userId: uid } }),
+      prisma.event.updateMany({ where: { createdBy: uid }, data: { createdBy: null } }),
+      prisma.favorite.deleteMany({ where: { OR: [{ userId: uid }, { memberId: uid }] } }),
+      prisma.user.delete({ where: { id: uid } })
+    ]);
     res.json({ success: true });
   } catch (err) {
     console.error('Erreur delete member:', err);
@@ -135,7 +156,7 @@ router.delete('/members/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // GET /api/admin/settings
-router.get('/settings', async (req, res) => {
+router.get('/settings', requireAuth, requireAdmin, async (req, res) => {
   try {
     let settings = await prisma.clubSettings.findUnique({ where: { id: 1 } });
     if (!settings) {
@@ -193,11 +214,11 @@ router.post('/settings/logo', requireAuth, requireAdmin, upload.single('logo'), 
 });
 
 // PUT /api/admin/members/:id/password — Reset password
-router.put('/members/:id/password', requireAuth, requireAdmin, async (req, res) => {
+router.put('/members/:id/password', requireAuth, requireAdmin, adminActionLimiter, async (req, res) => {
   try {
     const { password } = req.body;
-    if (!password || password.length < 6) {
-      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    if (!password || password.length < 8) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' });
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -253,7 +274,7 @@ router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) =
 });
 
 // POST /api/admin/invite — Invite a new member by email
-router.post('/invite', requireAuth, requireAdmin, async (req, res) => {
+router.post('/invite', requireAuth, requireAdmin, emailLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email requis' });
@@ -272,7 +293,7 @@ router.post('/invite', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // POST /api/admin/notify — Send email to all active members
-router.post('/notify', requireAuth, requireAdmin, async (req, res) => {
+router.post('/notify', requireAuth, requireAdmin, emailLimiter, async (req, res) => {
   try {
     const { subject, message } = req.body;
     if (!subject || !message) {
@@ -299,7 +320,16 @@ router.post('/notify', requireAuth, requireAdmin, async (req, res) => {
       </div>
     `;
 
-    const sent = await sendBulkEmail(emails, subject, htmlContent);
+    // Instead of sequential for loop, use batched Promise.allSettled
+    const batchSize = 10;
+    let sent = 0;
+    for (let i = 0; i < emails.length; i += batchSize) {
+      const batch = emails.slice(i, i + batchSize);
+      const results = await Promise.allSettled(
+        batch.map(email => sendBulkEmail([email], subject, htmlContent))
+      );
+      sent += results.filter(r => r.status === 'fulfilled' && r.value >= 1).length;
+    }
     res.json({ sent, total: emails.length, message: `Email envoyé à ${sent}/${emails.length} membres.` });
   } catch (err) {
     console.error('Erreur notify:', err);

@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl } from '../../utils/helpers';
 
-export default function EventCard({ event }) {
+function EventCard({ event }) {
   const navigate = useNavigate();
   const dateObj = new Date(event.date);
   const day = dateObj.getDate();
@@ -60,3 +61,5 @@ export default function EventCard({ event }) {
     </div>
   );
 }
+
+export default memo(EventCard);

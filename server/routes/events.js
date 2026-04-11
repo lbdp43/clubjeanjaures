@@ -24,9 +24,12 @@ router.get('/', async (req, res) => {
       where.type = type;
     }
 
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+
     const events = await prisma.event.findMany({
       where,
-      orderBy: { date: past === 'true' ? 'desc' : 'asc' }
+      orderBy: { date: past === 'true' ? 'desc' : 'asc' },
+      take: limit
     });
 
     res.json(events);
@@ -97,8 +100,11 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 router.post('/batch', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { events } = req.body;
-    if (!Array.isArray(events) || events.length === 0) {
-      return res.status(400).json({ error: 'Liste d\'événements requise' });
+    if (!events || !Array.isArray(events) || events.length === 0) {
+      return res.status(400).json({ error: 'Liste d\'événements invalide' });
+    }
+    if (events.length > 100) {
+      return res.status(400).json({ error: 'Maximum 100 événements par lot' });
     }
 
     const { v4: uuidv4 } = require('uuid');

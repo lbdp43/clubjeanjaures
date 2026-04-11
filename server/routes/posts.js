@@ -24,6 +24,7 @@ router.get('/', requireAuth, requireMember, async (req, res) => {
             select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }
           },
           comments: {
+            take: 30,
             include: {
               author: {
                 select: { id: true, email: true, member: { select: { companyName: true, logoUrl: true, photoUrl: true } } }

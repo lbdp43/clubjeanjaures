@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import MemberCard from '../components/annuaire/MemberCard';
@@ -8,10 +8,13 @@ export default function Annuaire() {
   const [members, setMembers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const searchTimeout = useRef(null);
 
   useEffect(() => {
     const fetchMembers = async () => {
       setLoading(true);
+      setError(false);
       try {
         if (isMember) {
           const data = await api.getMembers(search || undefined);
@@ -22,13 +25,17 @@ export default function Annuaire() {
         }
       } catch {
         setMembers([]);
+        setError(true);
       } finally {
         setLoading(false);
       }
     };
 
-    const timeout = setTimeout(fetchMembers, 300);
-    return () => clearTimeout(timeout);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(fetchMembers, 400);
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
   }, [search, isMember]);
 
   const filteredMembers = !isMember && search
@@ -55,6 +62,12 @@ export default function Annuaire() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
         </svg>
       </div>
+
+      {error && (
+        <p className="text-center text-red-500 text-sm py-4">
+          Impossible de charger les données. Vérifiez votre connexion.
+        </p>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">

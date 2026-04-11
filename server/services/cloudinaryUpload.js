@@ -24,11 +24,11 @@ async function uploadImage(filePath) {
   } finally {
     // Supprimer l'original même si sharp échoue
     if (filePath !== webpPath) {
-      try { fs.unlinkSync(filePath); } catch {}
+      await fs.promises.unlink(filePath).catch(() => {});
     }
   }
 
-  const data = fs.readFileSync(webpPath);
+  const data = await fs.promises.readFile(webpPath);
 
   try {
     const upload = await prisma.upload.create({
@@ -36,7 +36,7 @@ async function uploadImage(filePath) {
     });
     return `/api/uploads/${upload.id}`;
   } finally {
-    try { fs.unlinkSync(webpPath); } catch {}
+    await fs.promises.unlink(webpPath).catch(() => {});
   }
 }
 
@@ -48,7 +48,7 @@ async function uploadFile(filePath) {
     throw new Error('Fichier introuvable : ' + filePath);
   }
 
-  const data = fs.readFileSync(filePath);
+  const data = await fs.promises.readFile(filePath);
   const ext = path.extname(filePath).toLowerCase();
   const mimeTypes = {
     '.pdf': 'application/pdf',
@@ -64,7 +64,7 @@ async function uploadFile(filePath) {
     });
     return `/api/uploads/${upload.id}`;
   } finally {
-    try { fs.unlinkSync(filePath); } catch {}
+    await fs.promises.unlink(filePath).catch(() => {});
   }
 }
 

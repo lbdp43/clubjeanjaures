@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
 import { timeAgo } from '../../utils/helpers';
 import CommentList from './CommentList';
 
-export default function PostCard({ post, onDelete }) {
+function PostCard({ post, onDelete }) {
   const { user, isMod } = useAuth();
   const [liked, setLiked] = useState(post.likes?.some(l => l.userId === user?.id));
   const [likeCount, setLikeCount] = useState(post._count?.likes || 0);
@@ -48,9 +48,9 @@ export default function PostCard({ post, onDelete }) {
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         {post.author?.member?.photoUrl ? (
-          <img src={post.author.member.photoUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+          <img src={post.author.member.photoUrl} alt="" loading="lazy" className="w-10 h-10 rounded-full object-cover" />
         ) : post.author?.member?.logoUrl ? (
-          <img src={post.author.member.logoUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+          <img src={post.author.member.logoUrl} alt="" loading="lazy" className="w-10 h-10 rounded-full object-cover" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-blue-light flex items-center justify-center text-blue font-bold">
             {authorName?.charAt(0) || '?'}
@@ -82,7 +82,7 @@ export default function PostCard({ post, onDelete }) {
                 Document PDF
               </a>
             ) : (
-              <img key={i} src={url} alt="" className="rounded-xl object-cover w-full h-40" />
+              <img key={i} src={url} alt="" loading="lazy" className="rounded-xl object-cover w-full h-40" />
             )
           ))}
         </div>
@@ -116,3 +116,5 @@ export default function PostCard({ post, onDelete }) {
     </div>
   );
 }
+
+export default memo(PostCard);

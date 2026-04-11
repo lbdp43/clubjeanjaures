@@ -49,8 +49,8 @@ router.post('/register', authLimiter, async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: 'Email et mot de passe requis.' });
     }
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();

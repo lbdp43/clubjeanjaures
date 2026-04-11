@@ -10,11 +10,12 @@ export default function Home() {
   const [events, setEvents] = useState([]);
   const [members, setMembers] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    api.getEvents().then(setEvents).catch(() => {});
-    api.getPublicMembers().then(setMembers).catch(() => {});
-    api.getSettings().then(setSettings).catch(() => {});
+    api.getEvents().then(setEvents).catch(() => setError(true));
+    api.getPublicMembers().then(setMembers).catch(() => setError(true));
+    api.getSettings().then(setSettings).catch(() => setError(true));
   }, []);
 
   return (
@@ -41,6 +42,12 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {error && (
+        <p className="text-center text-red-500 text-sm py-4">
+          Impossible de charger les données. Vérifiez votre connexion.
+        </p>
+      )}
 
       {/* Prochains événements */}
       <section>

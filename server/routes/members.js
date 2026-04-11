@@ -1,10 +1,17 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const prisma = require('../prisma/db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { requireMember } = require('../middleware/roles');
 const upload = require('../middleware/upload');
 const { uploadImage, uploadFile } = require('../services/cloudinaryUpload');
 const xss = require('xss');
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { error: 'Trop d\'uploads, réessayez plus tard' }
+});
 
 const router = express.Router();
 
@@ -49,6 +56,9 @@ router.get('/public', optionalAuth, async (req, res) => {
 router.get('/', requireAuth, requireMember, async (req, res) => {
   try {
     const { search } = req.query;
+    if (search && search.length > 100) {
+      return res.status(400).json({ error: 'Recherche trop longue' });
+    }
     let where = { user: { status: 'active', role: { not: 'visitor' } } };
 
     if (search) {
@@ -122,6 +132,16 @@ router.put('/:id', requireAuth, async (req, res) => {
       }
     }
 
+    if (data.latitude !== undefined && (isNaN(data.latitude) || data.latitude < -90 || data.latitude > 90)) {
+      return res.status(400).json({ error: 'Latitude invalide' });
+    }
+    if (data.longitude !== undefined && (isNaN(data.longitude) || data.longitude < -180 || data.longitude > 180)) {
+      return res.status(400).json({ error: 'Longitude invalide' });
+    }
+    if (data.website && data.website.length > 500) {
+      return res.status(400).json({ error: 'URL trop longue' });
+    }
+
     if (req.body.socialLinks) data.socialLinks = req.body.socialLinks;
     if (req.body.visibility) data.visibility = req.body.visibility;
 
@@ -155,7 +175,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 });
 
 // POST /api/members/:id/photos
-router.post('/:id/photos', requireAuth, upload.array('photos', 10), async (req, res) => {
+router.post('/:id/photos', requireAuth, uploadLimiter, upload.array('photos', 10), async (req, res) => {
   try {
     if (req.user.id !== req.params.id && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Non autorisé' });

@@ -101,6 +101,8 @@ model Event {
   creator User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@map("events")
+  @@index([date])
+  @@index([type])
 }
 
 model Post {
@@ -116,6 +118,8 @@ model Post {
   likes    Like[]
 
   @@map("posts")
+  @@index([authorId])
+  @@index([createdAt])
 }
 
 model Comment {
@@ -129,6 +133,8 @@ model Comment {
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("comments")
+  @@index([postId])
+  @@index([authorId])
 }
 
 model Like {
@@ -142,6 +148,7 @@ model Like {
 
   @@unique([postId, userId])
   @@map("likes")
+  @@index([userId])
 }
 
 model Favorite {
@@ -154,6 +161,8 @@ model Favorite {
 
   @@unique([userId, memberId])
   @@map("favorites")
+  @@index([userId])
+  @@index([memberId])
 }
 
 model ClubSettings {
@@ -175,6 +184,7 @@ model Session {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("sessions")
+  @@index([userId])
 }
 
 model Upload {

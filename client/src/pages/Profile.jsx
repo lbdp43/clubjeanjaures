@@ -118,7 +118,7 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             <div className="relative">
               {user.member?.photoUrl ? (
-                <img src={user.member.photoUrl} alt="" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover" />
+                <img src={user.member.photoUrl} alt="" loading="lazy" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover" />
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
                   <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -148,7 +148,7 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             <div className="relative">
               {user.member?.logoUrl ? (
-                <img src={user.member.logoUrl} alt="" className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover" />
+                <img src={user.member.logoUrl} alt="" loading="lazy" className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover" />
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl">
                   {form.companyName?.charAt(0) || '?'}
@@ -278,7 +278,7 @@ export default function Profile() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {(user.member?.photos || []).map((url, i) => (
             <div key={i} className="relative">
-              <img src={url} alt="" className="rounded-xl object-cover w-full h-24" />
+              <img src={url} alt="" loading="lazy" className="rounded-xl object-cover w-full h-24" />
               <button
                 onClick={async () => {
                   try { await api.deletePhoto(user.id, i); refreshUser(); }

@@ -12,10 +12,12 @@ export default function Feed() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!user || !isMember) return;
     setLoading(true);
+    setError(false);
     const params = { page: String(page) };
     if (filter) params.type = filter;
 
@@ -24,7 +26,7 @@ export default function Feed() {
         setPosts(data.posts);
         setTotalPages(data.pages);
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [page, filter, user, isMember]);
 
@@ -77,6 +79,12 @@ export default function Feed() {
           </button>
         ))}
       </div>
+
+      {error && (
+        <p className="text-center text-red-500 text-sm py-4">
+          Impossible de charger les données. Vérifiez votre connexion.
+        </p>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
