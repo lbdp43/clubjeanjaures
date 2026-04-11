@@ -24,14 +24,23 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/.*\/api\/members/,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'members-cache', expiration: { maxEntries: 100, maxAgeSeconds: 86400 } }
+            // Images uploadées = immuables (UUID), cache agressif
+            urlPattern: /^https?:\/\/.*\/api\/uploads\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'uploads-cache',
+              expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 3600 }
+            }
           },
           {
-            urlPattern: /^https?:\/\/.*\/api\/events/,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'events-cache', expiration: { maxEntries: 100, maxAgeSeconds: 86400 } }
+            // Toutes les autres requêtes API = réseau d'abord, cache en fallback offline
+            urlPattern: /^https?:\/\/.*\/api\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-network-first',
+              expiration: { maxEntries: 100, maxAgeSeconds: 86400 },
+              networkTimeoutSeconds: 3
+            }
           }
         ]
       }
