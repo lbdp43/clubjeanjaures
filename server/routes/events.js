@@ -37,7 +37,8 @@ router.get('/', readLimiter, async (req, res) => {
     const events = await prisma.event.findMany({
       where,
       orderBy: { date: past === 'true' ? 'desc' : 'asc' },
-      take: limit
+      take: limit,
+      include: { _count: { select: { rsvps: true } } }
     });
 
     res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
@@ -51,7 +52,13 @@ router.get('/', readLimiter, async (req, res) => {
 // GET /api/events/:id
 router.get('/:id', async (req, res) => {
   try {
-    const event = await prisma.event.findUnique({ where: { id: req.params.id } });
+    const event = await prisma.event.findUnique({
+      where: { id: req.params.id },
+      include: {
+        _count: { select: { rsvps: true } },
+        rsvps: { select: { userId: true } }
+      }
+    });
     if (!event) return res.status(404).json({ error: 'Événement introuvable' });
     res.set('Cache-Control', 'public, max-age=60');
     res.json(event);
@@ -73,6 +80,52 @@ router.get('/:id/ics', async (req, res) => {
     res.send(cal.toString());
   } catch (err) {
     logger.error('Erreur ics', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/events/:id/rsvp — toggle participation
+router.post('/:id/rsvp', requireAuth, async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const userId = req.user.id;
+
+    const existing = await prisma.rsvp.findUnique({
+      where: { userId_eventId: { userId, eventId } }
+    });
+
+    if (existing) {
+      await prisma.rsvp.delete({ where: { id: existing.id } });
+      return res.json({ participating: false });
+    }
+
+    await prisma.rsvp.create({ data: { userId, eventId } });
+    res.json({ participating: true });
+  } catch (err) {
+    logger.error('Erreur RSVP:', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET /api/events/:id/rsvps — get participants list
+router.get('/:id/rsvps', async (req, res) => {
+  try {
+    const rsvps = await prisma.rsvp.findMany({
+      where: { eventId: req.params.id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            member: { select: { companyName: true, photoUrl: true, jobTitle: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json(rsvps);
+  } catch (err) {
+    logger.error('Erreur get rsvps:', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

@@ -40,8 +40,19 @@ export const api = {
   completeOnboarding: () => apiFetch('/auth/onboarding', { method: 'PUT' }),
 
   // Members
-  getPublicMembers: () => apiFetch('/members/public'),
-  getMembers: (search) => apiFetch(`/members${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  getPublicMembers: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.sector) qs.set('sector', params.sector);
+    const str = qs.toString();
+    return apiFetch(`/members/public${str ? `?${str}` : ''}`);
+  },
+  getMembers: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.search) qs.set('search', params.search);
+    if (params.sector) qs.set('sector', params.sector);
+    const str = qs.toString();
+    return apiFetch(`/members${str ? `?${str}` : ''}`);
+  },
   getMember: (id) => apiFetch(`/members/${id}`),
   updateMember: (id, data) => apiFetch(`/members/${id}`, {
     method: 'PUT', body: JSON.stringify(data)
@@ -51,6 +62,7 @@ export const api = {
   }),
   deletePhoto: (id, idx) => apiFetch(`/members/${id}/photos/${idx}`, { method: 'DELETE' }),
   deleteProfilePhoto: (id, type) => apiFetch(`/members/${id}/photo/${type}`, { method: 'DELETE' }),
+  getSectors: () => apiFetch('/members/sectors'),
 
   // Events
   getEvents: (params = {}) => {
@@ -66,6 +78,8 @@ export const api = {
     method: 'PUT', body: JSON.stringify(data)
   }),
   deleteEvent: (id) => apiFetch(`/events/${id}`, { method: 'DELETE' }),
+  toggleRsvp: (eventId) => apiFetch(`/events/${eventId}/rsvp`, { method: 'POST' }),
+  getEventRsvps: (eventId) => apiFetch(`/events/${eventId}/rsvps`),
 
   // Posts
   getPosts: (params = {}) => {

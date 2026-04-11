@@ -55,6 +55,7 @@ model User {
   favorites     Favorite[] @relation("UserFavorites")
   favoritedBy   Favorite[] @relation("FavoritedMember")
   eventsCreated Event[]
+  rsvps         Rsvp[]
 
   @@map("users")
   @@index([status])
@@ -65,6 +66,7 @@ model Member {
   id          String   @id @db.Uuid
   companyName String   @map("company_name")
   jobTitle    String   @map("job_title")
+  sector      String?  @map("sector")
   phone       String
   address     String
   city        String?
@@ -84,6 +86,7 @@ model Member {
   user User @relation(fields: [id], references: [id], onDelete: Cascade)
 
   @@map("members")
+  @@index([sector])
 }
 
 model Event {
@@ -101,6 +104,7 @@ model Event {
   createdAt       DateTime  @default(now()) @map("created_at")
 
   creator User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  rsvps   Rsvp[]
 
   @@map("events")
   @@index([date])
@@ -196,4 +200,19 @@ model Upload {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("uploads")
+}
+
+model Rsvp {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  eventId   String   @map("event_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("rsvps")
+  @@index([eventId])
+  @@index([userId])
 }

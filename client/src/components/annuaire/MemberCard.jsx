@@ -5,6 +5,21 @@ import { whatsappLink, mapsUrl } from '../../utils/helpers';
 function MemberCard({ member }) {
   const navigate = useNavigate();
 
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/annuaire/${member.id}`;
+    const text = `${member.companyName}${member.jobTitle ? ` — ${member.jobTitle}` : ''}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: text, text: `Découvrez ${text} sur le Club Jean Jaurès`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert('Lien copié !');
+    }
+  };
+
   const shortDesc = member.description
     ? member.description.length > 120
       ? member.description.slice(0, 120) + '...'
@@ -44,6 +59,11 @@ function MemberCard({ member }) {
             </svg>
             {member.city}
           </p>
+        )}
+        {member.sector && (
+          <span className="inline-block text-[10px] sm:text-xs bg-blue-light text-blue-dark px-2 py-0.5 rounded-full mt-1">
+            {member.sector}
+          </span>
         )}
       </div>
 

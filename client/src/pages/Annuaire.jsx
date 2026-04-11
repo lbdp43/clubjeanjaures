@@ -10,6 +10,12 @@ export default function Annuaire() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const searchTimeout = useRef(null);
+  const [sectors, setSectors] = useState([]);
+  const [selectedSector, setSelectedSector] = useState('');
+
+  useEffect(() => {
+    api.getSectors().then(setSectors).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -17,10 +23,10 @@ export default function Annuaire() {
       setError(false);
       try {
         if (isMember) {
-          const data = await api.getMembers(search || undefined);
+          const data = await api.getMembers({ search: search || undefined, sector: selectedSector || undefined });
           setMembers(data);
         } else {
-          const data = await api.getPublicMembers();
+          const data = await api.getPublicMembers({ sector: selectedSector || undefined });
           setMembers(data);
         }
       } catch {
@@ -36,7 +42,7 @@ export default function Annuaire() {
     return () => {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
     };
-  }, [search, isMember]);
+  }, [search, isMember, selectedSector]);
 
   const filteredMembers = !isMember && search
     ? members.filter(m =>

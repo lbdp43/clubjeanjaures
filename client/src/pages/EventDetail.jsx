@@ -7,13 +7,16 @@ import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCa
 export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [participating, setParticipating] = useState(false);
+  const [rsvps, setRsvps] = useState([]);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
 
   useEffect(() => {
     api.getEvent(id).then(data => {
@@ -29,7 +32,28 @@ export default function EventDetail() {
         speaker: data.speaker || ''
       });
     }).catch(() => {}).finally(() => setLoading(false));
+
+    // After fetching event, fetch RSVPs
+    api.getEventRsvps(id).then(data => {
+      setRsvps(data);
+      if (user) {
+        setParticipating(data.some(r => r.user.id === user.id));
+      }
+    }).catch(() => {});
   }, [id]);
+
+  const handleRsvp = async () => {
+    if (!user) return;
+    setRsvpLoading(true);
+    try {
+      const result = await api.toggleRsvp(event.id);
+      setParticipating(result.participating);
+      // Refresh RSVP list
+      const data = await api.getEventRsvps(event.id);
+      setRsvps(data);
+    } catch (err) {}
+    setRsvpLoading(false);
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -244,6 +268,44 @@ export default function EventDetail() {
                 Apple / Autre (.ics)
               </a>
             </div>
+          </div>
+
+          {/* Participants */}
+          <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs sm:text-sm font-medium text-text-muted">
+                {rsvps.length} participant{rsvps.length !== 1 ? 's' : ''}
+              </p>
+              {user && (
+                <button
+                  onClick={handleRsvp}
+                  disabled={rsvpLoading}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    participating
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-blue text-white hover:bg-blue-dark'
+                  }`}
+                >
+                  {rsvpLoading ? '...' : participating ? 'Je participe \u2713' : 'Je participe'}
+                </button>
+              )}
+            </div>
+            {rsvps.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {rsvps.map(r => (
+                  <div key={r.id} className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5">
+                    {r.user.member?.photoUrl ? (
+                      <img src={r.user.member.photoUrl} alt={r.user.member?.companyName || ''} loading="lazy" className="w-6 h-6 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-blue-light flex items-center justify-center text-xs text-blue font-bold">
+                        {(r.user.member?.companyName || r.user.email)?.[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-xs text-text-main">{r.user.member?.companyName || r.user.email}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

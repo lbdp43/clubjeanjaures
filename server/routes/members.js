@@ -22,14 +22,35 @@ const uploadLimiter = rateLimit({
 
 const router = express.Router();
 
+// GET /api/members/sectors — list of distinct sectors
+router.get('/sectors', async (req, res) => {
+  try {
+    const members = await prisma.member.findMany({
+      where: { sector: { not: null } },
+      select: { sector: true },
+      distinct: ['sector'],
+      orderBy: { sector: 'asc' }
+    });
+    res.json(members.map(m => m.sector));
+  } catch (err) {
+    logger.error('Erreur sectors:', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // GET /api/members/public — annuaire public
 router.get('/public', readLimiter, optionalAuth, async (req, res) => {
   try {
+    const { sector } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const skip = (page - 1) * limit;
 
     const where = { user: { status: 'active', role: { not: 'visitor' } } };
+
+    if (sector) {
+      where.sector = sector;
+    }
 
     const total = await prisma.member.count({ where });
     res.set('X-Total-Count', total.toString());
@@ -55,6 +76,7 @@ router.get('/public', readLimiter, optionalAuth, async (req, res) => {
         description: m.description,
         lookingFor: m.lookingFor,
         canOffer: m.canOffer,
+        sector: m.sector,
         website: m.website,
         phone: (isAuthenticated || visibility.phone === 'public') ? m.phone : null,
         email: (isAuthenticated || visibility.email === 'public') ? m.user.email : null,
@@ -74,7 +96,7 @@ router.get('/public', readLimiter, optionalAuth, async (req, res) => {
 // GET /api/members — annuaire complet (membres authentifiés)
 router.get('/', readLimiter, requireAuth, requireMember, async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, sector } = req.query;
     if (search && search.length > 100) {
       return res.status(400).json({ error: 'Recherche trop longue' });
     }
@@ -91,9 +113,14 @@ router.get('/', readLimiter, requireAuth, requireMember, async (req, res) => {
           { companyName: { contains: search, mode: 'insensitive' } },
           { jobTitle: { contains: search, mode: 'insensitive' } },
           { city: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
+          { description: { contains: search, mode: 'insensitive' } },
+          { sector: { contains: search, mode: 'insensitive' } }
         ]
       };
+    }
+
+    if (sector) {
+      where.sector = sector;
     }
 
     const total = await prisma.member.count({ where });
@@ -151,7 +178,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     const fields = [
       'companyName', 'jobTitle', 'phone', 'address', 'city',
       'latitude', 'longitude', 'website', 'description',
-      'lookingFor', 'canOffer'
+      'lookingFor', 'canOffer', 'sector'
     ];
 
     for (const field of fields) {
