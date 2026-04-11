@@ -28,11 +28,13 @@ const slides = [
 
 export default function Onboarding() {
   const [current, setCurrent] = useState(0);
+  const [gdprAccepted, setGdprAccepted] = useState(false);
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
 
   const handleFinish = async () => {
-    await api.completeOnboarding();
+    if (!gdprAccepted) return;
+    await api.completeOnboarding(true);
     await refreshUser();
     navigate('/profil', { replace: true });
   };
@@ -63,6 +65,23 @@ export default function Onboarding() {
           ))}
         </div>
 
+        {/* Case RGPD sur le dernier slide */}
+        {isLast && (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={gdprAccepted}
+                onChange={(e) => setGdprAccepted(e.target.checked)}
+                className="mt-1 w-5 h-5 rounded border-gray-300 text-blue focus:ring-blue flex-shrink-0"
+              />
+              <span className="text-sm text-text-muted leading-relaxed">
+                J'accepte que mes données personnelles (nom, coordonnées, informations professionnelles) soient traitées par le Club Jean Jaurès et partagées avec les autres membres dans le cadre de l'annuaire du club. Ces données sont utilisées uniquement pour faciliter les échanges entre membres. Conformément au RGPD et à la loi Informatique et Libertés, je dispose d'un droit d'accès, de rectification et de suppression de mes données en contactant l'administrateur du club.
+              </span>
+            </label>
+          </div>
+        )}
+
         <div className="flex gap-3">
           {current > 0 && (
             <button onClick={() => setCurrent(c => c - 1)} className="btn-secondary flex-1">
@@ -70,7 +89,11 @@ export default function Onboarding() {
             </button>
           )}
           {isLast ? (
-            <button onClick={handleFinish} className="btn-primary flex-1">
+            <button
+              onClick={handleFinish}
+              disabled={!gdprAccepted}
+              className={`btn-primary flex-1 ${!gdprAccepted ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               Commencer
             </button>
           ) : (
@@ -81,7 +104,7 @@ export default function Onboarding() {
         </div>
 
         {!isLast && (
-          <button onClick={handleFinish} className="block mx-auto mt-4 text-sm text-text-muted hover:text-blue">
+          <button onClick={() => setCurrent(slides.length - 1)} className="block mx-auto mt-4 text-sm text-text-muted hover:text-blue">
             Passer l'introduction
           </button>
         )}

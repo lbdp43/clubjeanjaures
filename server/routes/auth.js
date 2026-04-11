@@ -228,9 +228,13 @@ router.get('/me', requireAuth, async (req, res) => {
 
 // PUT /api/auth/onboarding
 router.put('/onboarding', requireAuth, async (req, res) => {
+  const data = { onboardingDone: true };
+  if (req.body.gdprConsent) {
+    data.gdprConsentAt = new Date();
+  }
   await prisma.user.update({
     where: { id: req.user.id },
-    data: { onboardingDone: true }
+    data
   });
   res.json({ success: true });
 });

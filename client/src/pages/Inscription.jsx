@@ -11,6 +11,7 @@ export default function Inscription() {
   const [magicSent, setMagicSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [gdprAccepted, setGdprAccepted] = useState(false);
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
 
@@ -96,8 +97,24 @@ export default function Inscription() {
               <label htmlFor="confirm-pw" className="block text-sm font-medium mb-2">Confirmer le mot de passe</label>
               <input id="confirm-pw" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" placeholder="Retapez le mot de passe" required minLength={6} />
             </div>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={gdprAccepted}
+                onChange={(e) => setGdprAccepted(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-300 text-blue focus:ring-blue flex-shrink-0"
+                required
+              />
+              <span className="text-xs text-text-muted leading-relaxed">
+                J'accepte que mes données personnelles soient traitées par le Club Jean Jaurès dans le cadre de l'annuaire des membres, conformément au{' '}
+                <button type="button" onClick={(e) => { e.preventDefault(); document.getElementById('rgpd-detail')?.classList.toggle('hidden'); }} className="text-blue hover:underline">RGPD</button>.
+              </span>
+            </label>
+            <div id="rgpd-detail" className="hidden text-xs text-text-muted bg-gray-50 rounded-lg p-3 leading-relaxed">
+              Vos données (nom, coordonnées, informations professionnelles) sont partagées avec les autres membres du club pour faciliter les échanges. Elles ne sont ni vendues ni transmises à des tiers. Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification et de suppression en contactant l'administrateur.
+            </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
+            <button type="submit" className="btn-primary w-full" disabled={loading || !gdprAccepted}>
               {loading ? 'Création...' : "S'inscrire"}
             </button>
           </form>
@@ -110,8 +127,20 @@ export default function Inscription() {
               <label htmlFor="email-magic" className="block text-sm font-medium mb-2">Adresse email professionnelle</label>
               <input id="email-magic" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="votre@entreprise.fr" required autoFocus />
             </div>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={gdprAccepted}
+                onChange={(e) => setGdprAccepted(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-300 text-blue focus:ring-blue flex-shrink-0"
+                required
+              />
+              <span className="text-xs text-text-muted leading-relaxed">
+                J'accepte que mes données personnelles soient traitées par le Club Jean Jaurès conformément au RGPD.
+              </span>
+            </label>
             {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
+            <button type="submit" className="btn-primary w-full" disabled={loading || !gdprAccepted}>
               {loading ? 'Envoi...' : 'Recevoir un lien de connexion'}
             </button>
             <p className="text-xs text-text-muted text-center">

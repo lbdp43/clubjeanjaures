@@ -42,6 +42,7 @@ model User {
   magicTokenExpires DateTime?  @map("magic_token_expires")
   googleId          String?    @map("google_id")
   onboardingDone    Boolean    @default(false) @map("onboarding_done")
+  gdprConsentAt     DateTime?  @map("gdpr_consent_at")
   invitedBy         String?    @map("invited_by") @db.Uuid
   createdAt         DateTime   @default(now()) @map("created_at")
   lastLogin         DateTime?  @map("last_login")

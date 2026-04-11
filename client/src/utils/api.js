@@ -40,7 +40,9 @@ export const api = {
   changePassword: (currentPassword, newPassword) => apiFetch('/auth/password', {
     method: 'PUT', body: JSON.stringify({ currentPassword, newPassword })
   }),
-  completeOnboarding: () => apiFetch('/auth/onboarding', { method: 'PUT' }),
+  completeOnboarding: (gdprConsent = false) => apiFetch('/auth/onboarding', {
+    method: 'PUT', body: JSON.stringify({ gdprConsent })
+  }),
 
   // Members
   getPublicMembers: (params = {}) => {
