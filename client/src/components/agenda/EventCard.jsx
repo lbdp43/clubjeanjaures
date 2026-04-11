@@ -99,17 +99,28 @@ function EventCard({ event, onRsvpChange }) {
               </span>
             )}
             {user && (
-              <button
-                onClick={handleRsvp}
-                disabled={rsvpLoading}
-                className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
-                  localParticipating
-                    ? 'bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600'
-                    : 'bg-blue-light text-blue-dark hover:bg-blue/10'
-                } ${rsvpLoading ? 'opacity-50' : ''}`}
-              >
-                {localParticipating ? 'Je participe ✓' : 'Participer'}
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (!localParticipating) handleRsvp(e); }}
+                  disabled={rsvpLoading}
+                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                    localParticipating
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-blue-light text-blue-dark hover:bg-blue/10'
+                  } ${rsvpLoading ? 'opacity-50' : ''}`}
+                >
+                  {localParticipating ? 'Je participe ✓' : 'Participer'}
+                </button>
+                {localParticipating && (
+                  <button
+                    onClick={handleRsvp}
+                    disabled={rsvpLoading}
+                    className="text-xs px-2 py-1 rounded-full text-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -277,17 +277,28 @@ export default function EventDetail() {
                 {rsvps.length} participant{rsvps.length !== 1 ? 's' : ''}
               </p>
               {user && (
-                <button
-                  onClick={handleRsvp}
-                  disabled={rsvpLoading}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    participating
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                      : 'bg-blue text-white hover:bg-blue-dark'
-                  }`}
-                >
-                  {rsvpLoading ? '...' : participating ? 'Je participe \u2713' : 'Je participe'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { if (!participating) handleRsvp(); }}
+                    disabled={rsvpLoading}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      participating
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-blue text-white hover:bg-blue-dark'
+                    }`}
+                  >
+                    {rsvpLoading ? '...' : participating ? 'Je participe ✓' : 'Je participe'}
+                  </button>
+                  {participating && (
+                    <button
+                      onClick={handleRsvp}
+                      disabled={rsvpLoading}
+                      className="px-3 py-2 rounded-full text-sm text-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             {rsvps.length > 0 && (
