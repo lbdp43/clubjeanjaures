@@ -179,7 +179,7 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
   }
 });
 
-// GET /api/auth/verify?token=xxx
+// GET /api/auth/verify?token=xxx  (JSON response for SPA)
 router.get('/verify', async (req, res) => {
   try {
     const { token } = req.query;
@@ -207,6 +207,38 @@ router.get('/verify', async (req, res) => {
   } catch (err) {
     logger.error('Erreur verify', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET /api/auth/verify-redirect?token=xxx  (redirect — utilisé par les emails)
+// Passe par /api/ donc le Service Worker ne l'intercepte jamais
+router.get('/verify-redirect', async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.redirect('/connexion?error=token_missing');
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await prisma.user.findFirst({
+      where: {
+        magicToken: hashedToken,
+        magicTokenExpires: { gt: new Date() }
+      }
+    });
+
+    if (!user) {
+      return res.redirect('/connexion?error=token_invalid');
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { magicToken: null, magicTokenExpires: null, lastLogin: new Date() }
+    });
+
+    await createSession(res, user.id);
+    res.redirect('/');
+  } catch (err) {
+    logger.error('Erreur verify-redirect', { error: err.message, stack: err.stack });
+    res.redirect('/connexion?error=server_error');
   }
 });
 
