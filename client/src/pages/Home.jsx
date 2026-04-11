@@ -11,6 +11,23 @@ export default function Home() {
   const [members, setMembers] = useState([]);
   const [settings, setSettings] = useState(null);
   const [error, setError] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const handleInvite = () => {
+    const url = `${window.location.origin}/inscription`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'Rejoins le Club Jean Jaurès',
+        text: 'Je t\'invite à rejoindre le Club Jean Jaurès, club d\'affaires de Saint-Étienne !',
+        url
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      });
+    }
+  };
 
   const showEvents = user || !settings || settings.publicAgenda !== false;
 
@@ -38,7 +55,7 @@ export default function Home() {
         <p className="text-base sm:text-lg text-text-muted max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
           {settings?.description || "Club d'affaires de Saint-Étienne — Échanges, entraide et développement entre professionnels de métiers différents."}
         </p>
-        {!user && (
+        {!user ? (
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/inscription" className="btn-primary">
               Rejoindre le club
@@ -47,6 +64,31 @@ export default function Home() {
               Se connecter
             </Link>
           </div>
+        ) : (
+          <button
+            onClick={handleInvite}
+            className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-colors ${
+              linkCopied
+                ? 'bg-green-100 text-green-700 border border-green-300'
+                : 'bg-blue text-white hover:bg-blue-dark'
+            }`}
+          >
+            {linkCopied ? (
+              <>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Lien copié !
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                </svg>
+                Inviter un membre
+              </>
+            )}
+          </button>
         )}
       </section>
 
