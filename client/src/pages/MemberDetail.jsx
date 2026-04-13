@@ -108,7 +108,12 @@ export default function MemberDetail() {
           </div>
           {msg && <p className="text-xs text-green-600 mt-1">{msg}</p>}
           <p className="text-text-muted text-sm sm:text-base">{member.jobTitle}</p>
-          {member.city && <p className="text-sm text-text-muted mt-1">{member.city}</p>}
+          {member.sector && (
+            <span className="inline-block text-xs sm:text-sm font-medium bg-blue-light text-blue-dark px-2.5 py-1 rounded-full mt-2">
+              {member.sector}
+            </span>
+          )}
+          {member.city && <p className="text-sm text-text-muted mt-2">{member.city}</p>}
         </div>
 
         {/* Boutons de contact */}

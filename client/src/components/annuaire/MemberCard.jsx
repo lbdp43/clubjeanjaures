@@ -69,19 +69,19 @@ function MemberCard({ member }) {
       <div className="text-center mb-3">
         <h3 className="font-semibold text-text-main text-base truncate">{member.companyName}</h3>
         <p className="text-sm text-text-muted truncate">{member.jobTitle}</p>
+        {member.sector && (
+          <span className="inline-block text-xs sm:text-sm font-medium bg-blue-light text-blue-dark px-2.5 py-1 rounded-full mt-1.5">
+            {member.sector}
+          </span>
+        )}
         {member.city && (
-          <p className="text-xs text-text-muted mt-0.5 flex items-center justify-center gap-1">
+          <p className="text-xs text-text-muted mt-1 flex items-center justify-center gap-1">
             <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
             </svg>
             {member.city}
           </p>
-        )}
-        {member.sector && (
-          <span className="inline-block text-[10px] sm:text-xs bg-blue-light text-blue-dark px-2 py-0.5 rounded-full mt-1">
-            {member.sector}
-          </span>
         )}
       </div>
 
