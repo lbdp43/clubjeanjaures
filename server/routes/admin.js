@@ -78,6 +78,47 @@ router.get('/dashboard', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/members/export — export TXT list of all members
+router.get('/members/export', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: { role: { not: 'visitor' } },
+      include: { member: true },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    const lines = [];
+    lines.push('LISTE DES MEMBRES — Club Jean Jaurès');
+    lines.push(`Exportée le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`);
+    lines.push(`Total : ${users.length} membre${users.length > 1 ? 's' : ''}`);
+    lines.push('');
+    lines.push('─'.repeat(50));
+    lines.push('');
+
+    users.forEach((u, i) => {
+      const m = u.member;
+      lines.push(`${i + 1}. ${m?.companyName || '(sans nom)'}`);
+      if (m?.jobTitle) lines.push(`   Fonction : ${m.jobTitle}`);
+      lines.push(`   Email : ${u.email}`);
+      if (m?.phone) lines.push(`   Téléphone : ${m.phone}`);
+      if (m?.city) lines.push(`   Ville : ${m.city}`);
+      if (m?.sector) lines.push(`   Secteur : ${m.sector}`);
+      lines.push(`   Statut : ${u.status === 'active' ? 'actif' : 'suspendu'} | Rôle : ${u.role}`);
+      lines.push('');
+    });
+
+    const txt = lines.join('\n');
+    const today = new Date().toISOString().slice(0, 10);
+
+    res.set('Content-Type', 'text/plain; charset=utf-8');
+    res.set('Content-Disposition', `attachment; filename="membres-club-jean-jaures-${today}.txt"`);
+    res.send(txt);
+  } catch (err) {
+    logger.error('Erreur export members', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // GET /api/admin/members
 router.get('/members', requireAuth, requireAdmin, async (req, res) => {
   try {
