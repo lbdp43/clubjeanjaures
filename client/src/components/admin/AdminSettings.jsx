@@ -121,6 +121,80 @@ export default function AdminSettings() {
           </button>
         </div>
 
+        {/* Rappels d'événements */}
+        <div className="py-3 border-b border-gray-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="pr-3">
+              <p className="text-sm font-medium">Rappels d'événements par email</p>
+              <p className="text-xs text-text-muted">Relance automatique aux membres qui n'ont pas répondu</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSettings({...settings, eventRemindersEnabled: !settings.eventRemindersEnabled})}
+              className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                settings.eventRemindersEnabled ? 'bg-blue' : 'bg-gray-300'
+              }`}
+              aria-label="Activer les rappels"
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${
+                settings.eventRemindersEnabled ? 'translate-x-5' : ''
+              }`} />
+            </button>
+          </div>
+
+          {settings.eventRemindersEnabled && (
+            <div className="space-y-3 pl-2 border-l-2 border-blue-light">
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1.5">
+                  Envoyer les rappels à J-… (en jours avant l'événement)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[15, 10, 7, 5, 3, 2, 1].map(d => {
+                    const active = (settings.reminderDaysBefore || []).includes(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          const current = settings.reminderDaysBefore || [];
+                          const next = active ? current.filter(x => x !== d) : [...current, d];
+                          setSettings({...settings, reminderDaysBefore: next.sort((a,b) => b-a)});
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors ${
+                          active ? 'bg-blue text-white' : 'bg-white text-text-muted border border-gray-200'
+                        }`}
+                      >
+                        J-{d}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-text-muted mt-1">
+                  Par défaut : J-10 et J-5. Chaque membre ne reçoit qu'un rappel par déclencheur.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1">
+                  Message personnalisé (optionnel)
+                </label>
+                <textarea
+                  value={settings.reminderMessage || ''}
+                  onChange={e => setSettings({...settings, reminderMessage: e.target.value})}
+                  className="input-field text-sm resize-none"
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="Ajout d'un mot du président, d'une précision sur l'événement…"
+                />
+                <p className="text-[11px] text-text-muted mt-1">
+                  Le texte "Pense à dire si tu participes ou si tu ne participes pas" est déjà
+                  inclus automatiquement dans l'email.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {msg && <p className="text-sm text-green-600">{msg}</p>}
         <button type="submit" className="btn-primary text-sm w-full sm:w-auto" disabled={saving}>
           {saving ? 'Sauvegarde...' : 'Enregistrer'}

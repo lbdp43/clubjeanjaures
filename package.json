@@ -12,7 +12,8 @@
     "db:push": "npx prisma db push",
     "db:seed": "node server/prisma/seed.js",
     "db:seed-events": "node server/prisma/seed-events.js",
-    "db:generate": "npx prisma generate"
+    "db:generate": "npx prisma generate",
+    "cron:reminders": "node server/scripts/sendEventReminders.js"
   },
   "prisma": {
     "schema": "server/prisma/schema.prisma"

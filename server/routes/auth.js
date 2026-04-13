@@ -258,6 +258,21 @@ router.get('/me', requireAuth, async (req, res) => {
   res.json(safeUser);
 });
 
+// PUT /api/auth/reminder-preferences — activer/désactiver les rappels d'événements
+router.put('/reminder-preferences', requireAuth, async (req, res) => {
+  try {
+    const optOut = !!req.body.optOut;
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { reminderOptOut: optOut }
+    });
+    res.json({ reminderOptOut: optOut });
+  } catch (err) {
+    logger.error('Erreur reminder-preferences', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // PUT /api/auth/onboarding
 router.put('/onboarding', requireAuth, async (req, res) => {
   const data = { onboardingDone: true };

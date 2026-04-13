@@ -228,6 +228,21 @@ router.put('/settings', requireAuth, requireAdmin, async (req, res) => {
     if (address !== undefined) data.address = xss(address);
     if (req.body.publicAgenda !== undefined) data.publicAgenda = !!req.body.publicAgenda;
 
+    if (req.body.eventRemindersEnabled !== undefined) {
+      data.eventRemindersEnabled = !!req.body.eventRemindersEnabled;
+    }
+    if (Array.isArray(req.body.reminderDaysBefore)) {
+      const days = req.body.reminderDaysBefore
+        .map(n => parseInt(n))
+        .filter(n => Number.isInteger(n) && n >= 1 && n <= 60);
+      data.reminderDaysBefore = [...new Set(days)].sort((a, b) => b - a);
+    }
+    if (req.body.reminderMessage !== undefined) {
+      data.reminderMessage = req.body.reminderMessage
+        ? xss(String(req.body.reminderMessage)).slice(0, 1000)
+        : null;
+    }
+
     const settings = await prisma.clubSettings.upsert({
       where: { id: 1 },
       update: data,

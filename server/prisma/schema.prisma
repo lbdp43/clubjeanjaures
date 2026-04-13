@@ -46,6 +46,7 @@ model User {
   invitedBy         String?    @map("invited_by") @db.Uuid
   createdAt         DateTime   @default(now()) @map("created_at")
   lastLogin         DateTime?  @map("last_login")
+  reminderOptOut    Boolean    @default(false) @map("reminder_opt_out")
 
   inviter       User?      @relation("Invitations", fields: [invitedBy], references: [id])
   invitees      User[]     @relation("Invitations")
@@ -91,25 +92,39 @@ model Member {
 }
 
 model Event {
-  id              String    @id @default(uuid()) @db.Uuid
-  title           String
-  type            EventType
-  date            DateTime  @db.Date
-  timeStart       String    @map("time_start")
-  timeEnd         String?   @map("time_end")
-  location        String
-  description     String?
-  speaker         String?
-  createdBy       String?   @map("created_by") @db.Uuid
-  recurrenceGroup String?   @map("recurrence_group") @db.Uuid
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id                 String    @id @default(uuid()) @db.Uuid
+  title              String
+  type               EventType
+  date               DateTime  @db.Date
+  timeStart          String    @map("time_start")
+  timeEnd            String?   @map("time_end")
+  location           String
+  description        String?
+  speaker            String?
+  createdBy          String?   @map("created_by") @db.Uuid
+  recurrenceGroup    String?   @map("recurrence_group") @db.Uuid
+  remindersDisabled  Boolean   @default(false) @map("reminders_disabled")
+  createdAt          DateTime  @default(now()) @map("created_at")
 
-  creator User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
-  rsvps   Rsvp[]
+  creator          User?                @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  rsvps            Rsvp[]
+  reminderBatches  EventReminderBatch[]
 
   @@map("events")
   @@index([date])
   @@index([type])
+}
+
+model EventReminderBatch {
+  eventId    String   @map("event_id") @db.Uuid
+  daysBefore Int      @map("days_before")
+  sentAt     DateTime @default(now()) @map("sent_at")
+  sentCount  Int      @default(0) @map("sent_count")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, daysBefore])
+  @@map("event_reminder_batches")
 }
 
 model Post {
@@ -173,14 +188,17 @@ model Favorite {
 }
 
 model ClubSettings {
-  id           Int     @id @default(1)
-  name         String  @default("Club de Jean Jaurès")
-  description  String  @default("")
-  logoUrl      String? @map("logo_url")
-  contactEmail String? @map("contact_email")
-  contactPhone String? @map("contact_phone")
-  address      String?
-  publicAgenda Boolean @default(true) @map("public_agenda")
+  id                      Int     @id @default(1)
+  name                    String  @default("Club de Jean Jaurès")
+  description             String  @default("")
+  logoUrl                 String? @map("logo_url")
+  contactEmail            String? @map("contact_email")
+  contactPhone            String? @map("contact_phone")
+  address                 String?
+  publicAgenda            Boolean @default(true) @map("public_agenda")
+  eventRemindersEnabled   Boolean @default(false) @map("event_reminders_enabled")
+  reminderDaysBefore      Int[]   @default([10, 5]) @map("reminder_days_before")
+  reminderMessage         String? @map("reminder_message")
 
   @@map("club_settings")
 }

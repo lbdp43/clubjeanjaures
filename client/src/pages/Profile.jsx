@@ -28,6 +28,8 @@ export default function Profile() {
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState('');
+  const [reminderOptOut, setReminderOptOut] = useState(false);
+  const [reminderMsg, setReminderMsg] = useState('');
   const logoRef = useRef();
   const profilePhotoRef = useRef();
 
@@ -48,7 +50,40 @@ export default function Profile() {
         visibility: user.member.visibility || { phone: 'public', email: 'public' }
       });
     }
+    if (user) {
+      setReminderOptOut(!!user.reminderOptOut);
+    }
   }, [user]);
+
+  // Auto opt-out si l'utilisateur arrive via le lien de l'email de rappel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('optout') === 'reminders' && user && !user.reminderOptOut) {
+      api.updateReminderPreferences(true)
+        .then(() => {
+          setReminderOptOut(true);
+          setReminderMsg('Vous ne recevrez plus de rappels d\'événements par email.');
+          if (refreshUser) refreshUser();
+        })
+        .catch(() => {});
+    }
+  }, [user, refreshUser]);
+
+  const handleToggleReminders = async () => {
+    const next = !reminderOptOut;
+    setReminderOptOut(next);
+    setReminderMsg('');
+    try {
+      await api.updateReminderPreferences(next);
+      setReminderMsg(next
+        ? 'Rappels d\'événements désactivés.'
+        : 'Rappels d\'événements réactivés.');
+      if (refreshUser) refreshUser();
+    } catch {
+      setReminderOptOut(!next);
+      setReminderMsg('Erreur lors de la mise à jour.');
+    }
+  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -343,6 +378,34 @@ export default function Profile() {
           + Ajouter des photos
           <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
         </label>
+      </div>
+
+      {/* Préférences de notifications */}
+      <div className="card p-4 sm:p-6">
+        <h3 className="font-semibold mb-3">Notifications par email</h3>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium">Rappels d'événements</p>
+            <p className="text-xs text-text-muted">
+              Recevoir une relance par email avant les événements auxquels je n'ai pas répondu.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleReminders}
+            className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+              !reminderOptOut ? 'bg-blue' : 'bg-gray-300'
+            }`}
+            aria-label="Activer/désactiver les rappels"
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${
+              !reminderOptOut ? 'translate-x-5' : ''
+            }`} />
+          </button>
+        </div>
+        {reminderMsg && (
+          <p className="text-xs text-green-600 mt-2">{reminderMsg}</p>
+        )}
       </div>
 
       {/* Mot de passe */}

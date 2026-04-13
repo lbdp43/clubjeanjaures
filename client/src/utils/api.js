@@ -133,5 +133,8 @@ export const api = {
   }),
   sendNotification: (subject, message) => apiFetch('/admin/notify', {
     method: 'POST', body: JSON.stringify({ subject, message })
+  }),
+  updateReminderPreferences: (optOut) => apiFetch('/auth/reminder-preferences', {
+    method: 'PUT', body: JSON.stringify({ optOut })
   })
 };

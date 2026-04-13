@@ -98,4 +98,43 @@ async function sendBulkEmail(emails, subject, htmlContent) {
   return sent;
 }
 
-module.exports = { sendMagicLink, sendInvitation, sendBulkEmail };
+// ─── Rappel d'événement ───
+async function sendEventReminder(email, { event, daysBefore, customMessage, userId }) {
+  const eventUrl = `${APP_URL}/agenda/${event.id}`;
+  const optOutUrl = `${APP_URL}/profil?optout=reminders`;
+  const dateStr = new Date(event.date).toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  const subject = daysBefore <= 5
+    ? `Plus que ${daysBefore} jours — ${event.title}`
+    : `Rappel : ${event.title} dans ${daysBefore} jours`;
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+      <h2 style="color:#2B5C8A;margin:0 0 16px;">Club Jean Jaurès</h2>
+      <p>Bonjour,</p>
+      <p>L'événement <strong>${event.title}</strong> aura lieu <strong>dans ${daysBefore} jours</strong>.</p>
+      <div style="background:#F3F4F6;border-radius:12px;padding:16px;margin:16px 0;">
+        <p style="margin:0 0 6px;"><strong>📅 ${dateStr}</strong></p>
+        <p style="margin:0 0 6px;">🕐 ${event.timeStart}${event.timeEnd ? ` — ${event.timeEnd}` : ''}</p>
+        <p style="margin:0;">📍 ${event.location}</p>
+      </div>
+      <p style="font-size:15px;">
+        <strong>Pense à dire si tu participes ou si tu ne participes pas à l'événement.</strong>
+      </p>
+      ${customMessage ? `<p style="color:#374151;">${customMessage.replace(/\n/g, '<br>')}</p>` : ''}
+      <a href="${eventUrl}" style="display:inline-block;background:#2B5C8A;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;margin:16px 0;font-weight:600;">
+        Répondre maintenant
+      </a>
+      <p style="color:#6B7280;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:12px;">
+        Vous recevez cet email car vous n'avez pas encore indiqué votre participation.<br>
+        <a href="${optOutUrl}" style="color:#6B7280;">Ne plus recevoir ces rappels</a>
+      </p>
+    </div>
+  `;
+
+  return sendEmail(email, subject, html);
+}
+
+module.exports = { sendMagicLink, sendInvitation, sendBulkEmail, sendEventReminder };
