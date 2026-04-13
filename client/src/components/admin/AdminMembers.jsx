@@ -385,15 +385,22 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                   <input value={profileForm.city || ''} onChange={e => setProfileForm({...profileForm, city: e.target.value})} className="input-field text-sm" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Secteur d'activité</label>
-                  <select
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Métier / Secteur d'activité
+                  </label>
+                  <input
+                    list={`sectors-${m.id}`}
                     value={profileForm.sector || ''}
                     onChange={e => setProfileForm({...profileForm, sector: e.target.value})}
                     className="input-field text-sm"
-                  >
-                    <option value="">Choisir un secteur…</option>
-                    {SECTORS.map(s => (<option key={s} value={s}>{s}</option>))}
-                  </select>
+                    placeholder="Ex : Notaire, Producteur de liqueur, Avocat…"
+                  />
+                  <datalist id={`sectors-${m.id}`}>
+                    {SECTORS.map(s => (<option key={s} value={s} />))}
+                  </datalist>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Choisis dans la liste ou tape librement (métier précis, activité…)
+                  </p>
                 </div>
               </div>
               <div>

@@ -220,16 +220,16 @@ export default function Profile() {
           </div>
           <div>
             <label className="block text-xs sm:text-sm font-medium mb-1">Secteur d'activité</label>
-            <select
+            <input
+              list="profile-sectors"
               value={form.sector || ''}
               onChange={e => setForm({...form, sector: e.target.value || null})}
               className="input-field text-sm"
-            >
-              <option value="">Choisir un secteur...</option>
-              {SECTORS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              placeholder="Ex : Notaire, Producteur de liqueur…"
+            />
+            <datalist id="profile-sectors">
+              {SECTORS.map(s => (<option key={s} value={s} />))}
+            </datalist>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Téléphone *</label>
