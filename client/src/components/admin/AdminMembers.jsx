@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../utils/api';
 
+const SECTORS = [
+  'Artisanat', 'Automobile', 'BTP / Construction', 'Commerce', 'Communication / Marketing',
+  'Comptabilité / Finance', 'Conseil', 'Culture / Loisirs', 'Droit / Juridique',
+  'Éducation / Formation', 'Environnement', 'Immobilier', 'Industrie',
+  'Informatique / Digital', 'Médical / Santé', 'Restauration / Hôtellerie',
+  'Services aux entreprises', 'Services à la personne', 'Sport / Bien-être',
+  'Transport / Logistique', 'Autre'
+];
+
 export default function AdminMembers() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -181,6 +190,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
       phone: m.member?.phone || '',
       address: m.member?.address || '',
       city: m.member?.city || '',
+      sector: m.member?.sector || '',
       website: m.member?.website || '',
       description: m.member?.description || '',
       lookingFor: m.member?.lookingFor || '',
@@ -373,6 +383,17 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Ville</label>
                   <input value={profileForm.city || ''} onChange={e => setProfileForm({...profileForm, city: e.target.value})} className="input-field text-sm" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Secteur d'activité</label>
+                  <select
+                    value={profileForm.sector || ''}
+                    onChange={e => setProfileForm({...profileForm, sector: e.target.value})}
+                    className="input-field text-sm"
+                  >
+                    <option value="">Choisir un secteur…</option>
+                    {SECTORS.map(s => (<option key={s} value={s}>{s}</option>))}
+                  </select>
                 </div>
               </div>
               <div>

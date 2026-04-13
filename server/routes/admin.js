@@ -285,7 +285,7 @@ router.put('/members/:id/password', requireAuth, requireAdmin, adminActionLimite
 // PUT /api/admin/members/:id/profile — Edit member profile
 router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { companyName, jobTitle, phone, address, city, website, description, lookingFor, canOffer } = req.body;
+    const { companyName, jobTitle, phone, address, city, sector, website, description, lookingFor, canOffer } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: req.params.id }, include: { member: true } });
     if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
@@ -296,6 +296,7 @@ router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) =
     if (phone !== undefined) data.phone = phone;
     if (address !== undefined) data.address = xss(address);
     if (city !== undefined) data.city = xss(city);
+    if (sector !== undefined) data.sector = sector ? xss(sector) : null;
     if (website !== undefined) data.website = website;
     if (description !== undefined) data.description = xss(description);
     if (lookingFor !== undefined) data.lookingFor = xss(lookingFor);
