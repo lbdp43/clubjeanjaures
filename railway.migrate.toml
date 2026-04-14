@@ -1,0 +1,6 @@
+[build]
+buildCommand = "npm run build"
+
+[deploy]
+startCommand = "npm run calendar:update-2026"
+restartPolicyType = "NEVER"
