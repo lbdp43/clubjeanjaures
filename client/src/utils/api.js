@@ -136,5 +136,8 @@ export const api = {
   }),
   updateReminderPreferences: (optOut) => apiFetch('/auth/reminder-preferences', {
     method: 'PUT', body: JSON.stringify({ optOut })
+  }),
+  sendReminderTest: (email, daysBefore) => apiFetch('/admin/reminder-test', {
+    method: 'POST', body: JSON.stringify({ email, daysBefore })
   })
 };

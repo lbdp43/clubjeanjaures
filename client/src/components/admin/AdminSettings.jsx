@@ -11,9 +11,14 @@ export default function AdminSettings() {
   const [emailMessage, setEmailMessage] = useState('');
   const [emailSending, setEmailSending] = useState(false);
   const [emailMsg, setEmailMsg] = useState('');
+  const [testEmail, setTestEmail] = useState('');
+  const [testDaysBefore, setTestDaysBefore] = useState(10);
+  const [testSending, setTestSending] = useState(false);
+  const [testMsg, setTestMsg] = useState('');
 
   useEffect(() => {
     api.getSettings().then(data => setSettings({ ...data, publicAgenda: data.publicAgenda ?? true })).catch(() => {}).finally(() => setLoading(false));
+    api.getMe().then(me => setTestEmail(me.email || '')).catch(() => {});
   }, []);
 
   const handleSave = async (e) => {
@@ -43,6 +48,20 @@ export default function AdminSettings() {
   if (loading) {
     return <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" /></div>;
   }
+
+  const handleSendTest = async (e) => {
+    e.preventDefault();
+    setTestMsg('');
+    setTestSending(true);
+    try {
+      const res = await api.sendReminderTest(testEmail, testDaysBefore);
+      setTestMsg(`Email de test envoyé à ${res.email}. Regarde ta boîte dans quelques secondes.`);
+    } catch (err) {
+      setTestMsg(err.message || 'Erreur lors de l\'envoi du test.');
+    } finally {
+      setTestSending(false);
+    }
+  };
 
   const handleSendEmail = async (e) => {
     e.preventDefault();
@@ -198,6 +217,50 @@ export default function AdminSettings() {
         {msg && <p className="text-sm text-green-600">{msg}</p>}
         <button type="submit" className="btn-primary text-sm w-full sm:w-auto" disabled={saving}>
           {saving ? 'Sauvegarde...' : 'Enregistrer'}
+        </button>
+      </form>
+
+      {/* Test reminder email */}
+      <form onSubmit={handleSendTest} className="card p-3 sm:p-5 space-y-3 sm:space-y-4">
+        <div>
+          <h3 className="font-semibold text-sm sm:text-base">Tester l'email de rappel</h3>
+          <p className="text-xs sm:text-sm text-text-muted mt-0.5">
+            Envoie un email de démonstration à l'adresse de ton choix, sans impact sur les vrais rappels ni sur les autres membres.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div>
+            <label className="block text-xs sm:text-sm font-medium mb-1">Email destinataire</label>
+            <input
+              type="email"
+              value={testEmail}
+              onChange={e => setTestEmail(e.target.value)}
+              className="input-field text-sm"
+              placeholder="ton.email@exemple.fr"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium mb-1">Simuler</label>
+            <select
+              value={testDaysBefore}
+              onChange={e => setTestDaysBefore(parseInt(e.target.value, 10))}
+              className="input-field text-sm"
+            >
+              <option value={10}>J-10</option>
+              <option value={5}>J-5</option>
+              <option value={2}>J-2</option>
+              <option value={1}>J-1</option>
+            </select>
+          </div>
+        </div>
+        {testMsg && (
+          <p className={`text-sm ${testMsg.includes('Erreur') || testMsg.includes('erreur') ? 'text-red-500' : 'text-green-600'}`}>
+            {testMsg}
+          </p>
+        )}
+        <button type="submit" className="btn-primary text-sm w-full sm:w-auto" disabled={testSending}>
+          {testSending ? 'Envoi...' : 'Envoyer l\'email de test'}
         </button>
       </form>
 

@@ -6,7 +6,7 @@ const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
-const { sendInvitation, sendBulkEmail } = require('../services/email');
+const { sendInvitation, sendBulkEmail, sendEventReminder } = require('../services/email');
 const xss = require('xss');
 const logger = require('../utils/logger');
 
@@ -404,6 +404,50 @@ router.post('/notify', requireAuth, requireAdmin, emailLimiter, async (req, res)
     res.json({ sent, total: emails.length, message: `Email envoyé à ${sent}/${emails.length} membres.` });
   } catch (err) {
     logger.error('Erreur notify', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/admin/reminder-test — Envoie un email de rappel de démo à l'admin (ou à l'email fourni)
+router.post('/reminder-test', requireAuth, requireAdmin, emailLimiter, async (req, res) => {
+  try {
+    const rawEmail = req.body.email || req.user.email || '';
+    const email = String(rawEmail).toLowerCase().trim();
+    const daysBefore = Math.min(Math.max(parseInt(req.body.daysBefore, 10) || 10, 1), 60);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Email invalide.' });
+    }
+
+    // Événement fictif pour la démo — aucune trace en base, aucun impact sur les rappels réels
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + daysBefore);
+    const demoEvent = {
+      id: 'demo',
+      title: 'Afterwork de démonstration',
+      date: targetDate,
+      timeStart: '18:30',
+      timeEnd: '20:30',
+      location: 'Saint-Étienne'
+    };
+
+    const settings = await prisma.clubSettings.findUnique({ where: { id: 1 } });
+    const customMessage = settings?.reminderMessage || null;
+
+    const result = await sendEventReminder(email, {
+      event: demoEvent,
+      daysBefore,
+      customMessage,
+      userId: req.user.id
+    });
+
+    if (!result.ok) {
+      return res.status(500).json({ error: result.error || 'Erreur lors de l\'envoi.' });
+    }
+    res.json({ ok: true, email, daysBefore });
+  } catch (err) {
+    logger.error('Erreur reminder-test', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
