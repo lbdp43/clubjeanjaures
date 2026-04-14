@@ -13,7 +13,8 @@
     "db:seed": "node server/prisma/seed.js",
     "db:seed-events": "node server/prisma/seed-events.js",
     "db:generate": "npx prisma generate",
-    "cron:reminders": "node server/scripts/sendEventReminders.js"
+    "cron:reminders": "node server/scripts/sendEventReminders.js",
+    "calendar:update-2026": "node server/scripts/updateCalendar2026.js"
   },
   "prisma": {
     "schema": "server/prisma/schema.prisma"
