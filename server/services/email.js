@@ -101,7 +101,6 @@ async function sendBulkEmail(emails, subject, htmlContent) {
 // ─── Rappel d'événement ───
 async function sendEventReminder(email, { event, daysBefore, customMessage, userId }) {
   const eventUrl = `${APP_URL}/agenda/${event.id}`;
-  const optOutUrl = `${APP_URL}/profil?optout=reminders`;
   const dateStr = new Date(event.date).toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
@@ -128,8 +127,7 @@ async function sendEventReminder(email, { event, daysBefore, customMessage, user
         Répondre maintenant
       </a>
       <p style="color:#6B7280;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:12px;">
-        Vous recevez cet email car vous n'avez pas encore indiqué votre participation.<br>
-        <a href="${optOutUrl}" style="color:#6B7280;">Ne plus recevoir ces rappels</a>
+        Vous recevez cet email car vous n'avez pas encore indiqué votre participation.
       </p>
     </div>
   `;
