@@ -30,6 +30,9 @@ export default function Profile() {
   const [pwMsg, setPwMsg] = useState('');
   const [reminderOptOut, setReminderOptOut] = useState(false);
   const [reminderMsg, setReminderMsg] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState('');
   const logoRef = useRef();
   const profilePhotoRef = useRef();
 
@@ -82,6 +85,21 @@ export default function Profile() {
     } catch {
       setReminderOptOut(!next);
       setReminderMsg('Erreur lors de la mise à jour.');
+    }
+  };
+
+  const handleSendInvite = async (e) => {
+    e.preventDefault();
+    setInviteMsg('');
+    setInviteSending(true);
+    try {
+      await api.sendInvite(inviteEmail.trim());
+      setInviteMsg(`Invitation envoyée à ${inviteEmail.trim()}.`);
+      setInviteEmail('');
+    } catch (err) {
+      setInviteMsg(err.message || 'Erreur lors de l\'envoi de l\'invitation.');
+    } finally {
+      setInviteSending(false);
     }
   };
 
@@ -407,6 +425,35 @@ export default function Profile() {
           <p className="text-xs text-green-600 mt-2">{reminderMsg}</p>
         )}
       </div>
+
+      {/* Inviter un membre */}
+      <form onSubmit={handleSendInvite} className="card p-4 sm:p-6 space-y-3">
+        <div>
+          <h3 className="font-semibold">Inviter un membre au club</h3>
+          <p className="text-xs text-text-muted mt-0.5">
+            Il recevra un email avec un lien de connexion directe. Il sera automatiquement enregistré comme membre.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Email de la personne à inviter</label>
+          <input
+            type="email"
+            value={inviteEmail}
+            onChange={e => setInviteEmail(e.target.value)}
+            className="input-field"
+            placeholder="nom@exemple.fr"
+            required
+          />
+        </div>
+        {inviteMsg && (
+          <p className={`text-sm ${inviteMsg.toLowerCase().includes('erreur') ? 'text-red-500' : 'text-green-600'}`}>
+            {inviteMsg}
+          </p>
+        )}
+        <button type="submit" className="btn-primary text-sm" disabled={inviteSending || !inviteEmail}>
+          {inviteSending ? 'Envoi...' : 'Envoyer l\'invitation'}
+        </button>
+      </form>
 
       {/* Mot de passe */}
       <form onSubmit={handleChangePassword} className="card p-4 sm:p-6 space-y-4">

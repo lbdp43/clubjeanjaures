@@ -3,7 +3,9 @@ const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../prisma/db');
 const { requireAuth } = require('../middleware/auth');
-const { requireAdmin } = require('../middleware/roles');
+const { requireAdmin, requireMember } = require('../middleware/roles');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
 const { sendInvitation, sendBulkEmail, sendEventReminder } = require('../services/email');
@@ -345,13 +347,53 @@ router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) =
 });
 
 // POST /api/admin/invite — Invite a new member by email
-router.post('/invite', requireAuth, requireAdmin, emailLimiter, async (req, res) => {
+// Accessible aux admins ET aux membres. L'invité est créé avec le rôle "member"
+// et reçoit un magic link qui le connecte directement.
+router.post('/invite', requireAuth, requireMember, emailLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email requis' });
 
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ error: "Format d'email invalide" });
+    }
+
+    // Créer ou promouvoir l'utilisateur en tant que membre
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    let user;
+    if (existing) {
+      // Promouvoir en member si encore visitor, sinon laisser tel quel
+      user = existing.role === 'visitor'
+        ? await prisma.user.update({
+            where: { id: existing.id },
+            data: { role: 'member', invitedBy: req.user.id }
+          })
+        : existing;
+    } else {
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          role: 'member',
+          invitedBy: req.user.id
+        }
+      });
+    }
+
+    // Générer un magic token pour que le lien connecte directement
+    const rawToken = uuidv4();
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        magicToken: hashedToken,
+        magicTokenExpires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 jours
+      }
+    });
+
     const inviterName = req.user.member?.companyName || req.user.email;
-    const result = await sendInvitation(email.toLowerCase().trim(), inviterName);
+    const result = await sendInvitation(normalizedEmail, inviterName, rawToken);
 
     if (!result.ok) {
       return res.status(500).json({ error: result.error || "Impossible d'envoyer l'email." });

@@ -67,8 +67,12 @@ async function sendMagicLink(email, token) {
 }
 
 // ─── Invitation ───
-async function sendInvitation(email, inviterName) {
-  const link = `${APP_URL}/inscription`;
+async function sendInvitation(email, inviterName, token) {
+  // Si un token est fourni → magic link qui connecte directement (et le compte est déjà en "member")
+  // Sinon → fallback vers la page d'inscription classique
+  const link = token
+    ? `${APP_URL}/api/auth/verify-redirect?token=${token}`
+    : `${APP_URL}/inscription`;
 
   return sendEmail(
     email,
@@ -77,9 +81,11 @@ async function sendInvitation(email, inviterName) {
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
         <h2 style="color:#2B5C8A;">Club Jean Jaurès</h2>
         <p>${inviterName} vous invite à rejoindre le Club Jean Jaurès, club d'affaires de Saint-Étienne.</p>
+        <p>Cliquez sur le bouton ci-dessous — vous serez directement connecté et enregistré comme membre du club :</p>
         <a href="${link}" style="display:inline-block;background:#2B5C8A;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;margin:16px 0;">
           Rejoindre le club
         </a>
+        ${token ? `<p style="color:#6B7280;font-size:12px;">Ce lien est valable 7 jours.</p>` : ''}
       </div>
     `
   );
