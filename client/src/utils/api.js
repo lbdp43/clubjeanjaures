@@ -139,5 +139,8 @@ export const api = {
   }),
   sendReminderTest: (email, daysBefore) => apiFetch('/admin/reminder-test', {
     method: 'POST', body: JSON.stringify({ email, daysBefore })
+  }),
+  sendCustomEmail: (data) => apiFetch('/admin/email-custom', {
+    method: 'POST', body: JSON.stringify(data)
   })
 };

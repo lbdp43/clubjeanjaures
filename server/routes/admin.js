@@ -494,4 +494,57 @@ router.post('/reminder-test', requireAuth, requireAdmin, emailLimiter, async (re
   }
 });
 
+// POST /api/admin/email-custom — Envoyer un email personnalisé à une liste d'adresses
+router.post('/email-custom', requireAuth, requireAdmin, emailLimiter, async (req, res) => {
+  try {
+    const { emails, subject, message, includeJoinLink } = req.body;
+    if (!emails || !subject || !message) {
+      return res.status(400).json({ error: 'Emails, sujet et message requis.' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailList = String(emails)
+      .split(/[,;\n]+/)
+      .map(e => e.trim().toLowerCase())
+      .filter(e => emailRegex.test(e));
+
+    if (emailList.length === 0) {
+      return res.status(400).json({ error: 'Aucune adresse email valide trouvée.' });
+    }
+
+    const APP_URL = process.env.APP_URL || 'http://localhost:5173';
+    const joinBlock = includeJoinLink
+      ? `<div style="margin:24px 0;text-align:center;">
+           <a href="${APP_URL}/inscription" style="display:inline-block;background:#2B5C8A;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;">
+             Rejoindre le Club Jean Jaurès
+           </a>
+         </div>`
+      : '';
+
+    const cleanSubject = xss(subject);
+    const cleanMessage = xss(message).replace(/\n/g, '<br>');
+    const htmlContent = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+        <h2 style="color:#2B5C8A;">Club Jean Jaurès</h2>
+        <div>${cleanMessage}</div>
+        ${joinBlock}
+        <hr style="margin:24px 0;border:none;border-top:1px solid #eee;">
+        <p style="color:#6B7280;font-size:12px;">Club Jean Jaurès — Club d'affaires de Saint-Étienne</p>
+      </div>
+    `;
+
+    let sent = 0;
+    for (const email of emailList) {
+      const result = await sendBulkEmail([email], cleanSubject, htmlContent);
+      if (result >= 1) sent++;
+      await new Promise(r => setTimeout(r, 120));
+    }
+
+    res.json({ sent, total: emailList.length, message: `Email envoyé à ${sent}/${emailList.length} adresse(s).` });
+  } catch (err) {
+    logger.error('Erreur email-custom', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

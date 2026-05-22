@@ -15,6 +15,12 @@ export default function AdminSettings() {
   const [testDaysBefore, setTestDaysBefore] = useState(10);
   const [testSending, setTestSending] = useState(false);
   const [testMsg, setTestMsg] = useState('');
+  const [customEmails, setCustomEmails] = useState('');
+  const [customSubject, setCustomSubject] = useState('');
+  const [customMessage, setCustomMessage] = useState('');
+  const [customJoinLink, setCustomJoinLink] = useState(true);
+  const [customSending, setCustomSending] = useState(false);
+  const [customMsg, setCustomMsg] = useState('');
 
   useEffect(() => {
     api.getSettings().then(data => setSettings({ ...data, publicAgenda: data.publicAgenda ?? true })).catch(() => {}).finally(() => setLoading(false));
@@ -60,6 +66,30 @@ export default function AdminSettings() {
       setTestMsg(err.message || 'Erreur lors de l\'envoi du test.');
     } finally {
       setTestSending(false);
+    }
+  };
+
+  const handleSendCustomEmail = async (e) => {
+    e.preventDefault();
+    const count = customEmails.split(/[,;\n]+/).filter(e => e.trim()).length;
+    if (!confirm(`Envoyer cet email à ${count} adresse(s) ?`)) return;
+    setCustomMsg('');
+    setCustomSending(true);
+    try {
+      const res = await api.sendCustomEmail({
+        emails: customEmails,
+        subject: customSubject,
+        message: customMessage,
+        includeJoinLink: customJoinLink
+      });
+      setCustomMsg(res.message || `Email envoyé à ${res.sent} adresse(s).`);
+      setCustomEmails('');
+      setCustomSubject('');
+      setCustomMessage('');
+    } catch (err) {
+      setCustomMsg(err.message || "Erreur lors de l'envoi.");
+    } finally {
+      setCustomSending(false);
     }
   };
 
@@ -261,6 +291,68 @@ export default function AdminSettings() {
         )}
         <button type="submit" className="btn-primary text-sm w-full sm:w-auto" disabled={testSending}>
           {testSending ? 'Envoi...' : 'Envoyer l\'email de test'}
+        </button>
+      </form>
+
+      {/* Email personnalisé à une liste d'adresses */}
+      <form onSubmit={handleSendCustomEmail} className="card p-3 sm:p-5 space-y-3 sm:space-y-4">
+        <div>
+          <h3 className="font-semibold text-sm sm:text-base">Envoyer un email à des adresses personnalisées</h3>
+          <p className="text-xs sm:text-sm text-text-muted mt-0.5">
+            Pour inviter des personnes extérieures au club, leur envoyer une info, etc.
+          </p>
+        </div>
+        <div>
+          <label className="block text-xs sm:text-sm font-medium mb-1">Adresses email (une par ligne, ou séparées par des virgules)</label>
+          <textarea
+            value={customEmails}
+            onChange={e => setCustomEmails(e.target.value)}
+            className="input-field text-sm resize-none font-mono"
+            rows={3}
+            placeholder={"jean@exemple.fr\npierre@exemple.fr\nmarie@exemple.fr"}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-xs sm:text-sm font-medium mb-1">Sujet</label>
+          <input
+            value={customSubject}
+            onChange={e => setCustomSubject(e.target.value)}
+            className="input-field text-sm"
+            placeholder="Invitation au Club Jean Jaurès"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-xs sm:text-sm font-medium mb-1">Message</label>
+          <textarea
+            value={customMessage}
+            onChange={e => setCustomMessage(e.target.value)}
+            className="input-field text-sm resize-none"
+            rows={5}
+            placeholder="Bonjour, je vous invite à découvrir le Club Jean Jaurès..."
+            required
+          />
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={customJoinLink}
+            onChange={e => setCustomJoinLink(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-blue focus:ring-blue"
+          />
+          <span className="text-xs sm:text-sm">Inclure un bouton "Rejoindre le Club Jean Jaurès" dans l'email</span>
+        </label>
+        {customMsg && (
+          <p className={`text-sm ${customMsg.toLowerCase().includes('erreur') ? 'text-red-500' : 'text-green-600'}`}>
+            {customMsg}
+          </p>
+        )}
+        <button type="submit" className="btn-primary text-sm w-full sm:w-auto flex items-center justify-center gap-2" disabled={customSending}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+          </svg>
+          {customSending ? 'Envoi en cours...' : 'Envoyer'}
         </button>
       </form>
 
