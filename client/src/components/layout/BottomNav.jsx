@@ -5,7 +5,6 @@ const navItems = [
   { to: '/', label: 'Accueil', icon: HomeIcon },
   { to: '/annuaire', label: 'Annuaire', icon: UsersIcon },
   { to: '/agenda', label: 'Agenda', icon: CalendarIcon },
-  { to: '/fil', label: 'Fil', icon: FeedIcon, auth: true, showForVisitor: true },
   { to: '/profil', label: 'Profil', icon: ProfileIcon, auth: true },
   { to: '/admin', label: 'Admin', icon: AdminIcon, admin: true }
 ];

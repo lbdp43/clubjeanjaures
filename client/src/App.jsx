@@ -13,7 +13,7 @@ const Annuaire = lazy(() => import('./pages/Annuaire'));
 const MemberDetail = lazy(() => import('./pages/MemberDetail'));
 const Agenda = lazy(() => import('./pages/Agenda'));
 const EventDetail = lazy(() => import('./pages/EventDetail'));
-const Feed = lazy(() => import('./pages/Feed'));
+// const Feed = lazy(() => import('./pages/Feed'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Profile = lazy(() => import('./pages/Profile'));
 const MemberDashboard = lazy(() => import('./pages/MemberDashboard'));
@@ -54,7 +54,7 @@ export default function App() {
             <Route path="/annuaire/:id" element={<MemberDetail />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/agenda/:id" element={<EventDetail />} />
-            <Route path="/fil" element={<Feed />} />
+            {/* <Route path="/fil" element={<Feed />} /> */}
             <Route path="/admin/*" element={<Admin />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/tableau-de-bord" element={<MemberDashboard />} />

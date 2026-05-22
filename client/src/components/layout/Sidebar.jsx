@@ -9,7 +9,6 @@ export default function Sidebar() {
     { to: '/annuaire', label: 'Annuaire' },
     { to: '/agenda', label: 'Agenda' },
     ...(user ? [
-      { to: '/fil', label: "Fil d'actualité" },
       { to: '/tableau-de-bord', label: 'Tableau de bord' },
       { to: '/profil', label: 'Mon profil' }
     ] : []),
