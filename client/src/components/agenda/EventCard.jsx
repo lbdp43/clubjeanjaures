@@ -2,7 +2,7 @@ import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
-import { formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl } from '../../utils/helpers';
+import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl } from '../../utils/helpers';
 
 function EventCard({ event, onRsvpChange }) {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ function EventCard({ event, onRsvpChange }) {
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [localParticipating, setLocalParticipating] = useState(false);
   const [localCount, setLocalCount] = useState(0);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     setLocalParticipating(user && event.rsvps?.some(r => r.userId === user.id));
@@ -34,6 +35,26 @@ function EventCard({ event, onRsvpChange }) {
     } finally {
       setRsvpLoading(false);
     }
+  };
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/agenda/${event.id}`;
+    const dateStr = formatDate(event.date);
+    const timeStr = formatTime(event.timeStart) + (event.timeEnd ? ` — ${formatTime(event.timeEnd)}` : '');
+    const text = `Club Jean Jaures vous invite :\n${event.title}\n${dateStr} a ${timeStr}\n${event.location || ''}\n\nPlus d'infos : ${url}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: event.title, text, url });
+        return;
+      } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch {}
   };
 
   const dateObj = new Date(event.date);
@@ -88,8 +109,8 @@ function EventCard({ event, onRsvpChange }) {
             </a>
           )}
 
-          {/* Participants + RSVP */}
-          <div className="flex items-center gap-3 mt-2">
+          {/* Participants + RSVP + Partager */}
+          <div className="flex items-center flex-wrap gap-2 sm:gap-3 mt-2">
             {localCount > 0 && (
               <span className="text-xs text-text-muted flex items-center gap-1">
                 <svg className="w-3.5 h-3.5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -124,6 +145,16 @@ function EventCard({ event, onRsvpChange }) {
                 </button>
               </div>
             )}
+            <button
+              onClick={handleShare}
+              className="text-xs px-3 py-1 rounded-full font-medium bg-gray-100 text-gray-500 hover:bg-blue-light hover:text-blue transition-colors flex items-center gap-1"
+              title="Partager l'événement"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+              </svg>
+              {shared ? 'Lien copie !' : 'Partager'}
+            </button>
           </div>
         </div>
       </div>
