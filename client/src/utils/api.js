@@ -142,5 +142,8 @@ export const api = {
   }),
   sendCustomEmail: (data) => apiFetch('/admin/email-custom', {
     method: 'POST', body: JSON.stringify(data)
+  }),
+  mergeAccounts: (primaryId, mergeEmail) => apiFetch(`/admin/members/${primaryId}/merge`, {
+    method: 'POST', body: JSON.stringify({ mergeEmail })
   })
 };

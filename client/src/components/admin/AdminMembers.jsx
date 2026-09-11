@@ -162,6 +162,7 @@ export default function AdminMembers() {
               onStatusToggle={handleStatusToggle}
               onDelete={handleDelete}
               onUpdate={(updated) => setMembers(prev => prev.map(x => x.id === updated.id ? { ...x, ...updated } : x))}
+              onMergeComplete={loadMembers}
             />
           ))}
         </div>
@@ -170,7 +171,7 @@ export default function AdminMembers() {
   );
 }
 
-function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatusToggle, onDelete, onUpdate }) {
+function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatusToggle, onDelete, onUpdate, onMergeComplete }) {
   const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' });
   const [pwMsg, setPwMsg] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
@@ -180,6 +181,9 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
   const [activeTab, setActiveTab] = useState('profile');
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoMsg, setPhotoMsg] = useState('');
+  const [mergeEmail, setMergeEmail] = useState('');
+  const [mergeLoading, setMergeLoading] = useState(false);
+  const [mergeMsg, setMergeMsg] = useState('');
   const profilePhotoRef = useRef();
   const logoRef = useRef();
 
@@ -268,6 +272,23 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
     setPhotoUploading(false);
   };
 
+  const handleMerge = async (e) => {
+    e.preventDefault();
+    setMergeMsg('');
+    if (!mergeEmail.trim()) return;
+    if (!confirm(`Fusionner le compte "${mergeEmail}" dans "${m.member?.companyName || m.email}" ?\n\nToutes les données (participations, favoris, posts) seront transférées. Le compte "${mergeEmail}" sera supprimé.\n\nCette action est irréversible.`)) return;
+    setMergeLoading(true);
+    try {
+      const result = await api.mergeAccounts(m.id, mergeEmail.trim());
+      setMergeMsg(result.message || 'Fusion réussie.');
+      setMergeEmail('');
+      if (onMergeComplete) onMergeComplete();
+    } catch (err) {
+      setMergeMsg(err.message || 'Erreur lors de la fusion.');
+    }
+    setMergeLoading(false);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setProfileMsg('');
@@ -353,6 +374,14 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
               }`}
             >
               Mot de passe
+            </button>
+            <button
+              onClick={() => setActiveTab('merge')}
+              className={`flex-1 py-1.5 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                activeTab === 'merge' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
+              }`}
+            >
+              Fusionner
             </button>
           </div>
 
@@ -559,6 +588,37 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                 {pwLoading ? 'Modification...' : 'Modifier le mot de passe'}
               </button>
             </form>
+          )}
+
+          {/* Merge tab */}
+          {activeTab === 'merge' && (
+            <div className="space-y-3">
+              <p className="text-xs sm:text-sm text-text-muted">
+                Si un membre s'est inscrit avec plusieurs adresses email, vous pouvez fusionner les comptes.
+                Toutes les participations, favoris et publications du compte secondaire seront transférées ici.
+                Le compte secondaire sera supprimé.
+              </p>
+              <form onSubmit={handleMerge} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Email du compte à fusionner</label>
+                  <input
+                    type="email"
+                    value={mergeEmail}
+                    onChange={e => setMergeEmail(e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="autre-email@exemple.fr"
+                    required
+                  />
+                </div>
+                {mergeMsg && <p className={`text-sm ${mergeMsg.includes('Erreur') || mergeMsg.includes('introuvable') || mergeMsg.includes('Impossible') ? 'text-red-500' : 'text-green-600'}`}>{mergeMsg}</p>}
+                <button type="submit" className="btn-primary text-sm flex items-center gap-2" disabled={mergeLoading}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                  </svg>
+                  {mergeLoading ? 'Fusion en cours...' : 'Fusionner les comptes'}
+                </button>
+              </form>
+            </div>
           )}
         </div>
       )}

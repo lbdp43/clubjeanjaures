@@ -494,6 +494,104 @@ router.post('/reminder-test', requireAuth, requireAdmin, emailLimiter, async (re
   }
 });
 
+// POST /api/admin/members/:id/merge — Fusionner un autre compte dans celui-ci
+router.post('/members/:id/merge', requireAuth, requireAdmin, adminActionLimiter, async (req, res) => {
+  try {
+    const primaryId = req.params.id;
+    const { mergeEmail } = req.body;
+    if (!mergeEmail) return res.status(400).json({ error: 'Email du compte à fusionner requis.' });
+
+    const normalizedEmail = String(mergeEmail).toLowerCase().trim();
+    const secondary = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { member: true }
+    });
+    if (!secondary) return res.status(404).json({ error: 'Aucun compte trouvé avec cet email.' });
+    if (secondary.id === primaryId) return res.status(400).json({ error: 'Impossible de fusionner un compte avec lui-même.' });
+
+    const primary = await prisma.user.findUnique({
+      where: { id: primaryId },
+      include: { member: true }
+    });
+    if (!primary) return res.status(404).json({ error: 'Compte principal introuvable.' });
+
+    await prisma.$transaction(async (tx) => {
+      // RSVPs : transférer ceux qui n'existent pas déjà
+      const primaryRsvps = await tx.rsvp.findMany({ where: { userId: primaryId }, select: { eventId: true } });
+      const primaryEventIds = new Set(primaryRsvps.map(r => r.eventId));
+      await tx.rsvp.updateMany({
+        where: { userId: secondary.id, eventId: { notIn: [...primaryEventIds] } },
+        data: { userId: primaryId }
+      });
+      await tx.rsvp.deleteMany({ where: { userId: secondary.id } });
+
+      // Posts
+      await tx.post.updateMany({ where: { authorId: secondary.id }, data: { authorId: primaryId } });
+
+      // Comments
+      await tx.comment.updateMany({ where: { authorId: secondary.id }, data: { authorId: primaryId } });
+
+      // Likes : transférer ceux qui n'existent pas déjà
+      const primaryLikes = await tx.like.findMany({ where: { userId: primaryId }, select: { postId: true } });
+      const primaryPostIds = new Set(primaryLikes.map(l => l.postId));
+      await tx.like.updateMany({
+        where: { userId: secondary.id, postId: { notIn: [...primaryPostIds] } },
+        data: { userId: primaryId }
+      });
+      await tx.like.deleteMany({ where: { userId: secondary.id } });
+
+      // Favorites (en tant qu'utilisateur)
+      const primaryFavs = await tx.favorite.findMany({ where: { userId: primaryId }, select: { memberId: true } });
+      const primaryFavIds = new Set(primaryFavs.map(f => f.memberId));
+      await tx.favorite.updateMany({
+        where: { userId: secondary.id, memberId: { notIn: [...primaryFavIds] } },
+        data: { userId: primaryId }
+      });
+      await tx.favorite.deleteMany({ where: { userId: secondary.id } });
+
+      // Favorites (en tant que membre favorisé)
+      const favedByPrimary = await tx.favorite.findMany({ where: { memberId: primaryId }, select: { userId: true } });
+      const favedByIds = new Set(favedByPrimary.map(f => f.userId));
+      await tx.favorite.updateMany({
+        where: { memberId: secondary.id, userId: { notIn: [...favedByIds] } },
+        data: { memberId: primaryId }
+      });
+      await tx.favorite.deleteMany({ where: { memberId: secondary.id } });
+
+      // Events créés
+      await tx.event.updateMany({ where: { createdBy: secondary.id }, data: { createdBy: primaryId } });
+
+      // Invités
+      await tx.user.updateMany({ where: { invitedBy: secondary.id }, data: { invitedBy: primaryId } });
+
+      // Profil membre : copier les données du secondaire si le primaire n'a pas de profil
+      if (secondary.member && !primary.member) {
+        const { id, updatedAt, ...memberData } = secondary.member;
+        await tx.member.delete({ where: { id: secondary.id } });
+        await tx.member.create({ data: { id: primaryId, ...memberData } });
+      } else if (secondary.member) {
+        await tx.member.delete({ where: { id: secondary.id } });
+      }
+
+      // Sessions
+      await tx.session.deleteMany({ where: { userId: secondary.id } });
+
+      // Supprimer le compte secondaire
+      await tx.user.delete({ where: { id: secondary.id } });
+    });
+
+    const updated = await prisma.user.findUnique({
+      where: { id: primaryId },
+      include: { member: true }
+    });
+
+    res.json({ success: true, message: `Compte ${normalizedEmail} fusionné avec succès.`, user: updated });
+  } catch (err) {
+    logger.error('Erreur merge', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur lors de la fusion.' });
+  }
+});
+
 // POST /api/admin/email-custom — Envoyer un email personnalisé à une liste d'adresses
 router.post('/email-custom', requireAuth, requireAdmin, emailLimiter, async (req, res) => {
   try {
