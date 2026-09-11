@@ -135,7 +135,7 @@ router.get('/members', requireAuth, requireAdmin, async (req, res) => {
       skip
     });
 
-    const safeUsers = users.map(({ magicToken, magicTokenExpires, ...u }) => u);
+    const safeUsers = users.map(({ magicToken, magicTokenExpires, passwordHash, ...u }) => u);
     res.json(safeUsers);
   } catch (err) {
     logger.error('Erreur admin members', { error: err.message, stack: err.stack });
@@ -573,6 +573,19 @@ router.post('/members/:id/merge', requireAuth, requireAdmin, adminActionLimiter,
         await tx.member.delete({ where: { id: secondary.id } });
       }
 
+      // Garder l'email du secondaire comme email secondaire du primaire
+      const allSecondaryEmails = [...(primary.secondaryEmails || [])];
+      if (!allSecondaryEmails.includes(secondary.email)) {
+        allSecondaryEmails.push(secondary.email);
+      }
+      for (const e of (secondary.secondaryEmails || [])) {
+        if (!allSecondaryEmails.includes(e)) allSecondaryEmails.push(e);
+      }
+      await tx.user.update({
+        where: { id: primaryId },
+        data: { secondaryEmails: allSecondaryEmails }
+      });
+
       // Sessions
       await tx.session.deleteMany({ where: { userId: secondary.id } });
 
@@ -589,6 +602,58 @@ router.post('/members/:id/merge', requireAuth, requireAdmin, adminActionLimiter,
   } catch (err) {
     logger.error('Erreur merge', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur lors de la fusion.' });
+  }
+});
+
+// PUT /api/admin/members/:id/emails — Gérer les emails secondaires d'un membre
+router.put('/members/:id/emails', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { action, email } = req.body;
+    if (!email || !action) return res.status(400).json({ error: 'Action et email requis.' });
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ error: "Format d'email invalide." });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
+
+    if (action === 'add') {
+      if (normalizedEmail === user.email) {
+        return res.status(400).json({ error: 'Cet email est déjà l\'email principal.' });
+      }
+      const existing = await prisma.user.findFirst({
+        where: {
+          id: { not: user.id },
+          OR: [
+            { email: normalizedEmail },
+            { secondaryEmails: { has: normalizedEmail } }
+          ]
+        }
+      });
+      if (existing) {
+        return res.status(409).json({ error: 'Cet email est déjà utilisé par un autre compte.' });
+      }
+      const emails = [...(user.secondaryEmails || [])];
+      if (!emails.includes(normalizedEmail)) {
+        emails.push(normalizedEmail);
+      }
+      await prisma.user.update({ where: { id: user.id }, data: { secondaryEmails: emails } });
+      return res.json({ secondaryEmails: emails });
+    }
+
+    if (action === 'remove') {
+      const emails = (user.secondaryEmails || []).filter(e => e !== normalizedEmail);
+      await prisma.user.update({ where: { id: user.id }, data: { secondaryEmails: emails } });
+      return res.json({ secondaryEmails: emails });
+    }
+
+    res.status(400).json({ error: 'Action invalide. Utilisez "add" ou "remove".' });
+  } catch (err) {
+    logger.error('Erreur manage emails', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

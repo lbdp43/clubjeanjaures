@@ -13,6 +13,18 @@ const router = express.Router();
 const SALT_ROUNDS = 10;
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 jours
 
+async function findUserByAnyEmail(email) {
+  return prisma.user.findFirst({
+    where: {
+      OR: [
+        { email },
+        { secondaryEmails: { has: email } }
+      ]
+    },
+    include: { member: true }
+  });
+}
+
 // Fonction utilitaire pour créer une session + cookie
 async function createSession(res, userId) {
   const session = await prisma.session.create({
@@ -61,7 +73,7 @@ router.post('/register', authLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Format d\'email invalide' });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const existing = await findUserByAnyEmail(normalizedEmail);
     if (existing && existing.passwordHash) {
       return res.status(409).json({ error: 'Un compte existe déjà avec cet email.' });
     }
@@ -104,7 +116,7 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Format d\'email invalide' });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const user = await findUserByAnyEmail(normalizedEmail);
 
     if (!user || !user.passwordHash) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
@@ -146,7 +158,7 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Format d\'email invalide' });
     }
 
-    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    let user = await findUserByAnyEmail(normalizedEmail);
     if (!user) {
       user = await prisma.user.create({
         data: { email: normalizedEmail, role: 'visitor' }

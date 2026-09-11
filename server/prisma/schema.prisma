@@ -47,6 +47,7 @@ model User {
   createdAt         DateTime   @default(now()) @map("created_at")
   lastLogin         DateTime?  @map("last_login")
   reminderOptOut    Boolean    @default(false) @map("reminder_opt_out")
+  secondaryEmails   String[]   @default([]) @map("secondary_emails")
 
   inviter       User?      @relation("Invitations", fields: [invitedBy], references: [id])
   invitees      User[]     @relation("Invitations")

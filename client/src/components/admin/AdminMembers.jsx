@@ -184,6 +184,10 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
   const [mergeEmail, setMergeEmail] = useState('');
   const [mergeLoading, setMergeLoading] = useState(false);
   const [mergeMsg, setMergeMsg] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailMsg, setEmailMsg] = useState('');
+  const [localSecondaryEmails, setLocalSecondaryEmails] = useState(m.secondaryEmails || []);
   const profilePhotoRef = useRef();
   const logoRef = useRef();
 
@@ -289,6 +293,36 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
     setMergeLoading(false);
   };
 
+  const handleAddEmail = async (e) => {
+    e.preventDefault();
+    if (!addEmail.trim()) return;
+    setEmailMsg('');
+    setEmailLoading(true);
+    try {
+      const result = await api.manageSecondaryEmail(m.id, 'add', addEmail.trim());
+      setLocalSecondaryEmails(result.secondaryEmails);
+      setAddEmail('');
+      setEmailMsg('Email ajouté.');
+    } catch (err) {
+      setEmailMsg(err.message || "Erreur lors de l'ajout.");
+    }
+    setEmailLoading(false);
+  };
+
+  const handleRemoveEmail = async (email) => {
+    if (!confirm(`Retirer l'email "${email}" de ce compte ?`)) return;
+    setEmailMsg('');
+    setEmailLoading(true);
+    try {
+      const result = await api.manageSecondaryEmail(m.id, 'remove', email);
+      setLocalSecondaryEmails(result.secondaryEmails);
+      setEmailMsg('Email retiré.');
+    } catch (err) {
+      setEmailMsg(err.message || 'Erreur lors de la suppression.');
+    }
+    setEmailLoading(false);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setProfileMsg('');
@@ -311,6 +345,9 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate text-sm sm:text-base">{m.member?.companyName || m.email}</p>
             <p className="text-xs sm:text-sm text-text-muted truncate">{m.email}</p>
+            {m.secondaryEmails?.length > 0 && (
+              <p className="text-[10px] sm:text-xs text-gray-400 truncate">+{m.secondaryEmails.length} email{m.secondaryEmails.length > 1 ? 's' : ''}</p>
+            )}
           </div>
           <svg className={`w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -592,32 +629,73 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
 
           {/* Merge tab */}
           {activeTab === 'merge' && (
-            <div className="space-y-3">
-              <p className="text-xs sm:text-sm text-text-muted">
-                Si un membre s'est inscrit avec plusieurs adresses email, vous pouvez fusionner les comptes.
-                Toutes les participations, favoris et publications du compte secondaire seront transférées ici.
-                Le compte secondaire sera supprimé.
-              </p>
-              <form onSubmit={handleMerge} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Email du compte à fusionner</label>
+            <div className="space-y-5">
+              {/* Emails secondaires */}
+              <div>
+                <h4 className="text-xs sm:text-sm font-semibold mb-2">Emails associés à ce compte</h4>
+                <p className="text-xs text-text-muted mb-3">
+                  Le membre peut se connecter avec n'importe lequel de ces emails.
+                </p>
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="bg-blue-light text-blue text-xs px-2 py-0.5 rounded-full">Principal</span>
+                    <span>{m.email}</span>
+                  </div>
+                  {localSecondaryEmails.map(email => (
+                    <div key={email} className="flex items-center gap-2 text-sm">
+                      <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">Secondaire</span>
+                      <span className="flex-1 min-w-0 truncate">{email}</span>
+                      <button
+                        onClick={() => handleRemoveEmail(email)}
+                        className="text-xs text-red-500 hover:underline flex-shrink-0"
+                        disabled={emailLoading}
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <form onSubmit={handleAddEmail} className="flex gap-2">
+                  <input
+                    type="email"
+                    value={addEmail}
+                    onChange={e => setAddEmail(e.target.value)}
+                    className="input-field text-sm flex-1"
+                    placeholder="ajouter-un-email@exemple.fr"
+                    required
+                  />
+                  <button type="submit" className="btn-primary text-xs whitespace-nowrap" disabled={emailLoading}>
+                    {emailLoading ? '...' : 'Ajouter'}
+                  </button>
+                </form>
+                {emailMsg && <p className={`text-sm mt-2 ${emailMsg.includes('Erreur') || emailMsg.includes('invalide') || emailMsg.includes('utilisé') ? 'text-red-500' : 'text-green-600'}`}>{emailMsg}</p>}
+              </div>
+
+              {/* Fusionner un compte existant */}
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="text-xs sm:text-sm font-semibold mb-2">Fusionner avec un autre compte</h4>
+                <p className="text-xs text-text-muted mb-3">
+                  Si ce membre a un deuxième compte (inscrit avec un autre email), fusionnez-le ici.
+                  Toutes les participations et données seront transférées, et l'autre compte sera supprimé.
+                </p>
+                <form onSubmit={handleMerge} className="space-y-3">
                   <input
                     type="email"
                     value={mergeEmail}
                     onChange={e => setMergeEmail(e.target.value)}
                     className="input-field text-sm"
-                    placeholder="autre-email@exemple.fr"
+                    placeholder="email-du-doublon@exemple.fr"
                     required
                   />
-                </div>
-                {mergeMsg && <p className={`text-sm ${mergeMsg.includes('Erreur') || mergeMsg.includes('introuvable') || mergeMsg.includes('Impossible') ? 'text-red-500' : 'text-green-600'}`}>{mergeMsg}</p>}
-                <button type="submit" className="btn-primary text-sm flex items-center gap-2" disabled={mergeLoading}>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                  </svg>
-                  {mergeLoading ? 'Fusion en cours...' : 'Fusionner les comptes'}
-                </button>
-              </form>
+                  {mergeMsg && <p className={`text-sm ${mergeMsg.includes('Erreur') || mergeMsg.includes('introuvable') || mergeMsg.includes('Impossible') ? 'text-red-500' : 'text-green-600'}`}>{mergeMsg}</p>}
+                  <button type="submit" className="btn-primary text-sm flex items-center gap-2" disabled={mergeLoading}>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                    {mergeLoading ? 'Fusion en cours...' : 'Fusionner et supprimer le doublon'}
+                  </button>
+                </form>
+              </div>
             </div>
           )}
         </div>
