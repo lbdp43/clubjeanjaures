@@ -63,14 +63,6 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
 // GET /api/events/:id
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
-    // Check if non-members can see the agenda
-    if (!req.user) {
-      const settings = await prisma.clubSettings.findUnique({ where: { id: 1 } });
-      if (settings && !settings.publicAgenda) {
-        return res.status(403).json({ error: 'L\'agenda n\'est accessible qu\'aux membres' });
-      }
-    }
-
     const event = await prisma.event.findUnique({
       where: { id: req.params.id },
       include: {
