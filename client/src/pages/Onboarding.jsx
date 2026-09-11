@@ -29,14 +29,23 @@ const slides = [
 export default function Onboarding() {
   const [current, setCurrent] = useState(0);
   const [gdprAccepted, setGdprAccepted] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
 
   const handleFinish = async () => {
-    if (!gdprAccepted) return;
-    await api.completeOnboarding(true);
-    await refreshUser();
-    navigate('/profil', { replace: true });
+    if (!gdprAccepted || finishing) return;
+    setFinishing(true);
+    setError('');
+    try {
+      await api.completeOnboarding(true);
+      await refreshUser();
+      navigate('/profil', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Une erreur est survenue. Réessayez.');
+      setFinishing(false);
+    }
   };
 
   const slide = slides[current];
@@ -91,10 +100,10 @@ export default function Onboarding() {
           {isLast ? (
             <button
               onClick={handleFinish}
-              disabled={!gdprAccepted}
-              className={`btn-primary flex-1 ${!gdprAccepted ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!gdprAccepted || finishing}
+              className={`btn-primary flex-1 ${!gdprAccepted || finishing ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Commencer
+              {finishing ? 'Un instant...' : 'Commencer'}
             </button>
           ) : (
             <button onClick={() => setCurrent(c => c + 1)} className="btn-primary flex-1">
@@ -102,6 +111,8 @@ export default function Onboarding() {
             </button>
           )}
         </div>
+
+        {error && <p className="text-red-500 text-sm text-center mt-4">{error}</p>}
 
         {!isLast && (
           <button onClick={() => setCurrent(slides.length - 1)} className="block mx-auto mt-4 text-sm text-text-muted hover:text-blue">

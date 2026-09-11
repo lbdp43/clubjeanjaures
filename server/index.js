@@ -37,6 +37,10 @@ for (const envVar of optionalEnvVars) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Railway place l'app derrière un proxy : sans ceci, tous les utilisateurs
+// partagent la même IP et les rate limiters bloquent tout le club.
+app.set('trust proxy', 1);
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {

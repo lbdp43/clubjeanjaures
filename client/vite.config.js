@@ -38,13 +38,18 @@ export default defineConfig({
             }
           },
           {
+            // Auth = jamais en cache (sinon on reste "connecté" hors-ligne après déconnexion)
+            urlPattern: /^https?:\/\/.*\/api\/auth\//,
+            handler: 'NetworkOnly'
+          },
+          {
             // Toutes les autres requêtes API = réseau d'abord, cache en fallback offline
             urlPattern: /^https?:\/\/.*\/api\//,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-network-first',
               expiration: { maxEntries: 100, maxAgeSeconds: 86400 },
-              networkTimeoutSeconds: 3
+              networkTimeoutSeconds: 8
             }
           }
         ]

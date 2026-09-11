@@ -1,17 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { useCachedFetch } from '../hooks/useCachedFetch';
 import EventCard from '../components/agenda/EventCard';
 import MemberCard from '../components/annuaire/MemberCard';
 
 export default function Home() {
   const { user } = useAuth();
-  const [events, setEvents] = useState([]);
-  const [members, setMembers] = useState([]);
-  const [settings, setSettings] = useState(null);
-  const [error, setError] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const scope = user?.id || 'anon';
+
+  const { data: settings } = useCachedFetch('settings', () => api.getPublicSettings());
+  const { data: members = [], loading: membersLoading, error: membersError } = useCachedFetch(
+    `home-members:${scope}`,
+    () => api.getPublicMembers({ limit: 6 })
+  );
+
+  const showEvents = user || !settings || settings.publicAgenda !== false;
+  const { data: events = [], loading: eventsLoading } = useCachedFetch(
+    `home-events:${scope}`,
+    () => api.getEvents({ limit: 6 }),
+    { enabled: !!showEvents }
+  );
 
   const handleInvite = () => {
     const url = `${window.location.origin}/inscription`;
@@ -21,29 +32,16 @@ export default function Home() {
         text: 'Je t\'invite à rejoindre le Club Jean Jaurès, club d\'affaires de Saint-Étienne !',
         url
       }).catch(() => {});
-    } else {
+    } else if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(() => {
         setLinkCopied(true);
         setTimeout(() => setLinkCopied(false), 2000);
-      });
+      }).catch(() => {});
     }
   };
 
-  const showEvents = user || !settings || settings.publicAgenda !== false;
-
-  useEffect(() => {
-    api.getPublicSettings().then(setSettings).catch(() => {});
-    api.getPublicMembers().then(setMembers).catch(() => setError(true));
-  }, []);
-
-  useEffect(() => {
-    if (showEvents) {
-      api.getEvents().then(setEvents).catch(() => {});
-    }
-  }, [showEvents]);
-
   return (
-    <div className="space-y-8 sm:space-y-12 fade-in">
+    <div className="space-y-8 sm:space-y-12">
       {/* Hero */}
       <section className="text-center py-8 sm:py-12 lg:py-20">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6">
@@ -92,7 +90,7 @@ export default function Home() {
         )}
       </section>
 
-      {error && (
+      {membersError && (
         <p className="text-center text-red-500 text-sm py-4">
           Impossible de charger les données. Vérifiez votre connexion.
         </p>
@@ -105,7 +103,9 @@ export default function Home() {
             <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Prochains événements</h2>
             <Link to="/agenda" className="text-blue text-sm hover:underline">Voir tout</Link>
           </div>
-          {events.length > 0 ? (
+          {eventsLoading ? (
+            <SkeletonGrid count={3} height="h-36" />
+          ) : events.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {events.slice(0, 6).map(event => (
                 <EventCard key={event.id} event={event} />
@@ -130,7 +130,9 @@ export default function Home() {
           <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Nos membres</h2>
           <Link to="/annuaire" className="text-blue text-sm hover:underline">Voir l'annuaire</Link>
         </div>
-        {members.length > 0 ? (
+        {membersLoading ? (
+          <SkeletonGrid count={3} height="h-64" />
+        ) : members.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {members.slice(0, 6).map(member => (
               <MemberCard key={member.id} member={member} compact />
@@ -155,6 +157,16 @@ export default function Home() {
           </Link>
         </section>
       )}
+    </div>
+  );
+}
+
+function SkeletonGrid({ count, height }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={`card ${height} animate-pulse bg-gray-100`} />
+      ))}
     </div>
   );
 }

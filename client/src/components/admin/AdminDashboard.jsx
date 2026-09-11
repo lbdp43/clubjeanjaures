@@ -5,10 +5,18 @@ import { formatShortDate } from '../../utils/helpers';
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.getDashboard().then(setData).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  const load = () => {
+    setLoading(true);
+    setError('');
+    api.getDashboard()
+      .then(setData)
+      .catch(err => setError(err.message || 'Erreur de chargement'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
 
   if (loading) {
     return (
@@ -18,7 +26,14 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500 text-sm mb-2">Impossible de charger le tableau de bord{error ? ` : ${error}` : ''}.</p>
+        <button onClick={load} className="text-sm text-blue hover:underline">Réessayer</button>
+      </div>
+    );
+  }
 
   const { stats, upcomingEvents, recentPosts, recentUsers } = data;
 

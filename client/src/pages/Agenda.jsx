@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { useCachedFetch } from '../hooks/useCachedFetch';
 import EventCard from '../components/agenda/EventCard';
 
 const TYPES = [
@@ -14,47 +15,34 @@ const TYPES = [
 
 export default function Agenda() {
   const { user } = useAuth();
-  const [events, setEvents] = useState([]);
-  const [pastEvents, setPastEvents] = useState([]);
   const [filter, setFilter] = useState('all');
   const [tab, setTab] = useState('upcoming');
-  const [loading, setLoading] = useState(true);
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [publicSettings, setPublicSettings] = useState(undefined); // undefined = loading, null = error
 
-  useEffect(() => {
-    api.getPublicSettings()
-      .then(setPublicSettings)
-      .catch(() => setPublicSettings(null));
-  }, []);
+  const { data: publicSettings } = useCachedFetch('settings', () => api.getPublicSettings());
+  const isAgendaBlocked = !user && !!publicSettings && !publicSettings.publicAgenda;
 
-  const isAgendaBlocked = !user && publicSettings !== undefined && publicSettings !== null && !publicSettings.publicAgenda;
+  const params = {};
+  if (tab === 'past') params.past = 'true';
+  if (filter !== 'all') params.type = filter;
 
-  const fetchEvents = useCallback(() => {
-    const params = {};
-    if (tab === 'past') params.past = 'true';
-    if (filter !== 'all') params.type = filter;
+  const { data: displayed = [], loading, error, refetch: fetchEvents } = useCachedFetch(
+    `agenda:${user?.id || 'anon'}:${tab}:${filter}`,
+    () => api.getEvents(params),
+    { enabled: !isAgendaBlocked }
+  );
 
-    setLoading(true);
-    api.getEvents(params)
-      .then(data => {
-        if (tab === 'past') setPastEvents(data);
-        else setEvents(data);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [filter, tab]);
-
-  useEffect(() => {
-    if (!isAgendaBlocked) fetchEvents();
-    else setLoading(false);
-  }, [filter, tab, isAgendaBlocked, fetchEvents]);
-
-  const displayed = tab === 'past' ? pastEvents : events;
+  const handleCopyFeed = () => {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(`${window.location.origin}/api/calendar/feed.ics`).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  };
 
   return (
-    <div className="space-y-4 sm:space-y-6 fade-in">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-xl sm:text-2xl text-blue-dark">Agenda</h1>
         {!isAgendaBlocked && (
@@ -121,11 +109,7 @@ export default function Agenda() {
                   </div>
                 </a>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/api/calendar/feed.ics`);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
+                  onClick={handleCopyFeed}
                   className="inline-flex items-center gap-3 bg-white border border-gray-200 hover:border-blue px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-colors text-left"
                 >
                   <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -195,16 +179,25 @@ export default function Agenda() {
             ))}
           </div>
 
+          {error && (
+            <div className="text-center py-4">
+              <p className="text-red-500 text-sm mb-2">Impossible de charger l'agenda. Vérifiez votre connexion.</p>
+              <button onClick={fetchEvents} className="text-sm text-blue hover:underline">Réessayer</button>
+            </div>
+          )}
+
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
+            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2" aria-hidden="true">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="card h-36 animate-pulse bg-gray-100" />
+              ))}
             </div>
           ) : (
             <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
               {displayed.map(event => (
                 <EventCard key={event.id} event={event} onRsvpChange={fetchEvents} />
               ))}
-              {displayed.length === 0 && (
+              {displayed.length === 0 && !error && (
                 <p className="text-text-muted col-span-full text-center py-8 text-sm">
                   {tab === 'past' ? 'Aucun événement passé.' : 'Aucun événement à venir.'}
                 </p>

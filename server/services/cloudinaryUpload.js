@@ -7,7 +7,7 @@ const prisma = require('../prisma/db');
  * Traite une image (redimensionne + WebP) puis la stocke en base de données.
  * Retourne une URL permanente /api/uploads/:id
  */
-async function uploadImage(filePath) {
+async function uploadImage(filePath, maxWidth = 1200) {
   if (!fs.existsSync(filePath)) {
     throw new Error('Fichier introuvable : ' + filePath);
   }
@@ -18,7 +18,7 @@ async function uploadImage(filePath) {
   try {
     await sharp(filePath)
       .rotate()
-      .resize(1200, null, { withoutEnlargement: true })
+      .resize(maxWidth, null, { withoutEnlargement: true })
       .webp({ quality: 80 })
       .toFile(webpPath);
   } finally {

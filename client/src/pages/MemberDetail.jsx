@@ -1,32 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { whatsappLink, mapsUrl } from '../utils/helpers';
+import { useCachedFetch } from '../hooks/useCachedFetch';
+import { whatsappLink, mapsUrl, imgUrl } from '../utils/helpers';
 
 export default function MemberDetail() {
   const { id } = useParams();
   const { user, isMember } = useAuth();
-  const [member, setMember] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isFav, setIsFav] = useState(false);
   const [msg, setMsg] = useState('');
+  const userId = user?.id;
 
-  useEffect(() => {
-    setLoading(true);
-    const promises = [api.getMember(id)];
-    if (user) promises.push(api.getFavorites());
-
-    Promise.all(promises)
-      .then(([memberData, favsData]) => {
-        setMember(memberData);
-        if (favsData) {
-          setIsFav(favsData.some(f => f.memberId === id));
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [id, user]);
+  const { data: member, loading, error, refetch } = useCachedFetch(
+    `member:${id}:${userId || 'anon'}`,
+    () => api.getMember(id)
+  );
+  const { data: favorites = [], setData: setFavorites } = useCachedFetch(
+    `favorites:${userId}`,
+    () => api.getFavorites(),
+    { enabled: !!userId }
+  );
+  const isFav = favorites.some(f => f.memberId === id);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/annuaire/${member.id}`;
@@ -35,55 +29,67 @@ export default function MemberDetail() {
     if (navigator.share) {
       try {
         await navigator.share({ title: text, text: `Découvrez ${text} sur le Club Jean Jaurès`, url });
-      } catch (err) {
-        // User cancelled
+      } catch {}
+    } else if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(url);
+        setMsg('Lien copié !');
+      } catch {
+        setMsg('Impossible de copier le lien.');
       }
-    } else {
-      await navigator.clipboard.writeText(url);
-      setMsg('Lien copié !');
       setTimeout(() => setMsg(''), 2000);
     }
   };
 
   const toggleFav = async () => {
+    const wasFav = isFav;
+    setFavorites(wasFav ? favorites.filter(f => f.memberId !== id) : [...favorites, { id: `tmp-${id}`, memberId: id }]);
     try {
-      if (isFav) {
-        await api.removeFavorite(id);
-        setIsFav(false);
-      } else {
-        await api.addFavorite(id);
-        setIsFav(true);
-      }
-    } catch {}
+      if (wasFav) await api.removeFavorite(id);
+      else await api.addFavorite(id);
+    } catch {
+      setFavorites(favorites);
+      setMsg('Erreur lors de la mise à jour des favoris.');
+      setTimeout(() => setMsg(''), 2500);
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
+      <div className="max-w-2xl mx-auto" aria-hidden="true">
+        <div className="card h-96 animate-pulse bg-gray-100" />
       </div>
     );
   }
 
   if (!member) {
-    return <p className="text-center text-text-muted py-12">Membre introuvable.</p>;
+    const notFound = error?.message?.includes('introuvable');
+    return (
+      <div className="text-center py-12 space-y-3">
+        <p className="text-text-muted">
+          {notFound ? 'Membre introuvable.' : 'Impossible de charger cette fiche. Vérifiez votre connexion.'}
+        </p>
+        {!notFound && <button onClick={refetch} className="text-sm text-blue hover:underline">Réessayer</button>}
+        <div><Link to="/annuaire" className="text-blue text-sm hover:underline">&larr; Retour à l'annuaire</Link></div>
+      </div>
+    );
   }
 
   const photos = Array.isArray(member.photos) ? member.photos : [];
   const social = member.socialLinks || {};
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 fade-in">
+    <div className="max-w-2xl mx-auto space-y-6">
       <Link to="/annuaire" className="text-blue text-sm hover:underline">&larr; Retour à l'annuaire</Link>
 
       <div className="card p-4 sm:p-6">
         {/* Photo + Logo */}
         <div className="flex items-center justify-center gap-4 sm:gap-5 mb-5">
           {member.photoUrl && (
-            <img src={member.photoUrl} alt={member.companyName || 'Photo de profil'} loading="lazy" className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover flex-shrink-0" />
+            <img src={imgUrl(member.photoUrl, 400)} alt={member.companyName || 'Photo de profil'} decoding="async" className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover flex-shrink-0" />
           )}
           {member.logoUrl ? (
-            <img src={member.logoUrl} alt={`Logo ${member.companyName}`} loading="lazy" className="flex-1 min-w-0 max-w-[220px] sm:max-w-[300px] h-auto max-h-36 sm:max-h-44 rounded-xl object-contain" />
+            <img src={imgUrl(member.logoUrl, 800)} alt={`Logo ${member.companyName}`} decoding="async" className="flex-1 min-w-0 max-w-[220px] sm:max-w-[300px] h-auto max-h-36 sm:max-h-44 rounded-xl object-contain" />
           ) : (
             <div className="w-32 h-32 sm:w-44 sm:h-44 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-4xl sm:text-5xl flex-shrink-0">
               {member.companyName?.charAt(0)}
@@ -222,7 +228,9 @@ export default function MemberDetail() {
           <h3 className="font-semibold mb-4">Photos</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {photos.map((url, i) => (
-              <img key={i} src={url} alt={`Photo ${i + 1}`} loading="lazy" className="rounded-xl object-cover w-full h-24 sm:h-32" />
+              <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                <img src={imgUrl(url, 400)} alt={`Photo ${i + 1}`} loading="lazy" decoding="async" className="rounded-xl object-cover w-full h-24 sm:h-32" />
+              </a>
             ))}
           </div>
         </div>

@@ -48,6 +48,7 @@ export const api = {
   getPublicMembers: (params = {}) => {
     const qs = new URLSearchParams();
     if (params.sector) qs.set('sector', params.sector);
+    if (params.limit) qs.set('limit', params.limit);
     const str = qs.toString();
     return apiFetch(`/members/public${str ? `?${str}` : ''}`);
   },

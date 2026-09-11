@@ -215,8 +215,8 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setPwMsg('');
-    if (passwordForm.password.length < 6) {
-      setPwMsg('Le mot de passe doit contenir au moins 6 caractères.');
+    if (passwordForm.password.length < 8) {
+      setPwMsg('Le mot de passe doit contenir au moins 8 caractères.');
       return;
     }
     if (passwordForm.password !== passwordForm.confirm) {
@@ -602,8 +602,8 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                     value={passwordForm.password}
                     onChange={e => setPasswordForm({...passwordForm, password: e.target.value})}
                     className="input-field text-sm"
-                    placeholder="Min. 6 caractères"
-                    minLength={6}
+                    placeholder="Min. 8 caractères"
+                    minLength={8}
                     required
                   />
                 </div>
@@ -615,7 +615,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                     onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
                     className="input-field text-sm"
                     placeholder="Confirmer le mot de passe"
-                    minLength={6}
+                    minLength={8}
                     required
                   />
                 </div>

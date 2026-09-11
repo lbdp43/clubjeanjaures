@@ -14,15 +14,19 @@ export default function AdminEvents() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
 
   useEffect(() => { loadEvents(); }, []);
 
   const loadEvents = async () => {
     setLoading(true);
+    setMsg('');
     try {
       const data = await api.getEvents();
       setEvents(data);
-    } catch {}
+    } catch (err) {
+      setMsg(`Erreur : ${err.message}`);
+    }
     setLoading(false);
   };
 
@@ -55,26 +59,36 @@ export default function AdminEvents() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     setSaving(true);
+    setMsg('');
     try {
       if (editingId) {
         const updated = await api.updateEvent(editingId, form);
-        setEvents(prev => prev.map(ev => ev.id === editingId ? updated : ev));
+        setEvents(prev => prev.map(ev => ev.id === editingId ? { ...ev, ...updated } : ev));
+        setMsg('Événement modifié.');
       } else {
         await api.createEvent(form);
         await loadEvents();
+        setMsg('Événement créé.');
       }
       cancelForm();
-    } catch {}
+    } catch (err) {
+      setMsg(`Erreur : ${err.message}`);
+    }
     setSaving(false);
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Supprimer cet événement ?')) return;
+    setMsg('');
     try {
       await api.deleteEvent(id);
       setEvents(prev => prev.filter(e => e.id !== id));
-    } catch {}
+      setMsg('Événement supprimé.');
+    } catch (err) {
+      setMsg(`Erreur : ${err.message}`);
+    }
   };
 
   return (
@@ -85,6 +99,10 @@ export default function AdminEvents() {
           {showForm ? 'Annuler' : '+ Créer'}
         </button>
       </div>
+
+      {msg && (
+        <p className={`text-sm ${msg.startsWith('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{msg}</p>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="card p-3 sm:p-5 space-y-3 sm:space-y-4">

@@ -22,8 +22,8 @@ export default function Inscription() {
       setError('Les mots de passe ne correspondent pas.');
       return;
     }
-    if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.');
+    if (password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères.');
       return;
     }
     setLoading(true);
@@ -91,11 +91,11 @@ export default function Inscription() {
             </div>
             <div>
               <label htmlFor="password-reg" className="block text-sm font-medium mb-2">Mot de passe</label>
-              <input id="password-reg" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input-field" placeholder="Minimum 6 caractères" required minLength={6} />
+              <input id="password-reg" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input-field" placeholder="Minimum 8 caractères" required minLength={8} autoComplete="new-password" />
             </div>
             <div>
               <label htmlFor="confirm-pw" className="block text-sm font-medium mb-2">Confirmer le mot de passe</label>
-              <input id="confirm-pw" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" placeholder="Retapez le mot de passe" required minLength={6} />
+              <input id="confirm-pw" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" placeholder="Retapez le mot de passe" required minLength={8} autoComplete="new-password" />
             </div>
             <label className="flex items-start gap-3 cursor-pointer">
               <input

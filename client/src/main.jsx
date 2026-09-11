@@ -5,6 +5,12 @@ import App from './App';
 import { AuthProvider } from './hooks/useAuth';
 import './styles/index.css';
 
+// Polices chargées après le premier rendu : le CSS distant ne bloque plus l'affichage
+const fontLink = document.createElement('link');
+fontLink.rel = 'stylesheet';
+fontLink.href = 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap';
+document.head.appendChild(fontLink);
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);

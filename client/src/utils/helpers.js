@@ -54,17 +54,30 @@ export function whatsappLink(phone) {
   return `https://wa.me/${cleaned}`;
 }
 
+// Miniature d'une image stockée en base (/api/uploads/:id) — largeurs supportées : 200, 400, 800
+export function imgUrl(url, width = 400) {
+  if (!url) return url;
+  if (url.startsWith('/api/uploads/') && !url.includes('?')) return `${url}?w=${width}`;
+  return url;
+}
+
 export function mapsUrl(address) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
+// La date d'un événement est un jour civil (YYYY-MM-DD) : on la lit telle quelle,
+// sans passer par new Date() qui la décalerait selon le fuseau du téléphone.
+function calendarDay(dateStr) {
+  const iso = String(dateStr).slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso.split('-');
+  const d = new Date(dateStr);
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')];
+}
+
 // Formater une date+heure en format iCal (YYYYMMDDTHHmmSS)
 function toCalDateStr(dateStr, time) {
-  const d = new Date(dateStr);
+  const [year, month, day] = calendarDay(dateStr);
   const [h, m] = (time || '00:00').split(':');
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
   return `${year}${month}${day}T${h.padStart(2, '0')}${m.padStart(2, '0')}00`;
 }
 
@@ -102,14 +115,15 @@ export function outlookCalendarUrl(event) {
 }
 
 function toISOLocal(dateStr, time) {
-  const d = new Date(dateStr);
+  const [year, month, day] = calendarDay(dateStr);
   const [h, m] = (time || '00:00').split(':');
-  d.setHours(parseInt(h), parseInt(m), 0, 0);
+  const d = new Date(Number(year), Number(month) - 1, Number(day), parseInt(h), parseInt(m), 0, 0);
   return d.toISOString();
 }
 
 function addHours(time, hours) {
-  const [h, m] = time.split(':').map(Number);
-  const newH = (h + hours) % 24;
-  return `${String(newH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  const [h, m] = (time || '00:00').split(':').map(Number);
+  const newH = Math.min(h + hours, 23);
+  const newM = newH === 23 && h + hours > 23 ? 59 : m;
+  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }

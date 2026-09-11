@@ -10,7 +10,9 @@ const logger = require('../utils/logger');
 
 const readLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { error: 'Trop de requêtes, réessayez plus tard' }
 });
 
@@ -268,10 +270,13 @@ router.post('/:id/photos', requireAuth, uploadLimiter, upload.array('photos', 10
       });
     }
 
+    const photoType = req.body.type;
+    const maxWidth = photoType === 'logo' || photoType === 'profile' ? 800 : 1200;
+
     const processedFiles = [];
     for (const file of req.files) {
       if (file.mimetype.startsWith('image/')) {
-        const url = await uploadImage(file.path);
+        const url = await uploadImage(file.path, maxWidth);
         processedFiles.push(url);
       } else {
         const url = await uploadFile(file.path);
@@ -279,7 +284,6 @@ router.post('/:id/photos', requireAuth, uploadLimiter, upload.array('photos', 10
       }
     }
 
-    const photoType = req.body.type;
     if (photoType === 'logo') {
       await prisma.member.update({
         where: { id: req.params.id },

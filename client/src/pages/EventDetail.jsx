@@ -2,57 +2,54 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl, mapsUrl } from '../utils/helpers';
+import { useCachedFetch } from '../hooks/useCachedFetch';
+import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl, mapsUrl, imgUrl } from '../utils/helpers';
 
 export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
-  const [participating, setParticipating] = useState(false);
-  const [rsvps, setRsvps] = useState([]);
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [shareMsg, setShareMsg] = useState('');
 
-  useEffect(() => {
-    api.getEvent(id).then(data => {
-      setEvent(data);
-      setForm({
-        title: data.title || '',
-        type: data.type || 'matinale',
-        date: data.date ? data.date.slice(0, 10) : '',
-        timeStart: data.timeStart || '',
-        timeEnd: data.timeEnd || '',
-        location: data.location || '',
-        description: data.description || '',
-        speaker: data.speaker || ''
-      });
-    }).catch(() => {}).finally(() => setLoading(false));
+  const { data: event, loading, error, setData: setEvent, refetch: refetchEvent } = useCachedFetch(
+    `event:${id}`,
+    () => api.getEvent(id)
+  );
+  const { data: rsvps = [], refetch: refetchRsvps } = useCachedFetch(
+    `rsvps:${id}`,
+    () => api.getEventRsvps(id)
+  );
+  const participating = !!user && rsvps.some(r => r.user.id === user.id);
 
-    // After fetching event, fetch RSVPs
-    api.getEventRsvps(id).then(data => {
-      setRsvps(data);
-      if (user) {
-        setParticipating(data.some(r => r.user.id === user.id));
-      }
-    }).catch(() => {});
-  }, [id]);
+  useEffect(() => {
+    if (!event || editing) return;
+    setForm({
+      title: event.title || '',
+      type: event.type || 'matinale',
+      date: event.date ? event.date.slice(0, 10) : '',
+      timeStart: event.timeStart || '',
+      timeEnd: event.timeEnd || '',
+      location: event.location || '',
+      description: event.description || '',
+      speaker: event.speaker || ''
+    });
+  }, [event, editing]);
 
   const handleRsvp = async () => {
-    if (!user) return;
+    if (!user || rsvpLoading) return;
     setRsvpLoading(true);
+    setMsg('');
     try {
-      const result = await api.toggleRsvp(event.id);
-      setParticipating(result.participating);
-      // Refresh RSVP list
-      const data = await api.getEventRsvps(event.id);
-      setRsvps(data);
-    } catch (err) {}
+      await api.toggleRsvp(event.id);
+      await refetchRsvps();
+    } catch (err) {
+      setMsg(`Erreur : ${err.message}`);
+    }
     setRsvpLoading(false);
   };
 
@@ -123,18 +120,31 @@ export default function EventDetail() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
+      <div className="max-w-2xl mx-auto space-y-6" aria-hidden="true">
+        <div className="card h-80 animate-pulse bg-gray-100" />
       </div>
     );
   }
 
   if (!event) {
-    return <p className="text-center text-text-muted py-12">Événement introuvable.</p>;
+    const notFound = error?.message?.includes('introuvable');
+    return (
+      <div className="text-center py-12 space-y-3">
+        <p className="text-text-muted">
+          {notFound ? 'Événement introuvable.' : 'Impossible de charger cet événement. Vérifiez votre connexion.'}
+        </p>
+        {!notFound && (
+          <button onClick={refetchEvent} className="text-sm text-blue hover:underline">Réessayer</button>
+        )}
+        <div>
+          <Link to="/agenda" className="text-blue text-sm hover:underline">&larr; Retour à l'agenda</Link>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 fade-in">
+    <div className="max-w-2xl mx-auto space-y-6">
       <Link to="/agenda" className="text-blue text-sm hover:underline">&larr; Retour à l'agenda</Link>
 
       {msg && (
@@ -403,7 +413,7 @@ export default function EventDetail() {
                 {rsvps.map(r => (
                   <div key={r.id} className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5">
                     {r.user.member?.photoUrl ? (
-                      <img src={r.user.member.photoUrl} alt={r.user.member?.companyName || ''} loading="lazy" className="w-6 h-6 rounded-full object-cover" />
+                      <img src={imgUrl(r.user.member.photoUrl, 200)} alt={r.user.member?.companyName || ''} loading="lazy" className="w-6 h-6 rounded-full object-cover" />
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-blue-light flex items-center justify-center text-xs text-blue font-bold">
                         {(r.user.member?.companyName || r.user.email)?.[0]?.toUpperCase()}

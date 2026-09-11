@@ -1,59 +1,45 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { useCachedFetch } from '../hooks/useCachedFetch';
 import MemberCard from '../components/annuaire/MemberCard';
 
 export default function Annuaire() {
   const { user, isMember } = useAuth();
-  const [members, setMembers] = useState([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const searchTimeout = useRef(null);
-  const [sectors, setSectors] = useState([]);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedSector, setSelectedSector] = useState('');
 
+  // Seule la saisie texte est différée ; le chargement initial et les filtres sont immédiats
   useEffect(() => {
-    api.getSectors().then(setSectors).catch(() => {});
-  }, []);
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      setLoading(true);
-      setError(false);
-      try {
-        if (isMember) {
-          const data = await api.getMembers({ search: search || undefined, sector: selectedSector || undefined });
-          setMembers(data);
-        } else {
-          const data = await api.getPublicMembers({ sector: selectedSector || undefined });
-          setMembers(data);
-        }
-      } catch {
-        setMembers([]);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: sectors = [] } = useCachedFetch('sectors', () => api.getSectors());
 
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(fetchMembers, 400);
-    return () => {
-      if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    };
-  }, [search, isMember, selectedSector]);
+  const scope = isMember ? `m:${user?.id}` : 'public';
+  const serverSearch = isMember ? debouncedSearch : '';
+  const { data: members = [], loading, error, refetch } = useCachedFetch(
+    `annuaire:${scope}:${selectedSector}:${serverSearch}`,
+    () => isMember
+      ? api.getMembers({ search: serverSearch || undefined, sector: selectedSector || undefined })
+      : api.getPublicMembers({ sector: selectedSector || undefined }),
+    { persist: !serverSearch }
+  );
 
-  const filteredMembers = !isMember && search
+  const needle = search.trim().toLowerCase();
+  const filteredMembers = !isMember && needle
     ? members.filter(m =>
-        m.companyName?.toLowerCase().includes(search.toLowerCase()) ||
-        m.jobTitle?.toLowerCase().includes(search.toLowerCase()) ||
-        m.city?.toLowerCase().includes(search.toLowerCase())
+        m.companyName?.toLowerCase().includes(needle) ||
+        m.jobTitle?.toLowerCase().includes(needle) ||
+        m.city?.toLowerCase().includes(needle) ||
+        m.sector?.toLowerCase().includes(needle)
       )
     : members;
 
   return (
-    <div className="space-y-6 fade-in">
+    <div className="space-y-6">
       <h1 className="font-display text-2xl text-blue-dark">Annuaire</h1>
 
       <div className="relative">
@@ -102,21 +88,24 @@ export default function Annuaire() {
       )}
 
       {error && (
-        <p className="text-center text-red-500 text-sm py-4">
-          Impossible de charger les données. Vérifiez votre connexion.
-        </p>
+        <div className="text-center py-4">
+          <p className="text-red-500 text-sm mb-2">Impossible de charger l'annuaire. Vérifiez votre connexion.</p>
+          <button onClick={refetch} className="text-sm text-blue hover:underline">Réessayer</button>
+        </div>
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
+        <div className="grid gap-4 sm:grid-cols-2" aria-hidden="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="card h-64 animate-pulse bg-gray-100" />
+          ))}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {filteredMembers.map(m => (
             <MemberCard key={m.id} member={m} />
           ))}
-          {filteredMembers.length === 0 && (
+          {filteredMembers.length === 0 && !error && (
             <p className="text-text-muted col-span-full text-center py-8">Aucun résultat.</p>
           )}
         </div>

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 
@@ -9,8 +9,13 @@ export default function Verify() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const started = useRef(false);
 
   useEffect(() => {
+    // Le token est à usage unique : ne jamais le vérifier deux fois (StrictMode)
+    if (started.current) return;
+    started.current = true;
+
     const token = searchParams.get('token');
     if (!token) {
       setError('Token manquant.');
@@ -50,7 +55,7 @@ export default function Verify() {
         </div>
         <h2 className="text-xl font-semibold mb-2">Lien expiré</h2>
         <p className="text-text-muted mb-4">{error}</p>
-        <a href="/connexion" className="btn-primary inline-block">Retour à la connexion</a>
+        <Link to="/connexion" className="btn-primary inline-block">Retour à la connexion</Link>
       </div>
     </div>
   );

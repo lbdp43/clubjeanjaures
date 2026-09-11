@@ -35,9 +35,14 @@ export default function Profile() {
   const [inviteMsg, setInviteMsg] = useState('');
   const logoRef = useRef();
   const profilePhotoRef = useRef();
+  const seededFor = useRef(null);
+  const optOutSent = useRef(false);
 
+  // On pré-remplit le formulaire une seule fois par utilisateur : un rafraîchissement
+  // du profil (après upload de photo par ex.) ne doit pas écraser ce qui est en cours de saisie.
   useEffect(() => {
-    if (user?.member) {
+    if (user?.member && seededFor.current !== user.id) {
+      seededFor.current = user.id;
       setForm({
         companyName: user.member.companyName || '',
         jobTitle: user.member.jobTitle || '',
@@ -61,7 +66,8 @@ export default function Profile() {
   // Auto opt-out si l'utilisateur arrive via le lien de l'email de rappel
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('optout') === 'reminders' && user && !user.reminderOptOut) {
+    if (params.get('optout') === 'reminders' && user && !user.reminderOptOut && !optOutSent.current) {
+      optOutSent.current = true;
       api.updateReminderPreferences(true)
         .then(() => {
           setReminderOptOut(true);
