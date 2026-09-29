@@ -12,7 +12,7 @@ export default function Home() {
   const scope = user?.id || 'anon';
 
   const { data: settings } = useCachedFetch('settings', () => api.getPublicSettings());
-  const { data: members = [], loading: membersLoading, error: membersError } = useCachedFetch(
+  const { data: members = [], loading: membersLoading, failed: membersFailed } = useCachedFetch(
     `home-members:${scope}`,
     () => api.getPublicMembers({ limit: 6 })
   );
@@ -90,9 +90,9 @@ export default function Home() {
         )}
       </section>
 
-      {membersError && (
-        <p className="text-center text-red-500 text-sm py-4">
-          Impossible de charger les données. Vérifiez votre connexion.
+      {membersFailed && (
+        <p className="text-center text-text-muted text-sm py-2">
+          Connexion en cours… les données s'afficheront dès que le réseau répond.
         </p>
       )}
 

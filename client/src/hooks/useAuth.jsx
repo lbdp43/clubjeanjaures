@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { api } from '../utils/api';
+import { api, withRetry } from '../utils/api';
 import { clearDataCache } from './useCachedFetch';
 
 const AuthContext = createContext(null);
@@ -28,12 +28,15 @@ export function AuthProvider({ children }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      const data = await api.getMe();
+      const data = await withRetry(() => api.getMe());
       setUser(data);
       storeUser(data);
-    } catch {
-      setUser(null);
-      storeUser(null);
+    } catch (err) {
+      // Une coupure réseau ne doit pas déconnecter : seul un vrai refus (401/403) le fait
+      if (err?.status === 401 || err?.status === 403) {
+        setUser(null);
+        storeUser(null);
+      }
     } finally {
       setLoading(false);
     }

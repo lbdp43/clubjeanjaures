@@ -63,13 +63,14 @@ export default function MemberDetail() {
   }
 
   if (!member) {
-    const notFound = error?.message?.includes('introuvable');
+    const notFound = error?.status === 404 || error?.message?.includes('introuvable');
     return (
       <div className="text-center py-12 space-y-3">
+        {!notFound && <div className="animate-spin w-6 h-6 border-4 border-blue border-t-transparent rounded-full mx-auto" />}
         <p className="text-text-muted">
-          {notFound ? 'Membre introuvable.' : 'Impossible de charger cette fiche. Vérifiez votre connexion.'}
+          {notFound ? 'Membre introuvable.' : 'Connexion en cours… la fiche s\'affichera dès que le réseau répond.'}
         </p>
-        {!notFound && <button onClick={refetch} className="text-sm text-blue hover:underline">Réessayer</button>}
+        {!notFound && <button onClick={refetch} className="text-sm text-blue hover:underline">Réessayer maintenant</button>}
         <div><Link to="/annuaire" className="text-blue text-sm hover:underline">&larr; Retour à l'annuaire</Link></div>
       </div>
     );

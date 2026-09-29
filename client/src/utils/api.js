@@ -17,10 +17,30 @@ async function apiFetch(path, options = {}) {
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || `Erreur ${res.status}`);
+    const err = new Error(data.error || `Erreur ${res.status}`);
+    err.status = res.status;
+    throw err;
   }
 
   return res.json();
+}
+
+const NO_RETRY_STATUSES = new Set([400, 401, 403, 404, 409, 422]);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Réessaie les échecs passagers (réseau qui se réveille, micro-coupure, serveur occupé)
+export async function withRetry(fn, { attempts = 3, delay = 500 } = {}) {
+  let wait = delay;
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const definitive = err?.status && NO_RETRY_STATUSES.has(err.status);
+      if (definitive || i >= attempts - 1) throw err;
+      await sleep(wait);
+      wait *= 2;
+    }
+  }
 }
 
 export const api = {

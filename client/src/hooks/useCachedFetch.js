@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { withRetry } from '../utils/api';
 
 const PREFIX = 'cjj-cache:';
 const MAX_AGE_MS = 60 * 60 * 1000;
+const AUTO_RETRY_DELAYS = [4000, 8000, 15000, 30000];
 const memory = new Map();
 
 function readCache(key) {
@@ -39,6 +41,8 @@ export function clearDataCache() {
 }
 
 // Affiche immédiatement la dernière valeur connue, puis rafraîchit en arrière-plan.
+// Un échec réseau est réessayé en silence ; on ne signale une erreur que si
+// l'on n'a vraiment rien à afficher, et on continue de réessayer tout seul.
 export function useCachedFetch(key, fetcher, { enabled = true, persist = true } = {}) {
   const initial = enabled && key ? readCache(key) : undefined;
   const [data, setData] = useState(initial);
@@ -47,24 +51,42 @@ export function useCachedFetch(key, fetcher, { enabled = true, persist = true } 
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
   const runId = useRef(0);
+  const autoRetry = useRef({ count: 0, timer: null });
+
+  const clearAutoRetry = () => {
+    if (autoRetry.current.timer) {
+      clearTimeout(autoRetry.current.timer);
+      autoRetry.current.timer = null;
+    }
+  };
 
   const load = useCallback(async () => {
     if (!enabled || !key) {
       setLoading(false);
       return;
     }
+    clearAutoRetry();
     const id = ++runId.current;
     const cached = readCache(key);
     setData(cached);
     setLoading(cached === undefined);
-    setError(null);
     try {
-      const result = await fetcherRef.current();
+      const result = await withRetry(() => fetcherRef.current());
       if (id !== runId.current) return;
       writeCache(key, result, persist);
       setData(result);
+      setError(null);
+      autoRetry.current.count = 0;
     } catch (err) {
-      if (id === runId.current) setError(err);
+      if (id !== runId.current) return;
+      const definitive = err?.status && err.status < 500 && err.status !== 429;
+      setError(err);
+      if (!definitive && readCache(key) === undefined) {
+        const n = autoRetry.current.count;
+        const delay = AUTO_RETRY_DELAYS[Math.min(n, AUTO_RETRY_DELAYS.length - 1)];
+        autoRetry.current.count = n + 1;
+        autoRetry.current.timer = setTimeout(() => { if (id === runId.current) load(); }, delay);
+      }
     } finally {
       if (id === runId.current) setLoading(false);
     }
@@ -72,28 +94,33 @@ export function useCachedFetch(key, fetcher, { enabled = true, persist = true } 
 
   useEffect(() => {
     load();
-    return () => { runId.current++; };
+    return () => { runId.current++; clearAutoRetry(); };
   }, [load]);
 
   // Retour sur l'app (onglet, PWA) ou retour du réseau : on rafraîchit sans vider l'écran
   useEffect(() => {
     if (!enabled || !key) return;
     let last = Date.now();
-    const refresh = () => {
+    const refresh = (force) => {
       if (document.visibilityState !== 'visible') return;
-      if (Date.now() - last < 15000) return;
+      if (!force && Date.now() - last < 15000) return;
       last = Date.now();
       load();
     };
-    document.addEventListener('visibilitychange', refresh);
-    window.addEventListener('online', refresh);
-    window.addEventListener('focus', refresh);
+    const onVisible = () => refresh(false);
+    const onOnline = () => refresh(true);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    window.addEventListener('online', onOnline);
     return () => {
-      document.removeEventListener('visibilitychange', refresh);
-      window.removeEventListener('online', refresh);
-      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+      window.removeEventListener('online', onOnline);
     };
   }, [load, enabled, key]);
 
-  return { data, loading, error, refetch: load, setData };
+  // failed = rien à afficher ET la dernière tentative a échoué
+  const failed = !!error && data === undefined;
+
+  return { data, loading, error, failed, refetch: load, setData };
 }

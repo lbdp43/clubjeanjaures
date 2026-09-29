@@ -127,14 +127,15 @@ export default function EventDetail() {
   }
 
   if (!event) {
-    const notFound = error?.message?.includes('introuvable');
+    const notFound = error?.status === 404 || error?.message?.includes('introuvable');
     return (
       <div className="text-center py-12 space-y-3">
+        {!notFound && <div className="animate-spin w-6 h-6 border-4 border-blue border-t-transparent rounded-full mx-auto" />}
         <p className="text-text-muted">
-          {notFound ? 'Événement introuvable.' : 'Impossible de charger cet événement. Vérifiez votre connexion.'}
+          {notFound ? 'Événement introuvable.' : 'Connexion en cours… l\'événement s\'affichera dès que le réseau répond.'}
         </p>
         {!notFound && (
-          <button onClick={refetchEvent} className="text-sm text-blue hover:underline">Réessayer</button>
+          <button onClick={refetchEvent} className="text-sm text-blue hover:underline">Réessayer maintenant</button>
         )}
         <div>
           <Link to="/agenda" className="text-blue text-sm hover:underline">&larr; Retour à l'agenda</Link>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../utils/api';
+import { api, withRetry } from '../../utils/api';
 import { formatShortDate } from '../../utils/helpers';
 
 export default function AdminDashboard() {
@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   const load = () => {
     setLoading(true);
     setError('');
-    api.getDashboard()
+    withRetry(() => api.getDashboard())
       .then(setData)
       .catch(err => setError(err.message || 'Erreur de chargement'))
       .finally(() => setLoading(false));
