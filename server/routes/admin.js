@@ -313,7 +313,7 @@ router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) =
     if (phone !== undefined) data.phone = phone;
     if (address !== undefined) data.address = xss(address);
     if (city !== undefined) data.city = xss(city);
-    if (sector !== undefined) data.sector = sector ? xss(sector) : null;
+    if (sector !== undefined) data.sector = sector ? xss(String(sector).trim().replace(/\s+/g, ' ')) || null : null;
     if (website !== undefined) data.website = website;
     if (description !== undefined) data.description = xss(description);
     if (lookingFor !== undefined) data.lookingFor = xss(lookingFor);

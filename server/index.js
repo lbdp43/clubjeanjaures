@@ -171,6 +171,11 @@ const server = app.listen(PORT, () => {
   logger.info(`Serveur démarré sur le port ${PORT}`);
 });
 
+// Nettoyage des secteurs saisis à la main (espaces, valeurs vides) : sans ça,
+// un filtre peut exister sans correspondre à personne.
+prisma.$executeRaw`UPDATE members SET sector = NULLIF(regexp_replace(trim(sector), '\s+', ' ', 'g'), '') WHERE sector IS NOT NULL AND sector IS DISTINCT FROM NULLIF(regexp_replace(trim(sector), '\s+', ' ', 'g'), '')`
+  .catch(err => logger.warn('Nettoyage des secteurs impossible', { error: err.message }));
+
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully...');
   server.close(() => {

@@ -24,19 +24,30 @@ const uploadLimiter = rateLimit({
 
 const router = express.Router();
 
+// Même périmètre que l'annuaire : un filtre n'existe que s'il y a au moins un membre visible derrière
+const VISIBLE_MEMBER = { user: { status: 'active', role: { not: 'visitor' }, email: { not: 'admin@clubjeanjaures.fr' } } };
+
+function normalizeSector(value) {
+  if (typeof value !== 'string') return null;
+  const s = value.trim().replace(/\s+/g, ' ');
+  return s || null;
+}
+
 // GET /api/members/sectors — list of distinct sectors
 router.get('/sectors', async (req, res) => {
   try {
-    const members = await prisma.member.findMany({
-      where: { sector: { not: null }, user: { status: 'active', role: { not: 'visitor' } } },
-      select: { sector: true },
-      distinct: ['sector'],
-      orderBy: { sector: 'asc' }
+    const groups = await prisma.member.groupBy({
+      by: ['sector'],
+      where: { ...VISIBLE_MEMBER, sector: { not: null } },
+      _count: { _all: true }
     });
-    const sectors = [...new Set(members.map(m => m.sector.trim()).filter(Boolean))]
+    const sectors = groups
+      .map(g => normalizeSector(g.sector))
+      .filter(Boolean);
+    const unique = [...new Set(sectors)]
       .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
     res.set('Cache-Control', 'no-cache');
-    res.json(sectors);
+    res.json(unique);
   } catch (err) {
     logger.error('Erreur sectors:', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
@@ -51,10 +62,10 @@ router.get('/public', readLimiter, optionalAuth, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const skip = (page - 1) * limit;
 
-    const where = { user: { status: 'active', role: { not: 'visitor' }, email: { not: 'admin@clubjeanjaures.fr' } } };
+    const where = { ...VISIBLE_MEMBER };
 
     if (sector) {
-      where.sector = sector;
+      where.sector = { equals: normalizeSector(sector), mode: 'insensitive' };
     }
 
     const total = await prisma.member.count({ where });
@@ -111,11 +122,11 @@ router.get('/', readLimiter, requireAuth, requireMember, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const skip = (page - 1) * limit;
 
-    let where = { user: { status: 'active', role: { not: 'visitor' }, email: { not: 'admin@clubjeanjaures.fr' } } };
+    let where = { ...VISIBLE_MEMBER };
 
     if (search) {
       where = {
-        user: { status: 'active', role: { not: 'visitor' }, email: { not: 'admin@clubjeanjaures.fr' } },
+        ...VISIBLE_MEMBER,
         OR: [
           { companyName: { contains: search, mode: 'insensitive' } },
           { jobTitle: { contains: search, mode: 'insensitive' } },
@@ -127,7 +138,7 @@ router.get('/', readLimiter, requireAuth, requireMember, async (req, res) => {
     }
 
     if (sector) {
-      where.sector = sector;
+      where.sector = { equals: normalizeSector(sector), mode: 'insensitive' };
     }
 
     const total = await prisma.member.count({ where });
@@ -196,6 +207,7 @@ router.put('/:id', requireAuth, async (req, res) => {
         data[field] = typeof req.body[field] === 'string' ? xss(req.body[field]) : req.body[field];
       }
     }
+    if (data.sector !== undefined) data.sector = normalizeSector(data.sector);
 
     if (data.latitude !== undefined && (isNaN(data.latitude) || data.latitude < -90 || data.latitude > 90)) {
       return res.status(400).json({ error: 'Latitude invalide' });
