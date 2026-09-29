@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' : la nouvelle version n'écrase pas l'app ouverte (sinon les pages
+      // chargées à la demande pointent vers des fichiers supprimés → écran d'erreur).
+      // L'utilisateur voit une bannière "Nouvelle version" et choisit quand recharger.
+      registerType: 'prompt',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
         name: 'Club Jean Jaurès',
@@ -25,8 +28,8 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/verify/, /^\/auth\/verify/],
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
+        skipWaiting: false,
+        clientsClaim: false,
         runtimeCaching: [
           {
             // Images uploadées = immuables (UUID), cache agressif

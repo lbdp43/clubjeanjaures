@@ -151,6 +151,10 @@ app.use(express.static(clientDist, {
   }
 }));
 
+// Un fichier d'assets absent (ancienne version après déploiement) doit renvoyer 404,
+// pas la page HTML : sinon le navigateur essaie d'exécuter du HTML comme du JS.
+app.use('/assets', (req, res) => res.status(404).end());
+
 // SPA fallback — serve index.html for all frontend routes
 const serveIndex = (req, res) => {
   res.set('Cache-Control', 'no-cache');

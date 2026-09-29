@@ -4,21 +4,39 @@ import { useAuth } from './hooks/useAuth';
 import { useOnline } from './hooks/useOnline';
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/layout/ScrollToTop';
+import UpdateBanner from './components/layout/UpdateBanner';
 import Verify from './pages/Verify';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
 import Onboarding from './pages/Onboarding';
+import { isChunkLoadError, reloadOnceForChunkError } from './utils/pwa';
 
-const Home = lazy(() => import('./pages/Home'));
-const Annuaire = lazy(() => import('./pages/Annuaire'));
-const MemberDetail = lazy(() => import('./pages/MemberDetail'));
-const Agenda = lazy(() => import('./pages/Agenda'));
-const EventDetail = lazy(() => import('./pages/EventDetail'));
-// const Feed = lazy(() => import('./pages/Feed'));
-const Admin = lazy(() => import('./pages/Admin'));
-const Profile = lazy(() => import('./pages/Profile'));
-const MemberDashboard = lazy(() => import('./pages/MemberDashboard'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+// Si le fichier d'une page n'existe plus (nouvelle version déployée), on réessaie
+// une fois puis on recharge l'app pour récupérer la version à jour.
+function lazyPage(importer) {
+  return lazy(() =>
+    importer().catch(async (err) => {
+      if (!isChunkLoadError(err)) throw err;
+      await new Promise(r => setTimeout(r, 800));
+      try {
+        return await importer();
+      } catch (err2) {
+        if (reloadOnceForChunkError()) return new Promise(() => {});
+        throw err2;
+      }
+    })
+  );
+}
+
+const Home = lazyPage(() => import('./pages/Home'));
+const Annuaire = lazyPage(() => import('./pages/Annuaire'));
+const MemberDetail = lazyPage(() => import('./pages/MemberDetail'));
+const Agenda = lazyPage(() => import('./pages/Agenda'));
+const EventDetail = lazyPage(() => import('./pages/EventDetail'));
+const Admin = lazyPage(() => import('./pages/Admin'));
+const Profile = lazyPage(() => import('./pages/Profile'));
+const MemberDashboard = lazyPage(() => import('./pages/MemberDashboard'));
+const NotFound = lazyPage(() => import('./pages/NotFound'));
 
 export default function App() {
   const { loading } = useAuth();
@@ -36,6 +54,7 @@ export default function App() {
     <>
       {!online && <div className="offline-banner">Mode hors-ligne</div>}
       <ScrollToTop />
+      <UpdateBanner />
       <Suspense fallback={
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
@@ -56,7 +75,6 @@ export default function App() {
             <Route path="/annuaire/:id" element={<MemberDetail />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/agenda/:id" element={<EventDetail />} />
-            {/* <Route path="/fil" element={<Feed />} /> */}
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/:tab" element={<Admin />} />
             <Route path="/profil" element={<Profile />} />
