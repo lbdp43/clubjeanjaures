@@ -50,6 +50,7 @@ function EventCard({ event, onRsvpChange }) {
         return;
       } catch {}
     }
+    if (!navigator.clipboard) return;
     try {
       await navigator.clipboard.writeText(url);
       setShared(true);
@@ -69,15 +70,17 @@ function EventCard({ event, onRsvpChange }) {
 
   return (
     <div
-      role="article"
+      role="link"
+      tabIndex={0}
       onClick={() => navigate(`/agenda/${event.id}`)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/agenda/${event.id}`); } }}
       aria-label={event.title}
-      className="card p-3 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
+      className="card p-3 sm:p-4 hover:shadow-md hover:border-blue/30 transition-all cursor-pointer active:scale-[0.99]"
     >
       <div className="flex gap-3 sm:gap-4">
-        <div className="flex-shrink-0 w-12 sm:w-14 text-center pt-0.5">
-          <div className="text-lg sm:text-2xl font-bold text-blue leading-tight">{day}</div>
-          <div className="text-[10px] sm:text-xs text-text-muted uppercase">{month}</div>
+        <div className="flex-shrink-0 w-14 h-16 rounded-xl bg-blue-light flex flex-col items-center justify-center leading-none">
+          <div className="text-2xl font-bold text-blue">{day}</div>
+          <div className="text-[10px] font-semibold text-blue-dark/70 uppercase mt-1 tracking-wide">{month}</div>
         </div>
         <div className="flex-1 min-w-0">
           <span className={getEventBadgeClass(event.type)}>
@@ -110,21 +113,13 @@ function EventCard({ event, onRsvpChange }) {
           )}
 
           {/* Participants + RSVP + Partager */}
-          <div className="flex items-center flex-wrap gap-2 sm:gap-3 mt-2">
-            {localCount > 0 && (
-              <span className="text-xs text-text-muted flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128H5.228A2 2 0 013 17.16V17a6.003 6.003 0 017.212-5.876M15 19.128a9.38 9.38 0 002.625.372" />
-                </svg>
-                {localCount} participant{localCount !== 1 ? 's' : ''}
-              </span>
-            )}
+          <div className="flex items-center flex-wrap gap-2 mt-3">
             {user && (
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={(e) => { e.stopPropagation(); if (!localParticipating) handleRsvp(e); }}
                   disabled={rsvpLoading}
-                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                  className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                     localParticipating
                       ? 'bg-green-100 text-green-700 ring-1 ring-green-300'
                       : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'
@@ -135,7 +130,7 @@ function EventCard({ event, onRsvpChange }) {
                 <button
                   onClick={(e) => { e.stopPropagation(); if (localParticipating) handleRsvp(e); }}
                   disabled={rsvpLoading}
-                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                  className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                     !localParticipating
                       ? 'bg-red-50 text-red-500 ring-1 ring-red-200'
                       : 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500'
@@ -147,14 +142,28 @@ function EventCard({ event, onRsvpChange }) {
             )}
             <button
               onClick={handleShare}
-              className="text-xs px-3 py-1 rounded-full font-medium bg-gray-100 text-gray-500 hover:bg-blue-light hover:text-blue transition-colors flex items-center gap-1"
-              title="Partager l'événement"
+              className="text-xs w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-blue-light hover:text-blue transition-colors flex items-center justify-center"
+              aria-label="Partager l'événement"
+              title={shared ? 'Lien copié !' : "Partager l'événement"}
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-              </svg>
-              {shared ? 'Lien copie !' : 'Partager'}
+              {shared ? (
+                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+              )}
             </button>
+            {localCount > 0 && (
+              <span className="text-xs text-text-muted flex items-center gap-1 ml-auto">
+                <svg className="w-3.5 h-3.5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128H5.228A2 2 0 013 17.16V17a6.003 6.003 0 017.212-5.876M15 19.128a9.38 9.38 0 002.625.372" />
+                </svg>
+                {localCount}
+              </span>
+            )}
           </div>
         </div>
       </div>

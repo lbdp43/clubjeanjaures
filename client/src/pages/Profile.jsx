@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { whatsappLink, mapsUrl } from '../utils/helpers';
+import { whatsappLink, mapsUrl, imgUrl } from '../utils/helpers';
 
 const SECTORS = [
   'Artisanat', 'Automobile', 'BTP / Construction', 'Commerce', 'Communication / Marketing',
@@ -147,9 +147,14 @@ export default function Profile() {
     setSaving(false);
   };
 
+  const MAX_UPLOAD = 8 * 1024 * 1024;
+  const tooBig = (files) => files.some(f => f.size > MAX_UPLOAD);
+
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (tooBig([file])) { setUploadMsg('Erreur logo : fichier trop lourd (8 Mo max).'); return; }
     setUploading(true);
     setUploadMsg('');
     const formData = new FormData();
@@ -167,7 +172,9 @@ export default function Profile() {
 
   const handleProfilePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (tooBig([file])) { setUploadMsg('Erreur photo de profil : fichier trop lourd (8 Mo max).'); return; }
     setUploading(true);
     setUploadMsg('');
     const formData = new FormData();
@@ -178,14 +185,17 @@ export default function Profile() {
       await refreshUser();
       setUploadMsg('Photo de profil mise à jour.');
     } catch (err) {
-      setUploadMsg(`Erreur photo : ${err.message}`);
+      setUploadMsg('Erreur photo de profil : ' + err.message);
     }
     setUploading(false);
   };
 
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
+    e.target.value = '';
     if (!files.length) return;
+    if (files.length > 10) { setUploadMsg('Erreur photos : 10 photos maximum à la fois.'); return; }
+    if (tooBig(files)) { setUploadMsg('Erreur photos : un fichier dépasse 8 Mo.'); return; }
     setUploading(true);
     setUploadMsg('');
     const formData = new FormData();
@@ -202,8 +212,8 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 fade-in">
-      <h1 className="font-display text-2xl text-blue-dark">Mon profil</h1>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h1 className="page-title">Mon profil</h1>
 
       <form onSubmit={handleSave} className="card p-4 sm:p-6 space-y-5">
         {/* Photo de profil + Logo */}
@@ -212,7 +222,7 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             <div className="relative">
               {user.member?.photoUrl ? (
-                <img src={user.member.photoUrl} alt="Ma photo de profil" loading="lazy" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover" />
+                <img src={imgUrl(user.member.photoUrl, 200)} alt="Ma photo de profil" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover" />
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
                   <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -231,7 +241,7 @@ export default function Profile() {
               <button type="button" onClick={() => profilePhotoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
                 {user.member?.photoUrl ? 'Changer' : 'Ajouter'}
               </button>
-              {uploadMsg && uploadMsg.includes('profil') && (
+              {uploadMsg && uploadMsg.includes('photo de profil') && (
                 <p className={`text-xs mt-1 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
               )}
             </div>
@@ -242,7 +252,7 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             <div className="relative">
               {user.member?.logoUrl ? (
-                <img src={user.member.logoUrl} alt="Mon logo" loading="lazy" className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover" />
+                <img src={imgUrl(user.member.logoUrl, 200)} alt="Mon logo" className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-contain bg-white border border-gray-100" />
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-blue-light flex items-center justify-center text-blue font-bold text-2xl">
                   {form.companyName?.charAt(0) || '?'}
@@ -259,7 +269,7 @@ export default function Profile() {
               <button type="button" onClick={() => logoRef.current?.click()} className={`text-sm text-blue hover:underline ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
                 {user.member?.logoUrl ? 'Changer' : 'Ajouter'}
               </button>
-              {uploadMsg && uploadMsg.includes('Logo') && (
+              {uploadMsg && uploadMsg.toLowerCase().includes('logo') && (
                 <p className={`text-xs mt-1 ${uploadMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{uploadMsg}</p>
               )}
             </div>
@@ -365,9 +375,11 @@ export default function Profile() {
         </div>
 
         {msg && <p className={`text-sm ${msg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{msg}</p>}
-        <button type="submit" className="btn-primary" disabled={saving}>
-          {saving ? 'Sauvegarde...' : 'Enregistrer le profil'}
-        </button>
+        <div className="sticky bottom-[72px] lg:bottom-4 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white/95 backdrop-blur border-t border-gray-100 rounded-b-card">
+          <button type="submit" className="btn-primary w-full sm:w-auto" disabled={saving}>
+            {saving ? 'Sauvegarde...' : 'Enregistrer le profil'}
+          </button>
+        </div>
       </form>
 
       {/* Photos */}
@@ -384,11 +396,14 @@ export default function Profile() {
         )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {(user.member?.photos || []).map((url, i) => (
-            <div key={i} className="relative">
-              <img src={url} alt={`Photo ${i + 1}`} loading="lazy" className="rounded-xl object-cover w-full h-24" />
+            <div key={url} className="relative">
+              <img src={imgUrl(url, 400)} alt={`Photo ${i + 1}`} loading="lazy" className="rounded-xl object-cover w-full h-24" />
               <button
+                type="button"
+                aria-label="Supprimer cette photo"
                 onClick={async () => {
-                  try { await api.deletePhoto(user.id, i); refreshUser(); }
+                  if (!confirm('Supprimer cette photo ?')) return;
+                  try { await api.deletePhoto(user.id, i); await refreshUser(); }
                   catch (err) { setUploadMsg(`Erreur suppression : ${err.message}`); }
                 }}
                 className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"

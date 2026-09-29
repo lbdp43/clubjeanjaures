@@ -43,9 +43,9 @@ export default function Home() {
   return (
     <div className="space-y-8 sm:space-y-12">
       {/* Hero */}
-      <section className="text-center py-8 sm:py-12 lg:py-20">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6">
-          JJ
+      <section className="text-center py-6 sm:py-12 lg:py-20">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6 shadow-lg shadow-blue/20 overflow-hidden">
+          {settings?.logoUrl ? <img src={settings.logoUrl} alt="" className="w-full h-full object-cover" /> : 'JJ'}
         </div>
         <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-blue-dark mb-3 sm:mb-4">
           {settings?.name || 'Club de Jean Jaurès'}
@@ -131,9 +131,9 @@ export default function Home() {
           <Link to="/annuaire" className="text-blue text-sm hover:underline">Voir l'annuaire</Link>
         </div>
         {membersLoading ? (
-          <SkeletonGrid count={3} height="h-64" />
+          <SkeletonGrid count={3} height="h-24" />
         ) : members.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {members.slice(0, 6).map(member => (
               <MemberCard key={member.id} member={member} compact />
             ))}

@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useOnline } from './hooks/useOnline';
 import Layout from './components/layout/Layout';
+import ScrollToTop from './components/layout/ScrollToTop';
 import Verify from './pages/Verify';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
@@ -34,6 +35,7 @@ export default function App() {
   return (
     <>
       {!online && <div className="offline-banner">Mode hors-ligne</div>}
+      <ScrollToTop />
       <Suspense fallback={
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
@@ -55,7 +57,8 @@ export default function App() {
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/agenda/:id" element={<EventDetail />} />
             {/* <Route path="/fil" element={<Feed />} /> */}
-            <Route path="/admin/*" element={<Admin />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/:tab" element={<Admin />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/tableau-de-bord" element={<MemberDashboard />} />
           </Route>

@@ -40,7 +40,14 @@ export default function Annuaire() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl text-blue-dark">Annuaire</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="page-title">Annuaire</h1>
+        {!loading && (
+          <span className="text-xs text-text-muted bg-white border border-gray-200 px-2.5 py-1 rounded-full">
+            {filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
 
       <div className="relative">
         <input
@@ -95,18 +102,28 @@ export default function Annuaire() {
       )}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2" aria-hidden="true">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card h-64 animate-pulse bg-gray-100" />
+        <div className="grid gap-3 sm:grid-cols-2" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="card h-32 animate-pulse bg-gray-100" />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {filteredMembers.map(m => (
             <MemberCard key={m.id} member={m} />
           ))}
           {filteredMembers.length === 0 && !error && (
-            <p className="text-text-muted col-span-full text-center py-8">Aucun résultat.</p>
+            <div className="col-span-full text-center py-12">
+              <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <p className="text-text-muted text-sm">Aucun membre ne correspond à votre recherche.</p>
+              {(search || selectedSector) && (
+                <button onClick={() => { setSearch(''); setSelectedSector(''); }} className="text-sm text-blue hover:underline mt-2">
+                  Effacer les filtres
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

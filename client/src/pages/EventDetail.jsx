@@ -367,16 +367,16 @@ export default function EventDetail() {
 
           {/* Participants */}
           <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
               <p className="text-xs sm:text-sm font-medium text-text-muted">
                 {rsvps.length} participant{rsvps.length !== 1 ? 's' : ''}
               </p>
               {user ? (
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2">
                   <button
                     onClick={() => { if (!participating) handleRsvp(); }}
                     disabled={rsvpLoading}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    className={`px-4 py-2.5 rounded-full text-sm font-medium transition-colors ${
                       participating
                         ? 'bg-green-100 text-green-700 ring-1 ring-green-300'
                         : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'
@@ -387,19 +387,19 @@ export default function EventDetail() {
                   <button
                     onClick={() => { if (participating) handleRsvp(); }}
                     disabled={rsvpLoading}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    className={`px-4 py-2.5 rounded-full text-sm font-medium transition-colors ${
                       !participating
                         ? 'bg-red-50 text-red-500 ring-1 ring-red-200'
                         : 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500'
                     }`}
                   >
-                    {rsvpLoading ? '...' : '✗ Je ne peux pas'}
+                    {rsvpLoading ? '...' : '✗ Pas dispo'}
                   </button>
                 </div>
               ) : (
                 <Link
                   to="/connexion"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-blue text-white hover:bg-blue-dark transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium bg-blue text-white hover:bg-blue-dark transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />

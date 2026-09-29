@@ -2,6 +2,13 @@
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
+    screens: {
+      xs: '400px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px'
+    },
     extend: {
       colors: {
         blue: { DEFAULT: '#2B5C8A', dark: '#1A3A5C', light: '#E8F0F8' },

@@ -75,5 +75,25 @@ export function useCachedFetch(key, fetcher, { enabled = true, persist = true } 
     return () => { runId.current++; };
   }, [load]);
 
+  // Retour sur l'app (onglet, PWA) ou retour du réseau : on rafraîchit sans vider l'écran
+  useEffect(() => {
+    if (!enabled || !key) return;
+    let last = Date.now();
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - last < 15000) return;
+      last = Date.now();
+      load();
+    };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('online', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('online', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [load, enabled, key]);
+
   return { data, loading, error, refetch: load, setData };
 }
