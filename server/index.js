@@ -172,9 +172,21 @@ const server = app.listen(PORT, () => {
 });
 
 // Nettoyage des secteurs saisis à la main (espaces, valeurs vides) : sans ça,
-// un filtre peut exister sans correspondre à personne.
-prisma.$executeRaw`UPDATE members SET sector = NULLIF(regexp_replace(trim(sector), '\s+', ' ', 'g'), '') WHERE sector IS NOT NULL AND sector IS DISTINCT FROM NULLIF(regexp_replace(trim(sector), '\s+', ' ', 'g'), '')`
-  .catch(err => logger.warn('Nettoyage des secteurs impossible', { error: err.message }));
+// un filtre peut exister sans correspondre à personne. Puis réparation des
+// secteurs abîmés par une ancienne version de ce nettoyage.
+const { repairSectors } = require('./utils/repairSectors');
+(async () => {
+  try {
+    await prisma.$executeRawUnsafe(
+      "UPDATE members SET sector = NULLIF(regexp_replace(trim(sector), '\\s+', ' ', 'g'), '') " +
+      "WHERE sector IS NOT NULL AND sector IS DISTINCT FROM NULLIF(regexp_replace(trim(sector), '\\s+', ' ', 'g'), '')"
+    );
+    const n = await repairSectors(prisma);
+    if (n) logger.warn(`${n} secteur(s) réparé(s)`);
+  } catch (err) {
+    logger.warn('Nettoyage des secteurs impossible', { error: err.message });
+  }
+})();
 
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully...');
