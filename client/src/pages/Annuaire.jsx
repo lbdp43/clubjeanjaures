@@ -16,7 +16,8 @@ export default function Annuaire() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const { data: sectors = [] } = useCachedFetch('sectors', () => api.getSectors());
+  const { data: rawSectors = [] } = useCachedFetch('sectors', () => api.getSectors());
+  const sectors = rawSectors.filter(s => typeof s === 'string' && s.trim());
 
   const scope = isMember ? `m:${user?.id}` : 'public';
   const serverSearch = isMember ? debouncedSearch : '';
@@ -66,7 +67,7 @@ export default function Annuaire() {
       {sectors.length > 0 && (
         <div>
           <p className="text-xs text-text-muted mb-2">Filtrer par métier / activité :</p>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="chips-row">
             <button
               onClick={() => setSelectedSector('')}
               className={`px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
@@ -108,7 +109,7 @@ export default function Annuaire() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 min-w-0">
           {filteredMembers.map(m => (
             <MemberCard key={m.id} member={m} />
           ))}

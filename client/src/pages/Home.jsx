@@ -133,7 +133,7 @@ export default function Home() {
         {membersLoading ? (
           <SkeletonGrid count={3} height="h-24" />
         ) : members.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 min-w-0">
             {members.slice(0, 6).map(member => (
               <MemberCard key={member.id} member={member} compact />
             ))}

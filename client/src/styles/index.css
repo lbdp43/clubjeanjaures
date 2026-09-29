@@ -62,6 +62,27 @@
   .page-title {
     @apply font-display text-2xl sm:text-3xl text-blue-dark;
   }
+  /* Rangée de puces défilante : pas de barre grise, glissement fluide, débordement jusqu'aux bords */
+  .chips-row {
+    @apply flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  .chips-row > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .badge {
     @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
   }

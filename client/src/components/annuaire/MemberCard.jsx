@@ -52,7 +52,7 @@ function MemberCard({ member, compact = false }) {
       onClick={open}
       onKeyDown={onKeyDown}
       aria-label={`Voir la fiche de ${member.companyName || 'ce membre'}`}
-      className="card p-4 hover:shadow-md hover:border-blue/30 transition-all cursor-pointer active:scale-[0.99]"
+      className="card p-4 min-w-0 overflow-hidden hover:shadow-md hover:border-blue/30 transition-all cursor-pointer active:scale-[0.99]"
     >
       {/* En-tête : visuel + identité */}
       <div className="flex items-center gap-3.5">
@@ -83,13 +83,13 @@ function MemberCard({ member, compact = false }) {
             <p className="text-text-muted line-clamp-2">{member.description}</p>
           )}
           {member.lookingFor && (
-            <p className="text-xs line-clamp-1">
+            <p className="text-xs truncate">
               <span className="font-medium text-blue-dark">Recherche :</span>{' '}
               <span className="text-text-muted">{member.lookingFor}</span>
             </p>
           )}
           {member.canOffer && (
-            <p className="text-xs line-clamp-1">
+            <p className="text-xs truncate">
               <span className="font-medium text-green-700">Apporte :</span>{' '}
               <span className="text-text-muted">{member.canOffer}</span>
             </p>
@@ -99,7 +99,7 @@ function MemberCard({ member, compact = false }) {
 
       {/* Actions de contact */}
       {(member.phone || email || member.website) && (
-        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
+        <div className="flex items-center flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
           {member.phone && (
             <a href={`tel:${member.phone}`} onClick={stop} className="contact-pill contact-pill-primary" aria-label="Appeler">
               <PhoneIcon className="w-4 h-4" />

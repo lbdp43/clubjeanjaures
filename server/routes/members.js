@@ -28,12 +28,15 @@ const router = express.Router();
 router.get('/sectors', async (req, res) => {
   try {
     const members = await prisma.member.findMany({
-      where: { sector: { not: null } },
+      where: { sector: { not: null }, user: { status: 'active', role: { not: 'visitor' } } },
       select: { sector: true },
       distinct: ['sector'],
       orderBy: { sector: 'asc' }
     });
-    res.json(members.map(m => m.sector));
+    const sectors = [...new Set(members.map(m => m.sector.trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+    res.set('Cache-Control', 'no-cache');
+    res.json(sectors);
   } catch (err) {
     logger.error('Erreur sectors:', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });

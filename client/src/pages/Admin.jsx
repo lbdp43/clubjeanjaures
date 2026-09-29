@@ -26,7 +26,7 @@ export default function Admin() {
     <div className="space-y-4 sm:space-y-6">
       <h1 className="page-title">Administration</h1>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="chips-row">
         {TABS.map(t => (
           <button
             key={t.id}
