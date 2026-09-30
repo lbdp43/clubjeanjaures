@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { haptic } from '../../utils/haptics';
 
 const THRESHOLD = 64;
 const MAX_PULL = 96;
@@ -42,6 +43,7 @@ export default function PullToRefresh({ children }) {
       pulling.current = false;
       if (pull < THRESHOLD) { setPull(0); return; }
       refreshingRef.current = true;
+      haptic('medium');
       setRefreshing(true);
       setPull(THRESHOLD);
       window.dispatchEvent(new CustomEvent('cjj:refresh'));

@@ -3,6 +3,7 @@ import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import MemberCard from '../components/annuaire/MemberCard';
+import { haptic } from '../utils/haptics';
 
 export default function Annuaire() {
   const { user, isMember } = useAuth();
@@ -69,7 +70,7 @@ export default function Annuaire() {
           <p className="text-xs on-bg-muted mb-2">Filtrer par métier / activité :</p>
           <div className="chips-row">
             <button
-              onClick={() => setSelectedSector('')}
+              onClick={() => { haptic('selection'); setSelectedSector(''); }}
               className={`chip ${!selectedSector ? 'chip-active' : ''}`}
             >
               Tous
@@ -77,7 +78,7 @@ export default function Annuaire() {
             {sectors.map(s => (
               <button
                 key={s}
-                onClick={() => setSelectedSector(s === selectedSector ? '' : s)}
+                onClick={() => { haptic('selection'); setSelectedSector(s === selectedSector ? '' : s); }}
                 className={`chip ${selectedSector === s ? 'chip-active' : ''}`}
               >
                 {s}

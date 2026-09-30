@@ -5,6 +5,7 @@ import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl, mapsUrl, imgUrl } from '../utils/helpers';
+import { haptic } from '../utils/haptics';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -43,6 +44,7 @@ export default function EventDetail() {
 
   const handleRsvp = async () => {
     if (!user || rsvpLoading) return;
+    haptic(participating ? 'light' : 'success');
     setRsvpLoading(true);
     setMsg('');
     try {

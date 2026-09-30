@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
 import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl, imgUrl } from '../../utils/helpers';
 import Collapse from '../ui/Collapse';
+import { haptic } from '../../utils/haptics';
 
 function participantName(r) {
   return r.user?.member?.companyName || r.user?.email?.split('@')[0] || 'Membre';
@@ -82,6 +83,7 @@ function EventCard({ event, onRsvpChange }) {
     if (!user || rsvpLoading) return;
 
     const was = localParticipating;
+    haptic(was ? 'light' : 'success');
     setLocalParticipating(!was);
     setLocalCount(c => was ? c - 1 : c + 1);
 

@@ -7,6 +7,7 @@ import { formatDate, formatTime, formatDaysUntil, getEventBadgeClass, getEventTy
 import EventCard from '../components/agenda/EventCard';
 import MemberCard from '../components/annuaire/MemberCard';
 import InstallCard from '../components/layout/InstallCard';
+import { haptic } from '../utils/haptics';
 
 export default function Home() {
   const { user } = useAuth();
@@ -188,6 +189,7 @@ function NextEventCard({ event, user, onChange }) {
 
   const toggle = async (target) => {
     if (busy || participating === target) return;
+    haptic(target ? 'success' : 'light');
     setBusy(true);
     setLocal(target);
     try {

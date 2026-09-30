@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
+import { haptic } from '../utils/haptics';
 
 const MIN_DISTANCE = 70;
 const MAX_CROSS = 80;
@@ -66,9 +67,10 @@ export function useSwipeNavigation(ref) {
       const isDetail = path.split('/').filter(Boolean).length > 1 && !path.startsWith('/admin');
 
       if (dx > 0) {
-        if (isDetail) navigate(-1);
-        else if (idx > 0) navigate(tabs[idx - 1]);
+        if (isDetail) { haptic('light'); navigate(-1); }
+        else if (idx > 0) { haptic('selection'); navigate(tabs[idx - 1]); }
       } else if (!isDetail && idx >= 0 && idx < tabs.length - 1) {
+        haptic('selection');
         navigate(tabs[idx + 1]);
       }
     };

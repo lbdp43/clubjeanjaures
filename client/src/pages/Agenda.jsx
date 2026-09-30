@@ -6,6 +6,7 @@ import { formatMonthLabel } from '../utils/helpers';
 import EventCard from '../components/agenda/EventCard';
 import SubscribePanel from '../components/agenda/SubscribePanel';
 import Collapse from '../components/ui/Collapse';
+import { haptic } from '../utils/haptics';
 
 const TYPES = [
   { value: 'all', label: 'Tous' },
@@ -78,7 +79,7 @@ export default function Agenda() {
             <button
               role="tab"
               aria-selected={tab === 'upcoming'}
-              onClick={() => setTab('upcoming')}
+              onClick={() => { haptic('selection'); setTab('upcoming'); }}
               className={`segment-item ${tab === 'upcoming' ? 'segment-item-on' : ''}`}
             >
               À venir
@@ -86,7 +87,7 @@ export default function Agenda() {
             <button
               role="tab"
               aria-selected={tab === 'past'}
-              onClick={() => setTab('past')}
+              onClick={() => { haptic('selection'); setTab('past'); }}
               className={`segment-item ${tab === 'past' ? 'segment-item-on' : ''}`}
             >
               Passés
@@ -98,7 +99,7 @@ export default function Agenda() {
             {TYPES.map(t => (
               <button
                 key={t.value}
-                onClick={() => setFilter(t.value)}
+                onClick={() => { haptic('selection'); setFilter(t.value); }}
                 aria-pressed={filter === t.value}
                 className={`chip ${filter === t.value ? 'chip-active' : ''}`}
               >

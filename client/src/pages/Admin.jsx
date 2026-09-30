@@ -4,6 +4,7 @@ import AdminDashboard from '../components/admin/AdminDashboard';
 import AdminMembers from '../components/admin/AdminMembers';
 import AdminEvents from '../components/admin/AdminEvents';
 import AdminSettings from '../components/admin/AdminSettings';
+import { haptic } from '../utils/haptics';
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -30,7 +31,7 @@ export default function Admin() {
         {TABS.map(t => (
           <button
             key={t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => { haptic('selection'); setTab(t.id); }}
             className={`chip ${tab === t.id ? 'chip-active' : ''}`}
           >
             {t.label}
