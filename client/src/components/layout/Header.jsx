@@ -10,7 +10,7 @@ export default function Header() {
   const displayName = user?.member?.companyName || user?.email;
 
   return (
-    <header className="glass-bar border-b px-4 py-2.5 flex items-center justify-between gap-3 lg:px-8 sticky top-0 z-30 text-white">
+    <header className="glass-bar border-b px-4 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] flex items-center justify-between gap-3 lg:px-8 sticky top-0 z-30 text-white">
       <Link to="/" className="flex items-center gap-2.5 min-w-0 lg:invisible" aria-label="Accueil">
         {settings?.logoUrl ? (
           <img src={imgUrl(settings.logoUrl, 200)} alt="" className="w-9 h-9 rounded-full object-cover ring-2 ring-white/30" />

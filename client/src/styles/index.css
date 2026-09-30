@@ -191,6 +191,10 @@
 .safe-bottom {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
+/* Bannière hors-ligne sous l'encoche iPhone */
+.offline-banner {
+  padding-top: calc(0.5rem + env(safe-area-inset-top));
+}
 
 /* Mode hors-ligne */
 .offline-banner {
