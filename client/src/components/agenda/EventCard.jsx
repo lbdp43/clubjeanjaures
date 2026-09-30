@@ -23,7 +23,7 @@ function ParticipantAvatar({ rsvp, size = 'w-7 h-7' }) {
   );
 }
 
-function Participants({ rsvps, count }) {
+export function Participants({ rsvps, count }) {
   const [open, setOpen] = useState(false);
   if (!rsvps?.length) {
     return <p className="text-xs text-text-muted mt-2.5">Aucun participant pour l'instant — soyez le premier !</p>;

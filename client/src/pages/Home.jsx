@@ -4,7 +4,7 @@ import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import { formatDate, formatTime, formatDaysUntil, getEventBadgeClass, getEventTypeLabel } from '../utils/helpers';
-import EventCard from '../components/agenda/EventCard';
+import EventCard, { Participants } from '../components/agenda/EventCard';
 import MemberCard from '../components/annuaire/MemberCard';
 import InstallCard from '../components/layout/InstallCard';
 import { haptic } from '../utils/haptics';
@@ -184,8 +184,12 @@ export default function Home() {
 function NextEventCard({ event, user, onChange }) {
   const [busy, setBusy] = useState(false);
   const [local, setLocal] = useState(null);
-  const participating = local ?? (event.rsvps?.some(r => r.userId === user.id) || false);
-  const count = (event._count?.rsvps || 0) + (local === null ? 0 : (local ? 1 : 0) - (event.rsvps?.some(r => r.userId === user.id) ? 1 : 0));
+  const serverHasMe = event.rsvps?.some(r => r.userId === user.id) || false;
+  const participating = local ?? serverHasMe;
+  const count = (event._count?.rsvps || 0) + (local === null ? 0 : (local ? 1 : 0) - (serverHasMe ? 1 : 0));
+  let displayedRsvps = event.rsvps || [];
+  if (participating && !serverHasMe) displayedRsvps = [{ userId: user.id, user: { email: user.email, member: user.member } }, ...displayedRsvps];
+  else if (!participating && serverHasMe) displayedRsvps = displayedRsvps.filter(r => r.userId !== user.id);
 
   const toggle = async (target) => {
     if (busy || participating === target) return;
@@ -235,13 +239,11 @@ function NextEventCard({ event, user, onChange }) {
         >
           ✗ Pas dispo
         </button>
-        <span className="text-xs text-text-muted ml-auto">
-          {count} participant{count !== 1 ? 's' : ''}
-        </span>
       </div>
       {participating && (
         <p className="text-xs text-green-700 mt-2">Vous êtes inscrit·e. À bientôt !</p>
       )}
+      <Participants rsvps={displayedRsvps} count={count} />
     </div>
   );
 }
