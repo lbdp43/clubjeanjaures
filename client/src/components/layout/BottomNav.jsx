@@ -24,7 +24,7 @@ export default function BottomNav() {
   const count = items.length;
 
   return (
-    <nav role="navigation" aria-label="Navigation principale" className="lg:hidden floating-nav flex z-40 px-1">
+    <nav role="navigation" aria-label="Navigation principale" className="lg:hidden nav-scrim flex z-40 px-1">
       {/* Pilule lumineuse qui glisse vers l'onglet actif.
           Les onglets occupent (largeur - 8px de marge intérieure) / n ; la pilule fait cette largeur moins 8px,
           donc un pas = 100 % de sa largeur + 8px. */}
