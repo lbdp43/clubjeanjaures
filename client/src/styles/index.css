@@ -644,25 +644,13 @@
   .nav-glow { transition: none; }
 }
 
-/* En-tête en pilule flottante : liseré réfractif et reflet comme la barre du bas */
-.floating-top {
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow:
-    0 14px 34px -14px rgba(5, 20, 45, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-}
-.floating-top::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.5px;
+/* En-tête flottant sans cadre : simple voile dégradé pour rester lisible sur le contenu qui défile */
+.header-scrim {
+  background: linear-gradient(180deg, rgba(19, 44, 71, 0.9) 0%, rgba(19, 44, 71, 0.7) 50%, rgba(19, 44, 71, 0) 100%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 60%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 60%, rgba(0, 0, 0, 0) 100%);
   pointer-events: none;
-  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.3) 22%, rgba(255,255,255,0.04) 45%, rgba(255,255,255,0.04) 58%, rgba(255,255,255,0.5) 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
 }
-.floating-top > * { position: relative; z-index: 1; }
+.header-scrim > * { pointer-events: auto; }

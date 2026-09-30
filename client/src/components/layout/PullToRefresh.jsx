@@ -71,7 +71,7 @@ export default function PullToRefresh({ children }) {
     <>
       <div
         aria-hidden="true"
-        className="lg:hidden fixed left-0 right-0 top-[calc(66px+env(safe-area-inset-top))] z-20 flex justify-center pointer-events-none"
+        className="lg:hidden fixed left-0 right-0 top-[calc(60px+env(safe-area-inset-top))] z-20 flex justify-center pointer-events-none"
         style={{ transform: `translateY(${pull - 48}px)`, opacity: Math.min(pull / THRESHOLD, 1), transition: pulling.current ? 'none' : 'transform 0.2s, opacity 0.2s' }}
       >
         <div className={`w-9 h-9 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
