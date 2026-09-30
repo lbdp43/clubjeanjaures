@@ -31,9 +31,7 @@ export default function Admin() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
-              tab === t.id ? 'bg-blue text-white' : 'bg-white text-text-muted border border-gray-200'
-            }`}
+            className={`chip ${tab === t.id ? 'chip-active' : ''}`}
           >
             {t.label}
           </button>

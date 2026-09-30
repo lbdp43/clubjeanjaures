@@ -35,17 +35,17 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       if (this.state.reloading) {
         return (
-          <div className="min-h-screen flex items-center justify-center bg-cream p-4">
+          <div className="min-h-screen flex items-center justify-center p-4">
             <div className="text-center">
-              <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full mx-auto mb-4" />
-              <p className="text-text-muted">Mise à jour de l'application...</p>
+              <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4" />
+              <p className="on-bg-muted">Mise à jour de l'application...</p>
             </div>
           </div>
         );
       }
       return (
-        <div className="min-h-screen flex items-center justify-center bg-cream p-4">
-          <div className="text-center">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="text-center card p-8">
             <h1 className="text-xl font-bold text-gray-800 mb-2">Une erreur est survenue</h1>
             <p className="text-gray-600 mb-4">Veuillez rafraîchir la page.</p>
             <button

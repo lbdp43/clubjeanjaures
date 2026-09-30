@@ -20,7 +20,7 @@ export default function BottomNav() {
   });
 
   return (
-    <nav role="navigation" aria-label="Navigation principale" className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-100 flex justify-around z-40 safe-bottom">
+    <nav role="navigation" aria-label="Navigation principale" className="lg:hidden fixed bottom-0 left-0 right-0 glass-bar border-t flex justify-around z-40 safe-bottom">
       {items.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
@@ -29,14 +29,14 @@ export default function BottomNav() {
           aria-label={label}
           className={({ isActive }) =>
             `relative flex flex-col items-center justify-center gap-0.5 flex-1 pt-2 pb-1 text-[11px] transition-colors ${
-              isActive ? 'text-blue font-semibold' : 'text-text-muted'
+              isActive ? 'text-white font-semibold' : 'text-white/60'
             }`
           }
         >
           {({ isActive }) => (
             <>
-              <span className={`absolute top-0 h-0.5 w-8 rounded-b-full bg-blue transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-              <span className={`flex items-center justify-center w-12 h-7 rounded-full transition-colors ${isActive ? 'bg-blue-light' : ''}`}>
+              <span className={`absolute top-0 h-0.5 w-8 rounded-b-full bg-white transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+              <span className={`flex items-center justify-center w-12 h-7 rounded-full transition-colors ${isActive ? 'bg-white/20' : ''}`}>
                 <Icon />
               </span>
               <span>{label}</span>

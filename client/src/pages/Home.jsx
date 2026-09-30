@@ -50,15 +50,15 @@ export default function Home() {
         <section className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="font-display text-2xl sm:text-3xl text-blue-dark truncate">
+              <h1 className="font-display text-2xl sm:text-3xl text-white truncate">
                 Bonjour{user.member?.companyName ? `, ${user.member.companyName}` : ''}
               </h1>
-              <p className="text-text-muted text-sm mt-1">Voici ce qui vous attend au club.</p>
+              <p className="on-bg-muted text-sm mt-1">Voici ce qui vous attend au club.</p>
             </div>
             <button
               onClick={handleInvite}
               className={`flex-shrink-0 inline-flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-full font-medium transition-colors ${
-                linkCopied ? 'bg-green-100 text-green-700' : 'bg-blue-light text-blue-dark hover:bg-blue/10'
+                linkCopied ? 'bg-green-100 text-green-700' : 'bg-white/15 text-white border border-white/25 hover:bg-white/25'
               }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -69,11 +69,11 @@ export default function Home() {
           </div>
 
           {eventsLoading && !nextEvent ? (
-            <div className="card h-40 animate-pulse bg-gray-100" aria-hidden="true" />
+            <div className="skeleton h-40" aria-hidden="true" />
           ) : nextEvent ? (
             <NextEventCard event={nextEvent} user={user} onChange={refetchEvents} />
           ) : (
-            <div className="card p-5 text-center text-sm text-text-muted">Aucun événement à venir pour le moment.</div>
+            <div className="card-glass p-5 text-center text-sm">Aucun événement à venir pour le moment.</div>
           )}
 
           {!user.member && (
@@ -85,24 +85,24 @@ export default function Home() {
         </section>
       ) : (
         <section className="text-center py-6 sm:py-12 lg:py-20">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6 shadow-lg shadow-blue/20 overflow-hidden">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center text-blue-dark font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6 shadow-lg shadow-blue-dark/40 ring-4 ring-white/20 overflow-hidden">
             {settings?.logoUrl ? <img src={settings.logoUrl} alt="" className="w-full h-full object-cover" /> : 'JJ'}
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-blue-dark mb-3 sm:mb-4">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-white mb-3 sm:mb-4">
             {settings?.name || 'Club de Jean Jaurès'}
           </h1>
-          <p className="text-base sm:text-lg text-text-muted max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
+          <p className="text-base sm:text-lg on-bg-muted max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
             {settings?.description || "Club d'affaires de Saint-Étienne — Échanges, entraide et développement entre professionnels de métiers différents."}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/inscription" className="btn-primary">Rejoindre le club</Link>
-            <Link to="/connexion" className="btn-secondary">Se connecter</Link>
+            <Link to="/inscription" className="bg-white text-blue-dark px-6 py-3 rounded-full font-semibold shadow-lg shadow-blue-dark/30 hover:bg-blue-light transition-colors">Rejoindre le club</Link>
+            <Link to="/connexion" className="border-2 border-white/70 text-white px-6 py-3 rounded-full font-semibold hover:bg-white/10 transition-colors">Se connecter</Link>
           </div>
         </section>
       )}
 
       {membersFailed && (
-        <p className="text-center text-text-muted text-sm py-2">
+        <p className="text-center on-bg-muted text-sm py-2">
           Connexion en cours… les données s'afficheront dès que le réseau répond.
         </p>
       )}
@@ -111,8 +111,8 @@ export default function Home() {
       {showEvents ? (
         <section>
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="font-display text-xl sm:text-2xl text-blue-dark">{user ? 'Et ensuite' : 'Prochains événements'}</h2>
-            <Link to="/agenda" className="text-blue text-sm hover:underline">Voir tout l'agenda</Link>
+            <h2 className="font-display text-xl sm:text-2xl text-white">{user ? 'Et ensuite' : 'Prochains événements'}</h2>
+            <Link to="/agenda" className="on-bg-link text-sm">Voir tout l'agenda</Link>
           </div>
           {eventsLoading && events.length === 0 ? (
             <SkeletonGrid count={3} height="h-36" />
@@ -123,16 +123,16 @@ export default function Home() {
               ))}
             </div>
           ) : !nextEvent ? (
-            <p className="text-text-muted">Aucun événement à venir.</p>
+            <p className="on-bg-muted">Aucun événement à venir.</p>
           ) : (
-            <p className="text-text-muted text-sm">Pas d'autre événement programmé pour l'instant.</p>
+            <p className="on-bg-muted text-sm">Pas d'autre événement programmé pour l'instant.</p>
           )}
         </section>
       ) : (
         <section className="text-center py-8">
-          <p className="text-text-muted text-sm">
+          <p className="on-bg-muted text-sm">
             L'agenda est réservé aux membres.{' '}
-            <Link to="/connexion" className="text-blue hover:underline">Connectez-vous</Link> pour voir les événements.
+            <Link to="/connexion" className="on-bg-link">Connectez-vous</Link> pour voir les événements.
           </p>
         </section>
       )}
@@ -140,8 +140,8 @@ export default function Home() {
       {/* Annuaire */}
       <section>
         <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Nos membres</h2>
-          <Link to="/annuaire" className="text-blue text-sm hover:underline">Voir l'annuaire</Link>
+          <h2 className="font-display text-xl sm:text-2xl text-white">Nos membres</h2>
+          <Link to="/annuaire" className="on-bg-link text-sm">Voir l'annuaire</Link>
         </div>
         {membersLoading ? (
           <SkeletonGrid count={3} height="h-24" />
@@ -152,20 +152,20 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <p className="text-text-muted">Aucun membre pour le moment.</p>
+          <p className="on-bg-muted">Aucun membre pour le moment.</p>
         )}
       </section>
 
       {/* CTA */}
       {!user && (
-        <section className="bg-blue rounded-card p-6 sm:p-8 lg:p-12 text-center text-white">
+        <section className="card-glass p-6 sm:p-8 lg:p-12 text-center">
           <h2 className="font-display text-xl sm:text-2xl lg:text-3xl mb-4">
             Envie de rejoindre le club ?
           </h2>
-          <p className="text-blue-light mb-6 max-w-lg mx-auto">
+          <p className="text-white/80 mb-6 max-w-lg mx-auto">
             Inscription gratuite et ouverte à tous les professionnels de Saint-Étienne et sa région.
           </p>
-          <Link to="/inscription" className="inline-block bg-white text-blue px-8 py-3 rounded-full font-semibold hover:bg-sand transition-colors">
+          <Link to="/inscription" className="inline-block bg-white text-blue-dark px-8 py-3 rounded-full font-semibold hover:bg-blue-light transition-colors shadow-lg shadow-blue-dark/30">
             S'inscrire maintenant
           </Link>
         </section>
@@ -242,7 +242,7 @@ function SkeletonGrid({ count, height }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={`card ${height} animate-pulse bg-gray-100`} />
+        <div key={i} className={`skeleton ${height}`} />
       ))}
     </div>
   );

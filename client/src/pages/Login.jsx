@@ -46,7 +46,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="card max-w-md w-full p-5 sm:p-8 fade-in">
         <div className="text-center mb-6 sm:mb-8">
           <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-xl sm:text-2xl mx-auto mb-4">

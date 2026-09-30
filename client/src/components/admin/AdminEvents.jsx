@@ -94,14 +94,14 @@ export default function AdminEvents() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center gap-2">
-        <h3 className="font-semibold text-sm sm:text-base">Événements ({events.length})</h3>
+        <h3 className="font-semibold text-sm sm:text-base text-white">Événements ({events.length})</h3>
         <button onClick={showForm ? cancelForm : openCreate} className="btn-primary text-xs sm:text-sm py-2 px-3 sm:px-4 flex-shrink-0">
           {showForm ? 'Annuler' : '+ Créer'}
         </button>
       </div>
 
       {msg && (
-        <p className={`text-sm ${msg.startsWith('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{msg}</p>
+        <p className={`text-sm rounded-xl px-3 py-2 ${msg.startsWith('Erreur') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>{msg}</p>
       )}
 
       {showForm && (
@@ -156,7 +156,7 @@ export default function AdminEvents() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-8"><div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" /></div>
+        <div className="flex justify-center py-8"><div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full" /></div>
       ) : (
         <div className="space-y-2 sm:space-y-3">
           {events.map(e => (

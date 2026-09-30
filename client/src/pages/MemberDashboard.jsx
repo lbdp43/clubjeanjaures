@@ -28,10 +28,10 @@ export default function MemberDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-2xl text-blue-dark">
+        <h1 className="font-display text-2xl text-white">
           Bonjour, {user.member?.companyName || 'membre'}
         </h1>
-        <p className="text-text-muted mt-1">Bienvenue sur votre tableau de bord.</p>
+        <p className="on-bg-muted mt-1">Bienvenue sur votre tableau de bord.</p>
       </div>
 
       {!user.member && (
@@ -46,29 +46,29 @@ export default function MemberDashboard() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2" aria-hidden="true">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="card h-36 animate-pulse bg-gray-100" />
+            <div key={i} className="skeleton h-36" />
           ))}
         </div>
       ) : (
         <>
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-lg">Prochains événements</h2>
-              <Link to="/agenda" className="text-sm text-blue hover:underline">Voir tout</Link>
+              <h2 className="font-semibold text-lg text-white">Prochains événements</h2>
+              <Link to="/agenda" className="text-sm on-bg-link">Voir tout</Link>
             </div>
             {events.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 {events.slice(0, 4).map(e => <EventCard key={e.id} event={e} />)}
               </div>
             ) : (
-              <p className="text-text-muted text-sm">Aucun événement à venir.</p>
+              <p className="on-bg-muted text-sm">Aucun événement à venir.</p>
             )}
           </section>
 
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-lg">Mes favoris</h2>
-              <Link to="/annuaire" className="text-sm text-blue hover:underline">Annuaire</Link>
+              <h2 className="font-semibold text-lg text-white">Mes favoris</h2>
+              <Link to="/annuaire" className="text-sm on-bg-link">Annuaire</Link>
             </div>
             {favorites.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -83,7 +83,7 @@ export default function MemberDashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-text-muted text-sm">Aucun favori pour le moment.</p>
+              <p className="on-bg-muted text-sm">Aucun favori pour le moment.</p>
             )}
           </section>
         </>

@@ -121,7 +121,7 @@ export default function EventDetail() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto space-y-6" aria-hidden="true">
-        <div className="card h-80 animate-pulse bg-gray-100" />
+        <div className="skeleton h-80" />
       </div>
     );
   }
@@ -130,15 +130,15 @@ export default function EventDetail() {
     const notFound = error?.status === 404 || error?.message?.includes('introuvable');
     return (
       <div className="text-center py-12 space-y-3">
-        {!notFound && <div className="animate-spin w-6 h-6 border-4 border-blue border-t-transparent rounded-full mx-auto" />}
-        <p className="text-text-muted">
+        {!notFound && <div className="animate-spin w-6 h-6 border-4 border-white border-t-transparent rounded-full mx-auto" />}
+        <p className="on-bg-muted">
           {notFound ? 'Événement introuvable.' : 'Connexion en cours… l\'événement s\'affichera dès que le réseau répond.'}
         </p>
         {!notFound && (
-          <button onClick={refetchEvent} className="text-sm text-blue hover:underline">Réessayer maintenant</button>
+          <button onClick={refetchEvent} className="text-sm on-bg-link">Réessayer maintenant</button>
         )}
         <div>
-          <Link to="/agenda" className="text-blue text-sm hover:underline">&larr; Retour à l'agenda</Link>
+          <Link to="/agenda" className="on-bg-link text-sm">&larr; Retour à l'agenda</Link>
         </div>
       </div>
     );
@@ -146,7 +146,7 @@ export default function EventDetail() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-20 lg:pb-0">
-      <Link to="/agenda" className="text-blue text-sm hover:underline">&larr; Retour à l'agenda</Link>
+      <Link to="/agenda" className="on-bg-link text-sm">&larr; Retour à l'agenda</Link>
 
       {msg && (
         <p className={`text-sm ${msg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{msg}</p>

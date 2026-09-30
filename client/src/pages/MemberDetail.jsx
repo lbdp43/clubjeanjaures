@@ -57,7 +57,7 @@ export default function MemberDetail() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto" aria-hidden="true">
-        <div className="card h-96 animate-pulse bg-gray-100" />
+        <div className="skeleton h-96" />
       </div>
     );
   }
@@ -66,12 +66,12 @@ export default function MemberDetail() {
     const notFound = error?.status === 404 || error?.message?.includes('introuvable');
     return (
       <div className="text-center py-12 space-y-3">
-        {!notFound && <div className="animate-spin w-6 h-6 border-4 border-blue border-t-transparent rounded-full mx-auto" />}
-        <p className="text-text-muted">
+        {!notFound && <div className="animate-spin w-6 h-6 border-4 border-white border-t-transparent rounded-full mx-auto" />}
+        <p className="on-bg-muted">
           {notFound ? 'Membre introuvable.' : 'Connexion en cours… la fiche s\'affichera dès que le réseau répond.'}
         </p>
-        {!notFound && <button onClick={refetch} className="text-sm text-blue hover:underline">Réessayer maintenant</button>}
-        <div><Link to="/annuaire" className="text-blue text-sm hover:underline">&larr; Retour à l'annuaire</Link></div>
+        {!notFound && <button onClick={refetch} className="text-sm on-bg-link">Réessayer maintenant</button>}
+        <div><Link to="/annuaire" className="on-bg-link text-sm">&larr; Retour à l'annuaire</Link></div>
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function MemberDetail() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Link to="/annuaire" className="text-blue text-sm hover:underline">&larr; Retour à l'annuaire</Link>
+      <Link to="/annuaire" className="on-bg-link text-sm">&larr; Retour à l'annuaire</Link>
 
       <div className="card p-4 sm:p-6">
         {/* Photo + Logo */}

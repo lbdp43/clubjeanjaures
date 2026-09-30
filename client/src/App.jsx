@@ -45,7 +45,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -57,7 +57,7 @@ export default function App() {
       <UpdateBanner />
       <Suspense fallback={
         <div className="flex justify-center items-center py-20">
-          <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full" />
         </div>
       }>
         <Routes>

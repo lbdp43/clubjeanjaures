@@ -6,9 +6,24 @@
   html {
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
+    background: #1a3a5c;
   }
   body {
-    @apply bg-cream text-text-main font-sans antialiased;
+    @apply text-text-main font-sans antialiased;
+    background: transparent;
+    min-height: 100vh;
+  }
+  /* Fond bleu dégradé fixe (pseudo-élément : background-attachment: fixed est ignoré sur iOS) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(900px 520px at 8% -8%, rgba(120, 178, 230, 0.55) 0%, rgba(120, 178, 230, 0) 62%),
+      radial-gradient(700px 480px at 108% 18%, rgba(70, 140, 205, 0.5) 0%, rgba(70, 140, 205, 0) 60%),
+      radial-gradient(800px 600px at 50% 110%, rgba(38, 92, 150, 0.7) 0%, rgba(38, 92, 150, 0) 65%),
+      linear-gradient(175deg, #16324f 0%, #1f4a76 45%, #2b5c8a 100%);
   }
   h1, h2, h3 {
     @apply font-display;
@@ -17,7 +32,7 @@
     touch-action: manipulation;
   }
   *:focus-visible {
-    outline: 2px solid #2B5C8A;
+    outline: 2px solid #ffffff;
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -33,7 +48,8 @@
   .btn-primary {
     @apply bg-blue text-white px-6 py-3 rounded-full font-semibold
            hover:bg-blue-dark transition-colors duration-200
-           active:scale-95 transform disabled:opacity-60 disabled:active:scale-100;
+           active:scale-95 transform disabled:opacity-60 disabled:active:scale-100
+           shadow-md shadow-blue-dark/20;
   }
   .btn-secondary {
     @apply bg-white text-blue border-2 border-blue px-6 py-3 rounded-full
@@ -43,11 +59,25 @@
     @apply bg-red-500 text-white px-6 py-3 rounded-full font-semibold
            hover:bg-red-600 transition-colors duration-200;
   }
+  /* Encart « verre » : blanc translucide, reflet en haut, ombre bleutée. Pas de flou : trop coûteux sur mobile. */
   .card {
-    @apply bg-white rounded-card shadow-sm p-4 border border-gray-100;
+    @apply relative rounded-card p-4 text-text-main;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 38%),
+      rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow:
+      0 12px 32px -12px rgba(10, 30, 60, 0.45),
+      0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  }
+  .card-glass {
+    @apply relative rounded-card p-4 text-white;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 12px 32px -12px rgba(10, 30, 60, 0.45), 0 1px 0 rgba(255, 255, 255, 0.35) inset;
   }
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-text-main
            focus:border-blue focus:ring-2 focus:ring-blue-light outline-none
            transition-all duration-200;
   }
@@ -60,7 +90,39 @@
     @apply bg-blue border-blue text-white hover:bg-blue-dark hover:border-blue-dark hover:text-white;
   }
   .page-title {
-    @apply font-display text-2xl sm:text-3xl text-blue-dark;
+    @apply font-display text-2xl sm:text-3xl text-white;
+  }
+  /* Textes posés directement sur le fond bleu */
+  .on-bg {
+    @apply text-white;
+  }
+  .on-bg-muted {
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .on-bg-link {
+    @apply text-white/90 hover:text-white underline-offset-2 hover:underline;
+  }
+  /* Puces de filtre sur le fond bleu */
+  .chip {
+    @apply px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors
+           bg-white/15 text-white border border-white/25 hover:bg-white/25;
+  }
+  .chip-active {
+    @apply bg-white text-blue-dark border-white shadow-md shadow-blue-dark/30;
+  }
+  /* Onglets segmentés sur le fond bleu */
+  .segment {
+    @apply flex gap-1 rounded-xl p-1 bg-white/15 border border-white/20;
+  }
+  .segment-item {
+    @apply flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-medium transition-colors text-white/80;
+  }
+  .segment-item-active {
+    @apply bg-white text-blue-dark shadow-sm;
+  }
+  /* Squelette de chargement sur le fond bleu */
+  .skeleton {
+    @apply rounded-card animate-pulse bg-white/25 border border-white/20;
   }
   /* Rangée de puces défilante : pas de barre grise, glissement fluide, débordement jusqu'aux bords */
   .chips-row {
@@ -133,6 +195,14 @@
 /* Mode hors-ligne */
 .offline-banner {
   @apply fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 text-sm font-medium z-50;
+}
+
+/* Barre de navigation / en-tête en verre bleu foncé */
+.glass-bar {
+  background: rgba(22, 50, 79, 0.82);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 @media (prefers-reduced-motion: reduce) {

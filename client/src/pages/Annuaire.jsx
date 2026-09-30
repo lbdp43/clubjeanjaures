@@ -44,7 +44,7 @@ export default function Annuaire() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="page-title">Annuaire</h1>
         {!loading && (
-          <span className="text-xs text-text-muted bg-white border border-gray-200 px-2.5 py-1 rounded-full">
+          <span className="text-xs text-white/85 bg-white/15 border border-white/25 px-2.5 py-1 rounded-full">
             {filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}
           </span>
         )}
@@ -55,7 +55,7 @@ export default function Annuaire() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="input-field pl-10"
+          className="input-field pl-10 shadow-lg shadow-blue-dark/30 border-white/60"
           placeholder="Rechercher un membre, métier, ville..."
           aria-label="Rechercher un membre"
         />
@@ -66,15 +66,11 @@ export default function Annuaire() {
 
       {sectors.length > 0 && (
         <div>
-          <p className="text-xs text-text-muted mb-2">Filtrer par métier / activité :</p>
+          <p className="text-xs on-bg-muted mb-2">Filtrer par métier / activité :</p>
           <div className="chips-row">
             <button
               onClick={() => setSelectedSector('')}
-              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
-                !selectedSector
-                  ? 'bg-blue text-white'
-                  : 'bg-white text-text-muted border border-gray-200 hover:border-blue'
-              }`}
+              className={`chip ${!selectedSector ? 'chip-active' : ''}`}
             >
               Tous
             </button>
@@ -82,11 +78,7 @@ export default function Annuaire() {
               <button
                 key={s}
                 onClick={() => setSelectedSector(s === selectedSector ? '' : s)}
-                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap transition-colors ${
-                  selectedSector === s
-                    ? 'bg-blue text-white'
-                    : 'bg-white text-text-muted border border-gray-200 hover:border-blue'
-                }`}
+                className={`chip ${selectedSector === s ? 'chip-active' : ''}`}
               >
                 {s}
               </button>
@@ -97,15 +89,15 @@ export default function Annuaire() {
 
       {failed && (
         <div className="text-center py-4">
-          <p className="text-text-muted text-sm mb-2">Connexion en cours… l'annuaire s'affichera dès que le réseau répond.</p>
-          <button onClick={refetch} className="text-sm text-blue hover:underline">Réessayer maintenant</button>
+          <p className="on-bg-muted text-sm mb-2">Connexion en cours… l'annuaire s'affichera dès que le réseau répond.</p>
+          <button onClick={refetch} className="text-sm on-bg-link">Réessayer maintenant</button>
         </div>
       )}
 
       {loading ? (
         <div className="grid gap-3 sm:grid-cols-2" aria-hidden="true">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="card h-32 animate-pulse bg-gray-100" />
+            <div key={i} className="skeleton h-32" />
           ))}
         </div>
       ) : (
@@ -115,12 +107,12 @@ export default function Annuaire() {
           ))}
           {filteredMembers.length === 0 && !failed && (
             <div className="col-span-full text-center py-12">
-              <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2} aria-hidden="true">
+              <svg className="w-12 h-12 text-white/30 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
-              <p className="text-text-muted text-sm">Aucun membre ne correspond à votre recherche.</p>
+              <p className="on-bg-muted text-sm">Aucun membre ne correspond à votre recherche.</p>
               {(search || selectedSector) && (
-                <button onClick={() => { setSearch(''); setSelectedSector(''); }} className="text-sm text-blue hover:underline mt-2">
+                <button onClick={() => { setSearch(''); setSelectedSector(''); }} className="text-sm on-bg-link mt-2">
                   Effacer les filtres
                 </button>
               )}

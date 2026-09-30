@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Club Jean Jaurès',
         short_name: 'Jean Jaurès',
         description: "Club d'affaires de Saint-Étienne",
-        theme_color: '#2B5C8A',
-        background_color: '#FDFBF7',
+        theme_color: '#16324f',
+        background_color: '#16324f',
         display: 'standalone',
         start_url: '/',
         icons: [
