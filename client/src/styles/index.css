@@ -13,17 +13,22 @@
     background: transparent;
     min-height: 100vh;
   }
-  /* Fond bleu dégradé fixe (pseudo-élément : background-attachment: fixed est ignoré sur iOS) */
+  /* Fond bleu dégradé fixe (pseudo-élément : background-attachment: fixed est ignoré sur iOS) :
+     bleu nuit en haut → bleu clair en bas, reflet glossy en diagonale, halos lumineux */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     z-index: -1;
     background:
-      radial-gradient(900px 520px at 8% -8%, rgba(120, 178, 230, 0.55) 0%, rgba(120, 178, 230, 0) 62%),
-      radial-gradient(700px 480px at 108% 18%, rgba(70, 140, 205, 0.5) 0%, rgba(70, 140, 205, 0) 60%),
-      radial-gradient(800px 600px at 50% 110%, rgba(38, 92, 150, 0.7) 0%, rgba(38, 92, 150, 0) 65%),
-      linear-gradient(175deg, #16324f 0%, #1f4a76 45%, #2b5c8a 100%);
+      /* reflet glossy en diagonale */
+      linear-gradient(112deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0.04) 56%, rgba(255, 255, 255, 0) 64%),
+      /* halo clair en haut à droite */
+      radial-gradient(720px 520px at 100% 0%, rgba(150, 205, 255, 0.55) 0%, rgba(150, 205, 255, 0) 60%),
+      /* lumière douce en bas à gauche */
+      radial-gradient(900px 700px at 0% 100%, rgba(140, 200, 255, 0.5) 0%, rgba(140, 200, 255, 0) 60%),
+      /* dégradé principal : nuit → clair */
+      linear-gradient(168deg, #132c47 0%, #1e4a78 30%, #2c6aa6 58%, #4a94d3 82%, #6fb2e6 100%);
   }
   h1, h2, h3 {
     @apply font-display;
@@ -59,22 +64,22 @@
     @apply bg-red-500 text-white px-6 py-3 rounded-full font-semibold
            hover:bg-red-600 transition-colors duration-200;
   }
-  /* Encart « verre » : blanc translucide, reflet en haut, ombre bleutée. Pas de flou : trop coûteux sur mobile. */
+  /* Encart « verre » : blanc translucide, reflet glossy en haut, ombre bleutée. Pas de flou : trop coûteux sur mobile. */
   .card {
     @apply relative rounded-card p-4 text-text-main;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 38%),
-      rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.75);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.15) 30%, rgba(255, 255, 255, 0) 55%),
+      rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.85);
     box-shadow:
-      0 12px 32px -12px rgba(10, 30, 60, 0.45),
-      0 1px 0 rgba(255, 255, 255, 0.9) inset;
+      0 14px 36px -14px rgba(10, 30, 60, 0.5),
+      0 1px 0 rgba(255, 255, 255, 1) inset;
   }
   .card-glass {
     @apply relative rounded-card p-4 text-white;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    box-shadow: 0 12px 32px -12px rgba(10, 30, 60, 0.45), 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.12) 40%, rgba(255, 255, 255, 0.10) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 14px 36px -14px rgba(10, 30, 60, 0.5), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
   }
   .input-field {
     @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-text-main
@@ -97,7 +102,11 @@
     @apply text-white;
   }
   .on-bg-muted {
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.82);
+    text-shadow: 0 1px 2px rgba(10, 30, 60, 0.25);
+  }
+  .page-title, .on-bg {
+    text-shadow: 0 1px 3px rgba(10, 30, 60, 0.3);
   }
   .on-bg-link {
     @apply text-white/90 hover:text-white underline-offset-2 hover:underline;
