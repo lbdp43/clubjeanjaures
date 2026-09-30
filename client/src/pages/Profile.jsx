@@ -383,7 +383,7 @@ export default function Profile() {
         </button>
         {createPortal(
           <div className="lg:hidden fixed left-0 right-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 px-3 pointer-events-none">
-            <div className="max-w-2xl mx-auto liquid rounded-full p-1.5 flex items-center gap-2 pointer-events-auto text-white">
+            <div className="max-w-2xl mx-auto glass-dark rounded-full p-1.5 flex items-center gap-2 pointer-events-auto text-white">
               <span className="text-xs text-white/85 flex-1 pl-3 truncate">{msg || 'Mon profil'}</span>
               <button
                 type="button"

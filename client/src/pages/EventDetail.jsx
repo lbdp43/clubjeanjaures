@@ -436,7 +436,7 @@ export default function EventDetail() {
           Rendue dans <body> car l'animation de page (transform) casserait un position: fixed imbriqué. */}
       {!editing && createPortal(
         <div className="lg:hidden fixed left-0 right-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 px-3 pointer-events-none">
-          <div className="max-w-2xl mx-auto liquid rounded-full px-2 py-2 flex items-center gap-2 pointer-events-auto text-white">
+          <div className="max-w-2xl mx-auto glass-dark rounded-full px-2 py-2 flex items-center gap-2 pointer-events-auto text-white">
             {user ? (
               <>
                 <span className="text-xs text-white/85 flex-shrink-0 pl-2">
