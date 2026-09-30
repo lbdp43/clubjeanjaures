@@ -125,6 +125,7 @@ function EventCard({ event, onRsvpChange }) {
   const dateObj = new Date(event.date);
   const day = dateObj.getDate();
   const month = dateObj.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase();
+  const weekday = dateObj.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '');
 
   // Liste affichée en tenant compte de la réponse en cours (avant le rafraîchissement)
   const serverHasMe = !!user && (event.rsvps || []).some(r => r.userId === user.id);
@@ -151,7 +152,8 @@ function EventCard({ event, onRsvpChange }) {
       className="card p-3 sm:p-4 min-w-0 overflow-hidden hover:shadow-md hover:border-blue/30 transition-all cursor-pointer active:scale-[0.99]"
     >
       <div className="flex gap-3 sm:gap-4">
-        <div className="flex-shrink-0 w-14 h-16 rounded-xl bg-blue-light flex flex-col items-center justify-center leading-none">
+        <div className="flex-shrink-0 w-14 h-[4.5rem] rounded-xl bg-blue-light flex flex-col items-center justify-center leading-none">
+          <div className="text-[10px] font-semibold text-blue uppercase tracking-wide mb-1">{weekday}</div>
           <div className="text-2xl font-bold text-blue">{day}</div>
           <div className="text-[10px] font-semibold text-blue-dark/70 uppercase mt-1 tracking-wide">{month}</div>
         </div>
