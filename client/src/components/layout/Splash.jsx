@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const SESSION_KEY = 'cjj-splash-shown';
-const DURATION_MS = 2200;
+const DURATION_MS = 4000;
 const OUT_MS = 520;
 
 function readSettings() {
