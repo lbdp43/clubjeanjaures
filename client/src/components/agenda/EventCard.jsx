@@ -2,7 +2,66 @@ import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
-import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl } from '../../utils/helpers';
+import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl, imgUrl } from '../../utils/helpers';
+
+function participantName(r) {
+  return r.user?.member?.companyName || r.user?.email?.split('@')[0] || 'Membre';
+}
+
+function ParticipantAvatar({ rsvp, size = 'w-7 h-7' }) {
+  const m = rsvp.user?.member;
+  const src = m?.photoUrl || m?.logoUrl;
+  if (src) {
+    return <img src={imgUrl(src, 200)} alt="" loading="lazy" className={`${size} rounded-full object-cover ring-2 ring-white bg-white`} />;
+  }
+  return (
+    <span className={`${size} rounded-full bg-blue-light text-blue text-[10px] font-bold flex items-center justify-center ring-2 ring-white`}>
+      {participantName(rsvp)[0]?.toUpperCase()}
+    </span>
+  );
+}
+
+function Participants({ rsvps, count }) {
+  const [open, setOpen] = useState(false);
+  if (!rsvps?.length) {
+    return <p className="text-xs text-text-muted mt-2.5">Aucun participant pour l'instant — soyez le premier !</p>;
+  }
+  const names = rsvps.map(participantName);
+  const shown = names.slice(0, 3).join(', ');
+  const rest = count - Math.min(3, names.length);
+
+  return (
+    <div className="mt-2.5">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+        className="flex items-center gap-2 text-left w-full max-w-full overflow-hidden group"
+        aria-expanded={open}
+        aria-label={`${count} participant${count > 1 ? 's' : ''} : ${names.join(', ')}`}
+      >
+        <span className="flex -space-x-2 flex-shrink-0">
+          {rsvps.slice(0, 5).map(r => <ParticipantAvatar key={r.userId} rsvp={r} />)}
+        </span>
+        <span className="text-xs text-text-muted min-w-0 truncate group-hover:text-text-main">
+          <span className="font-medium text-text-main">{count} participant{count > 1 ? 's' : ''}</span>
+          {' · '}{shown}{rest > 0 ? ` et ${rest} autre${rest > 1 ? 's' : ''}` : ''}
+        </span>
+        <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 ml-auto transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      {open && (
+        <ul className="mt-2 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+          {rsvps.map(r => (
+            <li key={r.userId} className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-full pl-0.5 pr-2.5 py-0.5 text-xs">
+              <ParticipantAvatar rsvp={r} size="w-5 h-5" />
+              <span className="truncate max-w-[160px]">{participantName(r)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function EventCard({ event, onRsvpChange }) {
   const navigate = useNavigate();
@@ -62,6 +121,15 @@ function EventCard({ event, onRsvpChange }) {
   const day = dateObj.getDate();
   const month = dateObj.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase();
 
+  // Liste affichée en tenant compte de la réponse en cours (avant le rafraîchissement)
+  const serverHasMe = !!user && (event.rsvps || []).some(r => r.userId === user.id);
+  let displayedRsvps = event.rsvps || [];
+  if (user && localParticipating && !serverHasMe) {
+    displayedRsvps = [{ userId: user.id, user: { email: user.email, member: user.member } }, ...displayedRsvps];
+  } else if (user && !localParticipating && serverHasMe) {
+    displayedRsvps = displayedRsvps.filter(r => r.userId !== user.id);
+  }
+
   const shortDesc = event.description
     ? event.description.length > 80
       ? event.description.slice(0, 80) + '…'
@@ -75,7 +143,7 @@ function EventCard({ event, onRsvpChange }) {
       onClick={() => navigate(`/agenda/${event.id}`)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/agenda/${event.id}`); } }}
       aria-label={event.title}
-      className="card p-3 sm:p-4 hover:shadow-md hover:border-blue/30 transition-all cursor-pointer active:scale-[0.99]"
+      className="card p-3 sm:p-4 min-w-0 overflow-hidden hover:shadow-md hover:border-blue/30 transition-all cursor-pointer active:scale-[0.99]"
     >
       <div className="flex gap-3 sm:gap-4">
         <div className="flex-shrink-0 w-14 h-16 rounded-xl bg-blue-light flex flex-col items-center justify-center leading-none">
@@ -156,15 +224,9 @@ function EventCard({ event, onRsvpChange }) {
                 </svg>
               )}
             </button>
-            {localCount > 0 && (
-              <span className="text-xs text-text-muted flex items-center gap-1 ml-auto">
-                <svg className="w-3.5 h-3.5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                </svg>
-                {localCount}
-              </span>
-            )}
           </div>
+
+          <Participants rsvps={displayedRsvps} count={localCount} />
         </div>
       </div>
     </div>

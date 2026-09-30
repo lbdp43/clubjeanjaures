@@ -117,7 +117,7 @@ export default function Home() {
           {eventsLoading && events.length === 0 ? (
             <SkeletonGrid count={3} height="h-36" />
           ) : otherEvents.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 min-w-0">
               {otherEvents.map(event => (
                 <EventCard key={event.id} event={event} onRsvpChange={refetchEvents} />
               ))}

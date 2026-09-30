@@ -127,7 +127,7 @@ export default function Agenda() {
                     <span className="flex-1 h-px bg-gray-200" />
                     <span className="text-xs font-normal normal-case">{events.length} événement{events.length > 1 ? 's' : ''}</span>
                   </h2>
-                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 min-w-0">
                     {events.map(event => (
                       <EventCard key={event.id} event={event} onRsvpChange={fetchEvents} />
                     ))}

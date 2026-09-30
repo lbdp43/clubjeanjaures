@@ -50,7 +50,13 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
       take: limit,
       include: {
         _count: { select: { rsvps: true } },
-        rsvps: { select: { userId: true } }
+        rsvps: {
+          orderBy: { createdAt: 'asc' },
+          select: {
+            userId: true,
+            user: { select: { email: true, member: { select: { companyName: true, photoUrl: true, logoUrl: true } } } }
+          }
+        }
       }
     });
 
