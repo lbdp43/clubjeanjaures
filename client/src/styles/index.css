@@ -620,24 +620,18 @@
   bottom: 6px;
   left: 8px;
   border-radius: 9999px;
-  background:
-    radial-gradient(60% 80% at 50% 0%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.16) 100%);
+  background: rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 0 28px rgba(190, 225, 255, 0.55),
-    0 0 6px rgba(255, 255, 255, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
   transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.4, 1), opacity 0.2s;
   z-index: 1;
   pointer-events: none;
 }
 .nav-glow-hidden { opacity: 0; }
 .nav-icon-active {
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
 }
 .nav-label-active {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
 }
 @keyframes navPop {
   0%   { transform: scale(0.8) translateY(2px); }
