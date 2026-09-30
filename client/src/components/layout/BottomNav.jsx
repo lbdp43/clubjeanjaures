@@ -25,11 +25,16 @@ export default function BottomNav() {
 
   return (
     <nav role="navigation" aria-label="Navigation principale" className="lg:hidden floating-nav flex z-40 px-1">
-      {/* Pilule lumineuse qui glisse vers l'onglet actif */}
+      {/* Pilule lumineuse qui glisse vers l'onglet actif.
+          Les onglets occupent (largeur - 8px de marge intérieure) / n ; la pilule fait cette largeur moins 8px,
+          donc un pas = 100 % de sa largeur + 8px. */}
       <span
         aria-hidden="true"
         className={`nav-glow ${activeIndex < 0 ? 'nav-glow-hidden' : ''}`}
-        style={{ width: `calc(${100 / count}% - 8px)`, transform: `translateX(calc(${Math.max(activeIndex, 0) * 100}% + ${Math.max(activeIndex, 0) * 8}px))` }}
+        style={{
+          width: `calc((100% - 8px) / ${count} - 8px)`,
+          transform: `translateX(calc(${Math.max(activeIndex, 0)} * (100% + 8px)))`
+        }}
       />
       {items.map(({ to, label, icon: Icon }, idx) => (
         <NavLink
