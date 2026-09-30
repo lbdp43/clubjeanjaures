@@ -180,5 +180,11 @@ export const api = {
   pushUnsubscribe: (endpoint) => apiFetch('/push/subscribe', {
     method: 'DELETE', body: JSON.stringify({ endpoint })
   }),
-  pushTest: () => apiFetch('/push/test', { method: 'POST' })
+  pushTest: () => apiFetch('/push/test', { method: 'POST' }),
+
+  // Admin — notifications push
+  getAdminPushStats: () => apiFetch('/admin/push/stats'),
+  adminPushSend: (data) => apiFetch('/admin/push/send', {
+    method: 'POST', body: JSON.stringify(data)
+  })
 };

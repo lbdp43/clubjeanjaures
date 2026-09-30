@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
 const { sendInvitation, sendBulkEmail, sendEventReminder } = require('../services/email');
-const { sendPushToAllMembers } = require('../services/push');
+const { sendPushToAllMembers, isPushEnabled } = require('../services/push');
 const xss = require('xss');
 const logger = require('../utils/logger');
 
@@ -245,6 +245,8 @@ router.put('/settings', requireAuth, requireAdmin, async (req, res) => {
         ? xss(String(req.body.reminderMessage)).slice(0, 1000)
         : null;
     }
+    if (req.body.pushRemindersEnabled !== undefined) data.pushRemindersEnabled = !!req.body.pushRemindersEnabled;
+    if (req.body.pushNewEventEnabled !== undefined) data.pushNewEventEnabled = !!req.body.pushNewEventEnabled;
 
     const settings = await prisma.clubSettings.upsert({
       where: { id: 1 },
@@ -451,6 +453,56 @@ router.post('/notify', requireAuth, requireAdmin, emailLimiter, async (req, res)
       .catch(err => logger.warn('Push notify impossible', { error: err.message }));
   } catch (err) {
     logger.error('Erreur notify', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET /api/admin/push/stats — état des notifications push (appareils abonnés par membre)
+router.get('/push/stats', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const subs = await prisma.pushSubscription.findMany({
+      select: { userId: true, createdAt: true, userAgent: true, user: { select: { email: true, member: { select: { companyName: true } } } } },
+      orderBy: { createdAt: 'desc' }
+    });
+    const byUser = new Map();
+    for (const s of subs) {
+      const entry = byUser.get(s.userId) || { userId: s.userId, name: s.user?.member?.companyName || s.user?.email, devices: 0, lastAt: s.createdAt };
+      entry.devices++;
+      if (s.createdAt > entry.lastAt) entry.lastAt = s.createdAt;
+      byUser.set(s.userId, entry);
+    }
+    const eligible = await prisma.user.count({ where: { status: 'active', role: { not: 'visitor' } } });
+    res.json({
+      enabled: isPushEnabled(),
+      devices: subs.length,
+      members: byUser.size,
+      eligibleMembers: eligible,
+      subscribers: [...byUser.values()].sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+    });
+  } catch (err) {
+    logger.error('Erreur push stats', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/admin/push/send — envoie une notification push à tous les membres abonnés
+router.post('/push/send', requireAuth, requireAdmin, adminActionLimiter, async (req, res) => {
+  try {
+    const title = String(req.body?.title || '').trim().slice(0, 80);
+    const body = String(req.body?.body || '').trim().slice(0, 200);
+    let url = String(req.body?.url || '/').trim();
+    if (!title || !body) return res.status(400).json({ error: 'Titre et message requis.' });
+    if (!url.startsWith('/')) {
+      try {
+        const parsed = new URL(url);
+        url = parsed.origin === (process.env.APP_URL || '') ? parsed.pathname + parsed.search : '/';
+      } catch { url = '/'; }
+    }
+    if (!isPushEnabled()) return res.status(503).json({ error: 'Notifications push non configurées sur le serveur.' });
+    const result = await sendPushToAllMembers({ title, body, url, tag: `admin-${Date.now()}` });
+    res.json({ ...result, message: `Notification envoyée à ${result.sent} appareil(s).` });
+  } catch (err) {
+    logger.error('Erreur push send', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

@@ -103,7 +103,7 @@ async function run() {
       });
 
       // Même rappel en notification push sur les appareils abonnés
-      try {
+      if (settings.pushRemindersEnabled !== false) try {
         const dateStr = new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
         const push = await sendPushToUsers(candidates.map(u => u.id), {
           title: `${event.title} — ${dateStr}`,

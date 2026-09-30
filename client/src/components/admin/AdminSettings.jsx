@@ -393,6 +393,164 @@ export default function AdminSettings() {
           {emailSending ? 'Envoi en cours...' : 'Envoyer à tous'}
         </button>
       </form>
+
+      <PushAdmin settings={settings} setSettings={setSettings} />
+    </div>
+  );
+}
+
+function PushAdmin({ settings, setSettings }) {
+  const [stats, setStats] = useState(null);
+  const [showList, setShowList] = useState(false);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [url, setUrl] = useState('');
+  const [sending, setSending] = useState(false);
+  const [msg, setMsg] = useState('');
+  const [testMsg, setTestMsg] = useState('');
+  const [savingToggle, setSavingToggle] = useState(false);
+
+  const loadStats = () => api.getAdminPushStats().then(setStats).catch(() => setStats({ enabled: false, devices: 0, members: 0, eligibleMembers: 0, subscribers: [] }));
+  useEffect(() => { loadStats(); }, []);
+
+  const toggle = async (key) => {
+    const next = { ...settings, [key]: !settings[key] };
+    setSettings(next);
+    setSavingToggle(true);
+    try { await api.updateSettings({ [key]: next[key] }); }
+    catch { setSettings(settings); }
+    setSavingToggle(false);
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!confirm(`Envoyer cette notification à ${stats?.devices ?? 0} appareil(s) ?`)) return;
+    setMsg('');
+    setSending(true);
+    try {
+      const res = await api.adminPushSend({ title, body, url: url || '/' });
+      setMsg(res.message || `Envoyée à ${res.sent} appareil(s).`);
+      setTitle(''); setBody(''); setUrl('');
+      loadStats();
+    } catch (err) {
+      setMsg(`Erreur : ${err.message}`);
+    }
+    setSending(false);
+  };
+
+  const handleTest = async () => {
+    setTestMsg('');
+    try {
+      const r = await api.pushTest();
+      setTestMsg(r.sent ? `Notification de test envoyée à ${r.sent} de vos appareils.` : "Aucun de vos appareils n'est abonné : activez les notifications depuis l'accueil sur votre téléphone.");
+    } catch (err) {
+      setTestMsg(`Erreur : ${err.message}`);
+    }
+  };
+
+  const Toggle = ({ on, onClick, label }) => (
+    <button type="button" onClick={onClick} disabled={savingToggle} aria-label={label}
+      className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${on ? 'bg-blue' : 'bg-gray-300'}`}>
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${on ? 'translate-x-5' : ''}`} />
+    </button>
+  );
+
+  return (
+    <div className="card p-3 sm:p-5 space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-sm sm:text-base">Notifications push</h3>
+          <p className="text-xs sm:text-sm text-text-muted">Notifications sur le téléphone des membres qui les ont activées depuis l'accueil.</p>
+        </div>
+        {stats && (
+          <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${stats.enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {stats.enabled ? 'Actif' : 'Non configuré'}
+          </span>
+        )}
+      </div>
+
+      {stats && (
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-blue-light/60 rounded-xl p-2.5">
+            <p className="text-xl font-bold text-blue">{stats.members}</p>
+            <p className="text-[11px] text-text-muted leading-tight">membre{stats.members > 1 ? 's' : ''} abonné{stats.members > 1 ? 's' : ''}</p>
+          </div>
+          <div className="bg-blue-light/60 rounded-xl p-2.5">
+            <p className="text-xl font-bold text-blue">{stats.devices}</p>
+            <p className="text-[11px] text-text-muted leading-tight">appareil{stats.devices > 1 ? 's' : ''}</p>
+          </div>
+          <div className="bg-blue-light/60 rounded-xl p-2.5">
+            <p className="text-xl font-bold text-blue">{stats.eligibleMembers ? Math.round(100 * stats.members / stats.eligibleMembers) : 0}%</p>
+            <p className="text-[11px] text-text-muted leading-tight">des membres actifs</p>
+          </div>
+        </div>
+      )}
+
+      {stats?.subscribers?.length > 0 && (
+        <div>
+          <button type="button" onClick={() => setShowList(v => !v)} className="text-xs text-blue hover:underline">
+            {showList ? 'Masquer la liste' : 'Voir qui est abonné'}
+          </button>
+          {showList && (
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {stats.subscribers.map(s => (
+                <li key={s.userId} className="text-xs bg-gray-50 border border-gray-100 rounded-full px-2.5 py-1">
+                  {s.name}{s.devices > 1 ? ` · ${s.devices} appareils` : ''}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Envois automatiques */}
+      <div className="border-t border-gray-100 pt-3 space-y-3">
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Envois automatiques</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="pr-2">
+            <p className="text-sm font-medium">Rappels d'événements</p>
+            <p className="text-xs text-text-muted">Mêmes déclencheurs (J-…) que les rappels par email, aux membres qui n'ont pas répondu</p>
+          </div>
+          <Toggle on={settings.pushRemindersEnabled !== false} onClick={() => toggle('pushRemindersEnabled')} label="Rappels push" />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="pr-2">
+            <p className="text-sm font-medium">Nouvel événement</p>
+            <p className="text-xs text-text-muted">Quand vous créez un événement dans l'agenda</p>
+          </div>
+          <Toggle on={settings.pushNewEventEnabled !== false} onClick={() => toggle('pushNewEventEnabled')} label="Push nouvel événement" />
+        </div>
+        <p className="text-xs text-text-muted">« Envoyer un email à tous les membres » ci-dessus envoie aussi la notification correspondante.</p>
+      </div>
+
+      {/* Envoi manuel */}
+      <form onSubmit={handleSend} className="border-t border-gray-100 pt-3 space-y-3">
+        <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Envoyer une notification maintenant</p>
+        <div>
+          <label className="block text-xs sm:text-sm font-medium mb-1">Titre</label>
+          <input value={title} onChange={e => setTitle(e.target.value)} className="input-field text-sm" placeholder="Ex : Rappel matinale vendredi" maxLength={80} required />
+        </div>
+        <div>
+          <label className="block text-xs sm:text-sm font-medium mb-1">Message</label>
+          <textarea value={body} onChange={e => setBody(e.target.value)} className="input-field text-sm resize-none" rows={2} placeholder="Court : c'est une notification, pas un email" maxLength={200} required />
+          <p className="text-[11px] text-text-muted mt-1 text-right">{body.length}/200</p>
+        </div>
+        <div>
+          <label className="block text-xs sm:text-sm font-medium mb-1">Page à ouvrir au tap (optionnel)</label>
+          <input value={url} onChange={e => setUrl(e.target.value)} className="input-field text-sm" placeholder="/agenda ou /agenda/id-de-l-evenement" />
+        </div>
+        {msg && <p className={`text-sm ${msg.startsWith('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{msg}</p>}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button type="submit" className="btn-primary text-sm flex items-center justify-center gap-2" disabled={sending || !stats?.enabled}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+            </svg>
+            {sending ? 'Envoi…' : `Envoyer à ${stats?.devices ?? 0} appareil(s)`}
+          </button>
+          <button type="button" onClick={handleTest} className="btn-secondary text-sm py-2">M'envoyer un test</button>
+        </div>
+        {testMsg && <p className={`text-sm ${testMsg.startsWith('Erreur') ? 'text-red-500' : 'text-text-muted'}`}>{testMsg}</p>}
+      </form>
     </div>
   );
 }

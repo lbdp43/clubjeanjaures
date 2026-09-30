@@ -201,6 +201,8 @@ model ClubSettings {
   eventRemindersEnabled   Boolean @default(false) @map("event_reminders_enabled")
   reminderDaysBefore      Int[]   @default([10, 5]) @map("reminder_days_before")
   reminderMessage         String? @map("reminder_message")
+  pushRemindersEnabled    Boolean @default(true) @map("push_reminders_enabled")
+  pushNewEventEnabled     Boolean @default(true) @map("push_new_event_enabled")
 
   @@map("club_settings")
 }

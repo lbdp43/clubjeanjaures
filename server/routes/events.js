@@ -176,11 +176,14 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 
     // Nouvel événement : prévenir les appareils abonnés (sans bloquer la réponse)
     const dateStr = new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-    sendPushToAllMembers({
-      title: `Nouvel événement : ${event.title}`,
-      body: `${dateStr} à ${event.timeStart}${event.location ? ' · ' + event.location : ''}`,
-      url: `/agenda/${event.id}`,
-      tag: `event-${event.id}`
+    prisma.clubSettings.findUnique({ where: { id: 1 } }).then(settings => {
+      if (settings && settings.pushNewEventEnabled === false) return;
+      return sendPushToAllMembers({
+        title: `Nouvel événement : ${event.title}`,
+        body: `${dateStr} à ${event.timeStart}${event.location ? ' · ' + event.location : ''}`,
+        url: `/agenda/${event.id}`,
+        tag: `event-${event.id}`
+      });
     }).catch(err => logger.warn('Push nouvel événement impossible', { error: err.message }));
   } catch (err) {
     logger.error('Erreur create event', { error: err.message, stack: err.stack });
