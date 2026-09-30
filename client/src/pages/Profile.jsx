@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Navigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
@@ -34,6 +35,7 @@ export default function Profile() {
   const [inviteSending, setInviteSending] = useState(false);
   const [inviteMsg, setInviteMsg] = useState('');
   const logoRef = useRef();
+  const formRef = useRef(null);
   const profilePhotoRef = useRef();
   const seededFor = useRef(null);
   const optOutSent = useRef(false);
@@ -212,10 +214,10 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 pb-16 lg:pb-0">
       <h1 className="page-title">Mon profil</h1>
 
-      <form onSubmit={handleSave} className="card p-4 sm:p-6 space-y-5">
+      <form ref={formRef} onSubmit={handleSave} className="card p-4 sm:p-6 space-y-5">
         {/* Photo de profil + Logo */}
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
           {/* Photo de profil */}
@@ -375,11 +377,26 @@ export default function Profile() {
         </div>
 
         {msg && <p className={`text-sm ${msg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{msg}</p>}
-        <div className="sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] lg:bottom-4 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white/95 backdrop-blur border-t border-gray-100 rounded-b-card">
-          <button type="submit" className="btn-primary w-full sm:w-auto" disabled={saving}>
-            {saving ? 'Sauvegarde...' : 'Enregistrer le profil'}
-          </button>
-        </div>
+        {/* Ordinateur : bouton en bas du formulaire. Mobile : barre flottante (rendue dans <body>) */}
+        <button type="submit" className="btn-primary hidden lg:inline-flex" disabled={saving}>
+          {saving ? 'Sauvegarde...' : 'Enregistrer le profil'}
+        </button>
+        {createPortal(
+          <div className="lg:hidden fixed left-0 right-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 px-3 pointer-events-none">
+            <div className="max-w-2xl mx-auto liquid rounded-full p-1.5 flex items-center gap-2 pointer-events-auto text-white">
+              <span className="text-xs text-white/85 flex-1 pl-3 truncate">{msg || 'Mon profil'}</span>
+              <button
+                type="button"
+                onClick={() => formRef.current?.requestSubmit()}
+                disabled={saving}
+                className="bg-white text-blue-dark text-sm font-semibold px-5 py-2.5 rounded-full shadow disabled:opacity-60"
+              >
+                {saving ? 'Sauvegarde…' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
       </form>
 
       {/* Photos */}

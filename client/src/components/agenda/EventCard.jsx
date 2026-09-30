@@ -47,9 +47,11 @@ export function Participants({ rsvps, count }) {
           <span className="font-medium text-text-main">{count} participant{count > 1 ? 's' : ''}</span>
           {' · '}{shown}{rest > 0 ? ` et ${rest} autre${rest > 1 ? 's' : ''}` : ''}
         </span>
-        <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 ml-auto transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
+        <span className={`w-7 h-7 rounded-full bg-white border border-gray-200 text-blue flex items-center justify-center flex-shrink-0 ml-auto transition-transform ${open ? 'rotate-180' : ''}`}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </span>
       </button>
       <Collapse open={open}>
         <ul className="mt-2 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
