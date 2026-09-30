@@ -10,7 +10,8 @@ export default function Header() {
   const displayName = user?.member?.companyName || user?.email;
 
   return (
-    <header className="glass-bar border-b px-4 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] flex items-center justify-between gap-3 lg:px-8 sticky top-0 z-30 text-white">
+    <div className="sticky top-0 z-30 px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1 lg:px-6 lg:pt-3">
+    <header className="glass-bar floating-top rounded-full px-2 py-1.5 pl-3 flex items-center justify-between gap-3 text-white">
       <Link to="/" className="flex items-center gap-2.5 min-w-0 lg:invisible" aria-label="Accueil">
         {settings?.logoUrl ? (
           <img src={imgUrl(settings.logoUrl, 200)} alt="" className="w-9 h-9 rounded-full object-cover ring-2 ring-white/30" />
@@ -58,5 +59,6 @@ export default function Header() {
         )}
       </div>
     </header>
+    </div>
   );
 }
