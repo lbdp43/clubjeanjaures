@@ -228,7 +228,7 @@ function NextEventCard({ event, user, onChange }) {
             participating ? 'bg-green-600 text-white' : 'bg-white text-green-700 ring-1 ring-green-300 hover:bg-green-50'
           }`}
         >
-          ✓ Je participe
+          {participating ? '✓ Inscrit' : '✓ Je participe'}
         </button>
         <button
           onClick={() => toggle(false)}
@@ -241,7 +241,7 @@ function NextEventCard({ event, user, onChange }) {
         </button>
       </div>
       {participating && (
-        <p className="text-xs text-green-700 mt-2">Vous êtes inscrit·e. À bientôt !</p>
+        <p className="text-xs text-green-700 mt-2">C'est noté, à bientôt !</p>
       )}
       <Participants rsvps={displayedRsvps} count={count} />
     </div>

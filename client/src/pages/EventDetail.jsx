@@ -386,7 +386,7 @@ export default function EventDetail() {
                         : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'
                     }`}
                   >
-                    {rsvpLoading ? '...' : '✓ Je participe'}
+                    {rsvpLoading ? '...' : participating ? '✓ Inscrit' : '✓ Je participe'}
                   </button>
                   <button
                     onClick={() => { if (participating) handleRsvp(); }}
@@ -450,7 +450,7 @@ export default function EventDetail() {
                       participating ? 'bg-green-500 text-white shadow' : 'bg-white/20 text-white'
                     }`}
                   >
-                    {rsvpLoading ? '...' : '✓ Je participe'}
+                    {rsvpLoading ? '...' : participating ? '✓ Inscrit' : '✓ Je participe'}
                   </button>
                   <button
                     onClick={() => { if (participating) handleRsvp(); }}

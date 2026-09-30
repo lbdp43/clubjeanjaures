@@ -198,7 +198,7 @@ function EventCard({ event, onRsvpChange }) {
                       : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'
                   } ${rsvpLoading ? 'opacity-50' : ''}`}
                 >
-                  ✓ Je participe
+                  {localParticipating ? '✓ Inscrit' : '✓ Je participe'}
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); if (localParticipating) handleRsvp(e); }}
