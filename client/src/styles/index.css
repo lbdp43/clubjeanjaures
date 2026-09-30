@@ -634,7 +634,6 @@
 }
 .nav-glow-hidden { opacity: 0; }
 .nav-icon-active {
-  animation: navPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
 }
 .nav-label-active {
@@ -647,5 +646,4 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-glow { transition: none; }
-  .nav-icon-active { animation: none; }
 }
