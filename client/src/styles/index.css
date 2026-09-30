@@ -141,7 +141,8 @@
   .segment {
     @apply liquid flex gap-1 rounded-full p-1;
   }
-  .segment-indicator {
+  .segment-indicator,
+  .segment > .segment-indicator {
     position: absolute;
     top: 4px;
     bottom: 4px;
@@ -153,14 +154,17 @@
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 1;
   }
-  .segment-indicator-2 {
+  .segment > .segment-indicator-2 {
     transform: translateX(calc(100% + 4px));
   }
-  .segment-item {
+  .segment > .segment-item {
     @apply flex-1 py-2 px-3 sm:px-4 rounded-full text-sm font-medium text-white/85;
+    position: relative;
+    z-index: 2;
+    background: transparent;
     transition: color 0.25s ease, transform 0.18s;
   }
-  .segment-item-on {
+  .segment > .segment-item-on {
     @apply text-blue-dark font-semibold;
   }
   .segment-item-active {
