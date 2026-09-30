@@ -5,6 +5,7 @@ import { useOnline } from './hooks/useOnline';
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/layout/ScrollToTop';
 import UpdateBanner from './components/layout/UpdateBanner';
+import ReadySignal from './components/layout/ReadySignal';
 import Verify from './pages/Verify';
 import Login from './pages/Login';
 import Inscription from './pages/Inscription';
@@ -84,6 +85,7 @@ export default function App() {
           {/* Catch-all 404 — OUTSIDE Layout to avoid matching conflicts */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ReadySignal />
       </Suspense>
     </>
   );

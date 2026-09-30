@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 const SESSION_KEY = 'cjj-splash-shown';
 const DURATION_MS = 3000;
 const OUT_MS = 520;
+const MAX_MS = 12000;
 
 function readSettings() {
   try {
@@ -27,8 +28,18 @@ export default function Splash() {
   useEffect(() => {
     if (phase === 'in') {
       try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {}
-      const t = setTimeout(() => setPhase('out'), DURATION_MS - OUT_MS);
-      return () => clearTimeout(t);
+      // Durée minimale, puis on attend que l'app soit prête (auth vérifiée, première page affichée),
+      // avec une limite de sécurité pour ne jamais rester bloqué.
+      let minElapsed = false;
+      let ready = !!window.__cjjReady;
+      let done = false;
+      const leave = () => { if (!done) { done = true; setPhase('out'); } };
+      const check = () => { if (minElapsed && ready) leave(); };
+      const onReady = () => { ready = true; check(); };
+      window.addEventListener('cjj:ready', onReady);
+      const tMin = setTimeout(() => { minElapsed = true; check(); }, DURATION_MS - OUT_MS);
+      const tMax = setTimeout(leave, MAX_MS);
+      return () => { clearTimeout(tMin); clearTimeout(tMax); window.removeEventListener('cjj:ready', onReady); };
     }
     if (phase === 'out') {
       const t = setTimeout(() => setPhase('done'), OUT_MS);
