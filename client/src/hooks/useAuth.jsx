@@ -44,6 +44,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => { fetchUser(); }, [fetchUser]);
 
+  useEffect(() => {
+    const onManual = () => fetchUser();
+    window.addEventListener('cjj:refresh', onManual);
+    return () => window.removeEventListener('cjj:refresh', onManual);
+  }, [fetchUser]);
+
   const logout = useCallback(async () => {
     try { await api.logout(); } catch {}
     setUser(null);

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
+import { formatDate, formatTime, formatDaysUntil, getEventBadgeClass, getEventTypeLabel } from '../utils/helpers';
 import EventCard from '../components/agenda/EventCard';
 import MemberCard from '../components/annuaire/MemberCard';
 
@@ -18,7 +19,7 @@ export default function Home() {
   );
 
   const showEvents = user || !settings || settings.publicAgenda !== false;
-  const { data: events = [], loading: eventsLoading } = useCachedFetch(
+  const { data: events = [], loading: eventsLoading, refetch: refetchEvents } = useCachedFetch(
     `home-events:${scope}`,
     () => api.getEvents({ limit: 6 }),
     { enabled: !!showEvents }
@@ -40,55 +41,65 @@ export default function Home() {
     }
   };
 
+  const nextEvent = user ? events[0] : null;
+  const otherEvents = user ? events.slice(1, 5) : events.slice(0, 6);
+
   return (
     <div className="space-y-8 sm:space-y-12">
-      {/* Hero */}
-      <section className="text-center py-6 sm:py-12 lg:py-20">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6 shadow-lg shadow-blue/20 overflow-hidden">
-          {settings?.logoUrl ? <img src={settings.logoUrl} alt="" className="w-full h-full object-cover" /> : 'JJ'}
-        </div>
-        <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-blue-dark mb-3 sm:mb-4">
-          {settings?.name || 'Club de Jean Jaurès'}
-        </h1>
-        <p className="text-base sm:text-lg text-text-muted max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
-          {settings?.description || "Club d'affaires de Saint-Étienne — Échanges, entraide et développement entre professionnels de métiers différents."}
-        </p>
-        {!user ? (
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/inscription" className="btn-primary">
-              Rejoindre le club
-            </Link>
-            <Link to="/connexion" className="btn-secondary">
-              Se connecter
-            </Link>
+      {user ? (
+        <section className="space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="font-display text-2xl sm:text-3xl text-blue-dark truncate">
+                Bonjour{user.member?.companyName ? `, ${user.member.companyName}` : ''}
+              </h1>
+              <p className="text-text-muted text-sm mt-1">Voici ce qui vous attend au club.</p>
+            </div>
+            <button
+              onClick={handleInvite}
+              className={`flex-shrink-0 inline-flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-full font-medium transition-colors ${
+                linkCopied ? 'bg-green-100 text-green-700' : 'bg-blue-light text-blue-dark hover:bg-blue/10'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+              </svg>
+              {linkCopied ? 'Lien copié !' : 'Inviter'}
+            </button>
           </div>
-        ) : (
-          <button
-            onClick={handleInvite}
-            className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-colors ${
-              linkCopied
-                ? 'bg-green-100 text-green-700 border border-green-300'
-                : 'bg-blue text-white hover:bg-blue-dark'
-            }`}
-          >
-            {linkCopied ? (
-              <>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                Lien copié !
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-                </svg>
-                Inviter un membre
-              </>
-            )}
-          </button>
-        )}
-      </section>
+
+          {eventsLoading && !nextEvent ? (
+            <div className="card h-40 animate-pulse bg-gray-100" aria-hidden="true" />
+          ) : nextEvent ? (
+            <NextEventCard event={nextEvent} user={user} onChange={refetchEvents} />
+          ) : (
+            <div className="card p-5 text-center text-sm text-text-muted">Aucun événement à venir pour le moment.</div>
+          )}
+
+          {!user.member && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-card p-4 text-sm">
+              Votre profil n'est pas encore renseigné.{' '}
+              <Link to="/profil" className="text-blue font-semibold hover:underline">Compléter mon profil</Link>
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="text-center py-6 sm:py-12 lg:py-20">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue rounded-full flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl mx-auto mb-4 sm:mb-6 shadow-lg shadow-blue/20 overflow-hidden">
+            {settings?.logoUrl ? <img src={settings.logoUrl} alt="" className="w-full h-full object-cover" /> : 'JJ'}
+          </div>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-blue-dark mb-3 sm:mb-4">
+            {settings?.name || 'Club de Jean Jaurès'}
+          </h1>
+          <p className="text-base sm:text-lg text-text-muted max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
+            {settings?.description || "Club d'affaires de Saint-Étienne — Échanges, entraide et développement entre professionnels de métiers différents."}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/inscription" className="btn-primary">Rejoindre le club</Link>
+            <Link to="/connexion" className="btn-secondary">Se connecter</Link>
+          </div>
+        </section>
+      )}
 
       {membersFailed && (
         <p className="text-center text-text-muted text-sm py-2">
@@ -100,19 +111,21 @@ export default function Home() {
       {showEvents ? (
         <section>
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="font-display text-xl sm:text-2xl text-blue-dark">Prochains événements</h2>
-            <Link to="/agenda" className="text-blue text-sm hover:underline">Voir tout</Link>
+            <h2 className="font-display text-xl sm:text-2xl text-blue-dark">{user ? 'Et ensuite' : 'Prochains événements'}</h2>
+            <Link to="/agenda" className="text-blue text-sm hover:underline">Voir tout l'agenda</Link>
           </div>
-          {eventsLoading ? (
+          {eventsLoading && events.length === 0 ? (
             <SkeletonGrid count={3} height="h-36" />
-          ) : events.length > 0 ? (
+          ) : otherEvents.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {events.slice(0, 6).map(event => (
-                <EventCard key={event.id} event={event} />
+              {otherEvents.map(event => (
+                <EventCard key={event.id} event={event} onRsvpChange={refetchEvents} />
               ))}
             </div>
-          ) : (
+          ) : !nextEvent ? (
             <p className="text-text-muted">Aucun événement à venir.</p>
+          ) : (
+            <p className="text-text-muted text-sm">Pas d'autre événement programmé pour l'instant.</p>
           )}
         </section>
       ) : (
@@ -156,6 +169,70 @@ export default function Home() {
             S'inscrire maintenant
           </Link>
         </section>
+      )}
+    </div>
+  );
+}
+
+function NextEventCard({ event, user, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const [local, setLocal] = useState(null);
+  const participating = local ?? (event.rsvps?.some(r => r.userId === user.id) || false);
+  const count = (event._count?.rsvps || 0) + (local === null ? 0 : (local ? 1 : 0) - (event.rsvps?.some(r => r.userId === user.id) ? 1 : 0));
+
+  const toggle = async (target) => {
+    if (busy || participating === target) return;
+    setBusy(true);
+    setLocal(target);
+    try {
+      await api.toggleRsvp(event.id);
+      if (onChange) await onChange();
+      setLocal(null);
+    } catch {
+      setLocal(null);
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div className="card p-4 sm:p-5 border-blue/20 bg-gradient-to-br from-white to-blue-light/40">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-blue">Prochain événement · {formatDaysUntil(event.date)}</span>
+        <span className={getEventBadgeClass(event.type)}>{getEventTypeLabel(event.type)}</span>
+      </div>
+      <Link to={`/agenda/${event.id}`} className="block group">
+        <h2 className="font-display text-xl sm:text-2xl text-blue-dark group-hover:underline leading-tight">{event.title}</h2>
+        <p className="text-sm text-text-muted mt-1.5">
+          {formatDate(event.date)} · {formatTime(event.timeStart)}{event.timeEnd ? ` — ${formatTime(event.timeEnd)}` : ''}
+        </p>
+        {event.location && <p className="text-sm text-text-muted">{event.location}</p>}
+      </Link>
+
+      <div className="flex items-center flex-wrap gap-2 mt-4 pt-4 border-t border-blue/10">
+        <button
+          onClick={() => toggle(true)}
+          disabled={busy}
+          className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-colors ${
+            participating ? 'bg-green-600 text-white' : 'bg-white text-green-700 ring-1 ring-green-300 hover:bg-green-50'
+          }`}
+        >
+          ✓ Je participe
+        </button>
+        <button
+          onClick={() => toggle(false)}
+          disabled={busy}
+          className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-colors ${
+            !participating ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-white text-text-muted ring-1 ring-gray-200 hover:bg-red-50 hover:text-red-500'
+          }`}
+        >
+          ✗ Pas dispo
+        </button>
+        <span className="text-xs text-text-muted ml-auto">
+          {count} participant{count !== 1 ? 's' : ''}
+        </span>
+      </div>
+      {participating && (
+        <p className="text-xs text-green-700 mt-2">Vous êtes inscrit·e. À bientôt !</p>
       )}
     </div>
   );

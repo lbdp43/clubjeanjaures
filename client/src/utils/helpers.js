@@ -15,6 +15,32 @@ export function formatTime(time) {
   return time.replace(':', 'h');
 }
 
+// Libellé de mois pour regrouper l'agenda : « Octobre 2026 »
+export function formatMonthLabel(dateStr) {
+  const label = new Date(dateStr).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+// Nombre de jours entre aujourd'hui et une date (0 = aujourd'hui, 1 = demain)
+export function daysUntil(dateStr) {
+  const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number);
+  const target = new Date(y, m - 1, d);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target - today) / 86400000);
+}
+
+export function formatDaysUntil(dateStr) {
+  const n = daysUntil(dateStr);
+  if (n < 0) return 'passé';
+  if (n === 0) return "aujourd'hui";
+  if (n === 1) return 'demain';
+  if (n < 7) return `dans ${n} jours`;
+  if (n < 14) return 'dans 1 semaine';
+  if (n < 30) return `dans ${Math.round(n / 7)} semaines`;
+  return `dans ${Math.round(n / 30)} mois`;
+}
+
 export function getEventBadgeClass(type) {
   const classes = {
     matinale: 'badge-matinale',

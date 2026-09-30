@@ -145,7 +145,7 @@ export default function EventDetail() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 pb-20 lg:pb-0">
       <Link to="/agenda" className="text-blue text-sm hover:underline">&larr; Retour à l'agenda</Link>
 
       {msg && (
@@ -373,7 +373,7 @@ export default function EventDetail() {
                 {rsvps.length} participant{rsvps.length !== 1 ? 's' : ''}
               </p>
               {user ? (
-                <div className="grid grid-cols-2 sm:flex items-center gap-2">
+                <div className="hidden lg:flex items-center gap-2">
                   <button
                     onClick={() => { if (!participating) handleRsvp(); }}
                     disabled={rsvpLoading}
@@ -400,7 +400,7 @@ export default function EventDetail() {
               ) : (
                 <Link
                   to="/connexion"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium bg-blue text-white hover:bg-blue-dark transition-colors"
+                  className="hidden lg:inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium bg-blue text-white hover:bg-blue-dark transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
@@ -424,6 +424,45 @@ export default function EventDetail() {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Barre d'action fixe sur mobile : toujours accessible sans remonter la page */}
+      {!editing && (
+        <div className="lg:hidden fixed left-0 right-0 bottom-[64px] z-30 px-3 pb-2 pointer-events-none">
+          <div className="max-w-2xl mx-auto bg-white/95 backdrop-blur border border-gray-200 shadow-lg rounded-2xl px-3 py-2.5 flex items-center gap-2 pointer-events-auto">
+            {user ? (
+              <>
+                <span className="text-xs text-text-muted flex-shrink-0 pl-1">
+                  {rsvps.length} inscrit{rsvps.length !== 1 ? 's' : ''}
+                </span>
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => { if (!participating) handleRsvp(); }}
+                    disabled={rsvpLoading}
+                    className={`py-2.5 rounded-full text-sm font-semibold transition-colors ${
+                      participating ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {rsvpLoading ? '...' : '✓ Je participe'}
+                  </button>
+                  <button
+                    onClick={() => { if (participating) handleRsvp(); }}
+                    disabled={rsvpLoading}
+                    className={`py-2.5 rounded-full text-sm font-semibold transition-colors ${
+                      !participating ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {rsvpLoading ? '...' : '✗ Pas dispo'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <Link to="/connexion" className="flex-1 text-center py-2.5 rounded-full text-sm font-semibold bg-blue text-white">
+                Se connecter pour participer
+              </Link>
             )}
           </div>
         </div>

@@ -109,13 +109,16 @@ export function useCachedFetch(key, fetcher, { enabled = true, persist = true } 
     };
     const onVisible = () => refresh(false);
     const onOnline = () => refresh(true);
+    const onManual = () => refresh(true);
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onVisible);
     window.addEventListener('online', onOnline);
+    window.addEventListener('cjj:refresh', onManual);
     return () => {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
       window.removeEventListener('online', onOnline);
+      window.removeEventListener('cjj:refresh', onManual);
     };
   }, [load, enabled, key]);
 
