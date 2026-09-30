@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
@@ -429,8 +430,9 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Barre d'action fixe sur mobile : toujours accessible sans remonter la page */}
-      {!editing && (
+      {/* Barre d'action fixe sur mobile : toujours accessible sans remonter la page.
+          Rendue dans <body> car l'animation de page (transform) casserait un position: fixed imbriqué. */}
+      {!editing && createPortal(
         <div className="lg:hidden fixed left-0 right-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 px-3 pointer-events-none">
           <div className="max-w-2xl mx-auto liquid rounded-full px-2 py-2 flex items-center gap-2 pointer-events-auto text-white">
             {user ? (
@@ -466,7 +468,7 @@ export default function EventDetail() {
             )}
           </div>
         </div>
-      )}
+      , document.body)}
     </div>
   );
 }

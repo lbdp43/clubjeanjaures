@@ -204,6 +204,19 @@
   animation: slideUp 0.3s ease-out;
 }
 
+/* Transitions entre pages (sens de la navigation) */
+.page-right { animation: pageFromRight 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.page-left  { animation: pageFromLeft  0.26s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.page-fade  { animation: fadeIn 0.2s ease-out backwards; }
+@keyframes pageFromRight {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pageFromLeft {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -312,7 +325,7 @@
 .card > * { position: relative; z-index: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fade-in, .slide-up {
+  .fade-in, .slide-up, .page-right, .page-left, .page-fade {
     animation: none !important;
   }
   * {

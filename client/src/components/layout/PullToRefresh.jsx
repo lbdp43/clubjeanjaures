@@ -9,6 +9,7 @@ export default function PullToRefresh({ children }) {
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(null);
+  const startX = useRef(0);
   const pulling = useRef(false);
   const refreshingRef = useRef(false);
 
@@ -18,11 +19,15 @@ export default function PullToRefresh({ children }) {
     const onStart = (e) => {
       if (refreshingRef.current || window.scrollY > 0 || e.touches.length !== 1) return;
       startY.current = e.touches[0].clientY;
+      startX.current = e.touches[0].clientX;
       pulling.current = false;
     };
     const onMove = (e) => {
       if (startY.current === null || refreshingRef.current) return;
       const dy = e.touches[0].clientY - startY.current;
+      const dx = e.touches[0].clientX - startX.current;
+      // Geste horizontal (changement de page) : on laisse la main
+      if (!pulling.current && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) { startY.current = null; return; }
       if (dy <= 0 || window.scrollY > 0) {
         if (pulling.current) { pulling.current = false; setPull(0); }
         return;
