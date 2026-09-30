@@ -14,7 +14,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen lg:ml-64 overflow-x-clip">
+      <div className="flex-1 flex flex-col min-h-screen lg:ml-64 overflow-x-clip min-w-0">
         <Header />
         <PullToRefresh>
           <main ref={mainRef} className="flex-1 px-4 pt-4 pb-28 lg:pb-8 max-w-5xl mx-auto w-full will-change-transform">
