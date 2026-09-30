@@ -80,7 +80,7 @@ export default function InstallCard() {
   const title = needInstall ? "Installer l'application" : 'Activer les notifications';
 
   return (
-    <div className="card-glass p-0 overflow-hidden">
+    <div className="card-glass p-0 overflow-hidden rounded-3xl">
       <button
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}

@@ -59,7 +59,7 @@ export default function Home() {
             <button
               onClick={handleInvite}
               className={`flex-shrink-0 inline-flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-full font-medium transition-colors ${
-                linkCopied ? 'bg-green-100 text-green-700' : 'bg-white/15 text-white border border-white/25 hover:bg-white/25'
+                linkCopied ? 'bg-green-100 text-green-700' : 'glass-pill hover:bg-white/10'
               }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">

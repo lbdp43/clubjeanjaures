@@ -44,7 +44,7 @@ export default function Annuaire() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="page-title">Annuaire</h1>
         {!loading && (
-          <span className="text-xs text-white/85 bg-white/15 border border-white/25 px-2.5 py-1 rounded-full">
+          <span className="glass-pill text-xs text-white/90 px-2.5 py-1">
             {filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}
           </span>
         )}

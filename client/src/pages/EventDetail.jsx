@@ -145,7 +145,7 @@ export default function EventDetail() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-20 lg:pb-0">
+    <div className="max-w-2xl mx-auto space-y-6 pb-16 lg:pb-0">
       <Link to="/agenda" className="on-bg-link text-sm">&larr; Retour à l'agenda</Link>
 
       {msg && (
@@ -431,11 +431,11 @@ export default function EventDetail() {
 
       {/* Barre d'action fixe sur mobile : toujours accessible sans remonter la page */}
       {!editing && (
-        <div className="lg:hidden fixed left-0 right-0 bottom-[64px] z-30 px-3 pb-2 pointer-events-none">
-          <div className="max-w-2xl mx-auto bg-white/95 backdrop-blur border border-gray-200 shadow-lg rounded-2xl px-3 py-2.5 flex items-center gap-2 pointer-events-auto">
+        <div className="lg:hidden fixed left-0 right-0 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 px-3 pointer-events-none">
+          <div className="max-w-2xl mx-auto liquid rounded-full px-2 py-2 flex items-center gap-2 pointer-events-auto text-white">
             {user ? (
               <>
-                <span className="text-xs text-text-muted flex-shrink-0 pl-1">
+                <span className="text-xs text-white/85 flex-shrink-0 pl-2">
                   {rsvps.length} inscrit{rsvps.length !== 1 ? 's' : ''}
                 </span>
                 <div className="flex-1 grid grid-cols-2 gap-2">
@@ -443,7 +443,7 @@ export default function EventDetail() {
                     onClick={() => { if (!participating) handleRsvp(); }}
                     disabled={rsvpLoading}
                     className={`py-2.5 rounded-full text-sm font-semibold transition-colors ${
-                      participating ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'
+                      participating ? 'bg-green-500 text-white shadow' : 'bg-white/20 text-white'
                     }`}
                   >
                     {rsvpLoading ? '...' : '✓ Je participe'}
@@ -452,7 +452,7 @@ export default function EventDetail() {
                     onClick={() => { if (participating) handleRsvp(); }}
                     disabled={rsvpLoading}
                     className={`py-2.5 rounded-full text-sm font-semibold transition-colors ${
-                      !participating ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-gray-100 text-gray-600'
+                      !participating ? 'bg-white text-red-600 shadow' : 'bg-white/20 text-white'
                     }`}
                   >
                     {rsvpLoading ? '...' : '✗ Pas dispo'}
@@ -460,7 +460,7 @@ export default function EventDetail() {
                 </div>
               </>
             ) : (
-              <Link to="/connexion" className="flex-1 text-center py-2.5 rounded-full text-sm font-semibold bg-blue text-white">
+              <Link to="/connexion" className="flex-1 text-center py-2.5 rounded-full text-sm font-semibold bg-white text-blue-dark shadow">
                 Se connecter pour participer
               </Link>
             )}

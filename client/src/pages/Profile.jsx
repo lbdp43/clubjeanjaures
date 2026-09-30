@@ -375,7 +375,7 @@ export default function Profile() {
         </div>
 
         {msg && <p className={`text-sm ${msg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{msg}</p>}
-        <div className="sticky bottom-[72px] lg:bottom-4 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white/95 backdrop-blur border-t border-gray-100 rounded-b-card">
+        <div className="sticky bottom-[calc(5.25rem+env(safe-area-inset-bottom))] lg:bottom-4 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white/95 backdrop-blur border-t border-gray-100 rounded-b-card">
           <button type="submit" className="btn-primary w-full sm:w-auto" disabled={saving}>
             {saving ? 'Sauvegarde...' : 'Enregistrer le profil'}
           </button>
