@@ -5,6 +5,7 @@ import { useCachedFetch } from '../hooks/useCachedFetch';
 import { formatMonthLabel } from '../utils/helpers';
 import EventCard from '../components/agenda/EventCard';
 import SubscribePanel from '../components/agenda/SubscribePanel';
+import Collapse from '../components/ui/Collapse';
 
 const TYPES = [
   { value: 'all', label: 'Tous' },
@@ -61,7 +62,9 @@ export default function Agenda() {
         </div>
       ) : (
         <>
-          {showSubscribe && <SubscribePanel onClose={() => setShowSubscribe(false)} />}
+          <Collapse open={showSubscribe}>
+            <div className="pb-1"><SubscribePanel onClose={() => setShowSubscribe(false)} /></div>
+          </Collapse>
 
           {/* Onglets */}
           <div role="tablist" aria-label="Filtrer par période" className="segment">
@@ -119,7 +122,7 @@ export default function Agenda() {
                     <span className="flex-1 h-px bg-white/25" />
                     <span className="text-xs font-normal normal-case">{events.length} événement{events.length > 1 ? 's' : ''}</span>
                   </h2>
-                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 min-w-0">
+                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 min-w-0 stagger">
                     {events.map(event => (
                       <EventCard key={event.id} event={event} onRsvpChange={fetchEvents} />
                     ))}

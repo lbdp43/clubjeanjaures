@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { isIOS, isAndroid, isMobile } from '../../utils/platform';
+import Collapse from '../ui/Collapse';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -97,7 +98,7 @@ export default function SubscribePanel({ onClose }) {
           <Row href={googleUrl} target="_blank" rel="noopener noreferrer" icon={<GoogleIcon />} title="Google Agenda" subtitle="S'abonner automatiquement" />
         )}
 
-        {showGoogleHelp && (
+        <Collapse open={showGoogleHelp}>
           <div className="bg-blue-light/60 rounded-xl p-3 sm:p-4 text-sm space-y-3 -mt-1">
             <p className="text-text-main">
               L'application Google Agenda du téléphone ne permet pas de s'abonner à un lien.
@@ -116,7 +117,7 @@ export default function SubscribePanel({ onClose }) {
               </button>
             </div>
           </div>
-        )}
+        </Collapse>
 
         {/* Outlook */}
         <Row href={outlookUrl} target="_blank" rel="noopener noreferrer" icon={<OutlookIcon />} title="Outlook" subtitle="S'abonner sur Outlook.com" />

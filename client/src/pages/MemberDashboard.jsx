@@ -57,7 +57,7 @@ export default function MemberDashboard() {
               <Link to="/agenda" className="text-sm on-bg-link">Voir tout</Link>
             </div>
             {events.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 stagger">
                 {events.slice(0, 4).map(e => <EventCard key={e.id} event={e} />)}
               </div>
             ) : (
@@ -71,7 +71,7 @@ export default function MemberDashboard() {
               <Link to="/annuaire" className="text-sm on-bg-link">Annuaire</Link>
             </div>
             {favorites.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 stagger">
                 {favorites.map(f => (
                   <MemberCard key={f.id} member={{
                     id: f.memberId,

@@ -101,7 +101,7 @@ export default function Annuaire() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 min-w-0">
+        <div className="grid gap-3 sm:grid-cols-2 min-w-0 stagger">
           {filteredMembers.map(m => (
             <MemberCard key={m.id} member={m} />
           ))}

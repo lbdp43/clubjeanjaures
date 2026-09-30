@@ -123,7 +123,7 @@ export default function Home() {
           {eventsLoading && events.length === 0 ? (
             <SkeletonGrid count={3} height="h-36" />
           ) : otherEvents.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 min-w-0">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 min-w-0 stagger">
               {otherEvents.map(event => (
                 <EventCard key={event.id} event={event} onRsvpChange={refetchEvents} />
               ))}
@@ -152,7 +152,7 @@ export default function Home() {
         {membersLoading ? (
           <SkeletonGrid count={3} height="h-24" />
         ) : members.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 min-w-0">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 min-w-0 stagger">
             {members.slice(0, 6).map(member => (
               <MemberCard key={member.id} member={member} compact />
             ))}

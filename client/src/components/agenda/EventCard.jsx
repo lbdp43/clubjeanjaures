@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
 import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl, imgUrl } from '../../utils/helpers';
+import Collapse from '../ui/Collapse';
 
 function participantName(r) {
   return r.user?.member?.companyName || r.user?.email?.split('@')[0] || 'Membre';
@@ -49,7 +50,7 @@ function Participants({ rsvps, count }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
         </svg>
       </button>
-      {open && (
+      <Collapse open={open}>
         <ul className="mt-2 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
           {rsvps.map(r => (
             <li key={r.userId} className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-full pl-0.5 pr-2.5 py-0.5 text-xs">
@@ -58,7 +59,7 @@ function Participants({ rsvps, count }) {
             </li>
           ))}
         </ul>
-      )}
+      </Collapse>
     </div>
   );
 }

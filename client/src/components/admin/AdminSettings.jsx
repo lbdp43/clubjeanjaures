@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../utils/api';
+import Collapse from '../ui/Collapse';
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState(null);
@@ -491,7 +492,7 @@ function PushAdmin({ settings, setSettings }) {
           <button type="button" onClick={() => setShowList(v => !v)} className="text-xs text-blue hover:underline">
             {showList ? 'Masquer la liste' : 'Voir qui est abonné'}
           </button>
-          {showList && (
+          <Collapse open={showList}>
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {stats.subscribers.map(s => (
                 <li key={s.userId} className="text-xs bg-gray-50 border border-gray-100 rounded-full px-2.5 py-1">
@@ -499,7 +500,7 @@ function PushAdmin({ settings, setSettings }) {
                 </li>
               ))}
             </ul>
-          )}
+          </Collapse>
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
 import { isIOS, isAndroid, isStandalone, isInAppBrowser, isFirefoxAndroid } from '../../utils/platform';
 import { canPromptInstall, promptInstall, onInstallAvailabilityChange, pushSupported, enablePush, getPushSubscription } from '../../utils/install';
+import Collapse from '../ui/Collapse';
 
 const DISMISS_KEY = 'cjj-install-card-dismissed';
 
@@ -95,7 +96,7 @@ export default function InstallCard() {
         </svg>
       </button>
 
-      {open && (
+      <Collapse open={open}>
         <div className="px-4 pb-4 pt-1 border-t border-white/15">
           <p className="text-sm text-white/80 mt-2">
             {needInstall
@@ -134,7 +135,7 @@ export default function InstallCard() {
           )}
           {msg && <p className="text-sm text-white mt-3">{msg}</p>}
 
-          {showHelp && isIOS && (
+          <Collapse open={showHelp && isIOS}>
             <div className="mt-3 bg-white/10 border border-white/20 rounded-xl p-3 text-sm text-white/90 space-y-2">
               {isInAppBrowser && (
                 <p className="text-yellow-200 text-xs">Vous êtes dans le navigateur intégré d'une autre application : ouvrez d'abord ce lien dans Safari (menu ··· → « Ouvrir dans Safari »).</p>
@@ -147,8 +148,8 @@ export default function InstallCard() {
               </ol>
               <p className="text-xs text-white/70">Les notifications sur iPhone nécessitent iOS 16.4 ou plus récent, et l'app ouverte depuis l'icône.</p>
             </div>
-          )}
-          {showHelp && isAndroid && !installable && (
+          </Collapse>
+          <Collapse open={showHelp && isAndroid && !installable}>
             <div className="mt-3 bg-white/10 border border-white/20 rounded-xl p-3 text-sm text-white/90 space-y-2">
               {isInAppBrowser && (
                 <p className="text-yellow-200 text-xs">Vous êtes dans le navigateur intégré d'une autre application : ouvrez d'abord ce lien dans Chrome (menu ⋮ → « Ouvrir dans Chrome »).</p>
@@ -160,9 +161,9 @@ export default function InstallCard() {
                 <li>Confirmez : l'icône apparaît sur votre écran d'accueil.</li>
               </ol>
             </div>
-          )}
+          </Collapse>
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }

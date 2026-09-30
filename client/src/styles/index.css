@@ -217,6 +217,52 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
+/* Apparition en cascade des éléments d'une liste */
+.stagger > * {
+  animation: itemIn 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.stagger > *:nth-child(1)  { animation-delay: 0.03s; }
+.stagger > *:nth-child(2)  { animation-delay: 0.07s; }
+.stagger > *:nth-child(3)  { animation-delay: 0.11s; }
+.stagger > *:nth-child(4)  { animation-delay: 0.15s; }
+.stagger > *:nth-child(5)  { animation-delay: 0.19s; }
+.stagger > *:nth-child(6)  { animation-delay: 0.23s; }
+.stagger > *:nth-child(7)  { animation-delay: 0.27s; }
+.stagger > *:nth-child(8)  { animation-delay: 0.31s; }
+.stagger > *:nth-child(n+9) { animation-delay: 0.34s; }
+@keyframes itemIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Déploiement fluide en hauteur */
+.expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s ease;
+}
+.expand-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.expand-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+.expand-open > .expand-inner {
+  transition: overflow 0s 0.32s;
+}
+
+/* Retour tactile : léger enfoncement au tap */
+.chip, .glass-pill, .contact-pill, .segment-item, .btn-secondary {
+  transition-property: transform, background-color, color, border-color, box-shadow;
+  transition-duration: 0.18s;
+}
+.chip:active, .glass-pill:active, .contact-pill:active, .segment-item:active, .btn-secondary:active {
+  transform: scale(0.96);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -325,8 +371,11 @@
 .card > * { position: relative; z-index: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fade-in, .slide-up, .page-right, .page-left, .page-fade {
+  .fade-in, .slide-up, .page-right, .page-left, .page-fade, .stagger > * {
     animation: none !important;
+  }
+  .expand {
+    transition: none !important;
   }
   * {
     transition-duration: 0.01ms !important;

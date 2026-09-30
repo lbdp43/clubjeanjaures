@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../utils/api';
+import Collapse from '../ui/Collapse';
 
 const SECTORS = [
   'Artisanat', 'Automobile', 'BTP / Construction', 'Commerce', 'Communication / Marketing',
@@ -384,6 +385,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
       </div>
 
       {/* Expanded section */}
+      <Collapse open={expanded}>
       {expanded && (
         <div className="border-t border-gray-100 p-3 sm:p-4 bg-gray-50/50">
           {/* Tabs */}
@@ -700,6 +702,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
           )}
         </div>
       )}
+      </Collapse>
     </div>
   );
 }
