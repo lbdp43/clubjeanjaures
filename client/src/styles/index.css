@@ -312,7 +312,7 @@
 
 /* Barre de navigation / en-tête en verre liquide bleu foncé */
 .glass-bar {
-  background: linear-gradient(180deg, rgba(50, 110, 175, 0.5) 0%, rgba(28, 75, 130, 0.58) 100%);
+  background: linear-gradient(180deg, rgba(42, 95, 155, 0.66) 0%, rgba(24, 66, 115, 0.74) 100%);
   -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
   backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
   border-color: rgba(255, 255, 255, 0.28);
@@ -337,7 +337,7 @@
   right: 0.75rem;
   bottom: calc(0.75rem + env(safe-area-inset-bottom));
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(60, 130, 205, 0.5) 0%, rgba(30, 85, 150, 0.56) 100%);
+  background: linear-gradient(135deg, rgba(45, 105, 170, 0.66) 0%, rgba(24, 68, 120, 0.72) 100%);
   -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.05);
   backdrop-filter: blur(30px) saturate(200%) brightness(1.05);
   border: 1px solid rgba(255, 255, 255, 0.35);
