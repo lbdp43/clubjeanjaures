@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './hooks/useAuth';
+import Splash from './components/layout/Splash';
 import { setupServiceWorker, isChunkLoadError, reloadOnceForChunkError, clearChunkReloadFlag } from './utils/pwa';
 import './styles/index.css';
 
@@ -67,6 +68,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
+          <Splash />
           <App />
         </AuthProvider>
       </BrowserRouter>

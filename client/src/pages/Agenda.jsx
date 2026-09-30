@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
@@ -21,6 +21,12 @@ export default function Agenda() {
   const [filter, setFilter] = useState('all');
   const [tab, setTab] = useState('upcoming');
   const [showSubscribe, setShowSubscribe] = useState(false);
+  // Sens de la transition de la liste : Passés est « à droite » d'À venir ; un filtre = simple fondu
+  const lastView = useRef({ tab, filter, dir: 'none' });
+  if (lastView.current.tab !== tab || lastView.current.filter !== filter) {
+    const dir = lastView.current.tab !== tab ? (tab === 'past' ? 'right' : 'left') : 'fade';
+    lastView.current = { tab, filter, dir };
+  }
 
   const { data: publicSettings } = useCachedFetch('settings', () => api.getPublicSettings());
   const isAgendaBlocked = !user && !!publicSettings && !publicSettings.publicAgenda;
@@ -68,11 +74,12 @@ export default function Agenda() {
 
           {/* Onglets */}
           <div role="tablist" aria-label="Filtrer par période" className="segment">
+            <span aria-hidden="true" className={`segment-indicator ${tab === 'past' ? 'segment-indicator-2' : ''}`} />
             <button
               role="tab"
               aria-selected={tab === 'upcoming'}
               onClick={() => setTab('upcoming')}
-              className={`segment-item ${tab === 'upcoming' ? 'segment-item-active' : ''}`}
+              className={`segment-item ${tab === 'upcoming' ? 'segment-item-on' : ''}`}
             >
               À venir
             </button>
@@ -80,7 +87,7 @@ export default function Agenda() {
               role="tab"
               aria-selected={tab === 'past'}
               onClick={() => setTab('past')}
-              className={`segment-item ${tab === 'past' ? 'segment-item-active' : ''}`}
+              className={`segment-item ${tab === 'past' ? 'segment-item-on' : ''}`}
             >
               Passés
             </button>
@@ -114,7 +121,7 @@ export default function Agenda() {
               ))}
             </div>
           ) : (
-            <div className="space-y-6">
+            <div key={`${tab}-${filter}`} className={`space-y-6 page-${lastView.current.dir}`}>
               {groupByMonth(displayed).map(([month, events]) => (
                 <section key={month}>
                   <h2 className="text-sm font-semibold text-white/85 uppercase tracking-wide mb-2 flex items-center gap-3">
