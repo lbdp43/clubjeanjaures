@@ -169,5 +169,16 @@ export const api = {
   }),
   manageSecondaryEmail: (id, action, email) => apiFetch(`/admin/members/${id}/emails`, {
     method: 'PUT', body: JSON.stringify({ action, email })
-  })
+  }),
+
+  // Notifications push
+  getPushConfig: () => apiFetch('/push/config'),
+  getPushStatus: () => apiFetch('/push/status'),
+  pushSubscribe: (subscription) => apiFetch('/push/subscribe', {
+    method: 'POST', body: JSON.stringify({ subscription })
+  }),
+  pushUnsubscribe: (endpoint) => apiFetch('/push/subscribe', {
+    method: 'DELETE', body: JSON.stringify({ endpoint })
+  }),
+  pushTest: () => apiFetch('/push/test', { method: 'POST' })
 };

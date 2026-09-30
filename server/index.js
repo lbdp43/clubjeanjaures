@@ -16,6 +16,7 @@ const adminRoutes = require('./routes/admin');
 const calendarRoutes = require('./routes/calendar');
 const favoriteRoutes = require('./routes/favorites');
 const uploadRoutes = require('./routes/uploads');
+const pushRoutes = require('./routes/push');
 
 // Validation des variables d'environnement
 const requiredEnvVars = ['DATABASE_URL'];
@@ -98,6 +99,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/push', pushRoutes);
 
 // Health check
 app.get('/api/health', async (req, res) => {

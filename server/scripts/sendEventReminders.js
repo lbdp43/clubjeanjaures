@@ -9,6 +9,7 @@
  */
 const prisma = require('../prisma/db');
 const { sendEventReminder } = require('../services/email');
+const { sendPushToUsers } = require('../services/push');
 const logger = require('../utils/logger');
 
 function startOfDayUTC(date) {
@@ -100,6 +101,20 @@ async function run() {
       await prisma.eventReminderBatch.create({
         data: { eventId: event.id, daysBefore, sentCount: sent }
       });
+
+      // Même rappel en notification push sur les appareils abonnés
+      try {
+        const dateStr = new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+        const push = await sendPushToUsers(candidates.map(u => u.id), {
+          title: `${event.title} — ${dateStr}`,
+          body: `Dans ${daysBefore} jours. Pense à dire si tu participes !`,
+          url: `/agenda/${event.id}`,
+          tag: `reminder-${event.id}`
+        });
+        if (push.sent) logger.info(`[reminders] ${push.sent} notification(s) push envoyée(s)`);
+      } catch (err) {
+        logger.warn('[reminders] Push impossible', { error: err.message });
+      }
 
       totalSent += sent;
       totalEvents += 1;

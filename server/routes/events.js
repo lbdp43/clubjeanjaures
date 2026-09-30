@@ -4,6 +4,7 @@ const prisma = require('../prisma/db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const { createSingleEvent } = require('../services/ical');
+const { sendPushToAllMembers } = require('../services/push');
 const xss = require('xss');
 const logger = require('../utils/logger');
 
@@ -172,6 +173,15 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     });
 
     res.status(201).json(event);
+
+    // Nouvel événement : prévenir les appareils abonnés (sans bloquer la réponse)
+    const dateStr = new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    sendPushToAllMembers({
+      title: `Nouvel événement : ${event.title}`,
+      body: `${dateStr} à ${event.timeStart}${event.location ? ' · ' + event.location : ''}`,
+      url: `/agenda/${event.id}`,
+      tag: `event-${event.id}`
+    }).catch(err => logger.warn('Push nouvel événement impossible', { error: err.message }));
   } catch (err) {
     logger.error('Erreur create event', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });

@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
 const { sendInvitation, sendBulkEmail, sendEventReminder } = require('../services/email');
+const { sendPushToAllMembers } = require('../services/push');
 const xss = require('xss');
 const logger = require('../utils/logger');
 
@@ -444,6 +445,10 @@ router.post('/notify', requireAuth, requireAdmin, emailLimiter, async (req, res)
       sent += results.filter(r => r.status === 'fulfilled' && r.value >= 1).length;
     }
     res.json({ sent, total: emails.length, message: `Email envoyé à ${sent}/${emails.length} membres.` });
+
+    // Même message en notification push sur les appareils abonnés
+    sendPushToAllMembers({ title: subject, body: String(message).slice(0, 180), url: '/', tag: 'admin-notify' })
+      .catch(err => logger.warn('Push notify impossible', { error: err.message }));
   } catch (err) {
     logger.error('Erreur notify', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });

@@ -59,6 +59,7 @@ model User {
   favoritedBy   Favorite[] @relation("FavoritedMember")
   eventsCreated Event[]
   rsvps         Rsvp[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
   @@index([status])
@@ -211,6 +212,21 @@ model Session {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("sessions")
+  @@index([userId])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
   @@index([userId])
 }
 

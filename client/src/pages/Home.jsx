@@ -6,6 +6,7 @@ import { useCachedFetch } from '../hooks/useCachedFetch';
 import { formatDate, formatTime, formatDaysUntil, getEventBadgeClass, getEventTypeLabel } from '../utils/helpers';
 import EventCard from '../components/agenda/EventCard';
 import MemberCard from '../components/annuaire/MemberCard';
+import InstallCard from '../components/layout/InstallCard';
 
 export default function Home() {
   const { user } = useAuth();
@@ -82,6 +83,8 @@ export default function Home() {
               <Link to="/profil" className="text-blue font-semibold hover:underline">Compléter mon profil</Link>
             </div>
           )}
+
+          <InstallCard />
         </section>
       ) : (
         <section className="text-center py-6 sm:py-12 lg:py-20">
@@ -97,6 +100,9 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/inscription" className="bg-white text-blue-dark px-6 py-3 rounded-full font-semibold shadow-lg shadow-blue-dark/30 hover:bg-blue-light transition-colors">Rejoindre le club</Link>
             <Link to="/connexion" className="border-2 border-white/70 text-white px-6 py-3 rounded-full font-semibold hover:bg-white/10 transition-colors">Se connecter</Link>
+          </div>
+          <div className="max-w-md mx-auto mt-6 text-left">
+            <InstallCard />
           </div>
         </section>
       )}
