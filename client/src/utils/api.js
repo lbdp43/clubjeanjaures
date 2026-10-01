@@ -170,8 +170,9 @@ export const api = {
   mergeAccounts: (primaryId, mergeEmail) => apiFetch(`/admin/members/${primaryId}/merge`, {
     method: 'POST', body: JSON.stringify({ mergeEmail })
   }),
-  manageSecondaryEmail: (id, action, email) => apiFetch(`/admin/members/${id}/emails`, {
-    method: 'PUT', body: JSON.stringify({ action, email })
+  manageSecondaryEmail: (id, action, email, newEmail) => apiFetch(`/admin/members/${id}/emails`, {
+    method: 'PUT',
+    body: JSON.stringify({ action, email, newEmail })
   }),
 
   // Notifications push

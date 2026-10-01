@@ -663,7 +663,7 @@ router.post('/members/:id/merge', requireAuth, requireAdmin, adminActionLimiter,
   }
 });
 
-// PUT /api/admin/members/:id/emails — Gérer les emails secondaires d'un membre
+// PUT /api/admin/members/:id/emails — Gérer les adresses d'un membre : add, remove, setPrimary, replace
 router.put('/members/:id/emails', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { action, email } = req.body;
@@ -699,16 +699,61 @@ router.put('/members/:id/emails', requireAuth, requireAdmin, async (req, res) =>
         emails.push(normalizedEmail);
       }
       await prisma.user.update({ where: { id: user.id }, data: { secondaryEmails: emails } });
-      return res.json({ secondaryEmails: emails });
+      return res.json({ email: user.email, secondaryEmails: emails });
     }
 
     if (action === 'remove') {
+      if (normalizedEmail === user.email) {
+        return res.status(400).json({ error: 'Impossible de retirer l\'adresse principale : choisissez d\'abord une autre adresse principale.' });
+      }
       const emails = (user.secondaryEmails || []).filter(e => e !== normalizedEmail);
       await prisma.user.update({ where: { id: user.id }, data: { secondaryEmails: emails } });
-      return res.json({ secondaryEmails: emails });
+      return res.json({ email: user.email, secondaryEmails: emails });
     }
 
-    res.status(400).json({ error: 'Action invalide. Utilisez "add" ou "remove".' });
+    // Faire d'une adresse secondaire l'adresse principale (l'ancienne principale devient secondaire)
+    if (action === 'setPrimary') {
+      if (normalizedEmail === user.email) return res.json({ email: user.email, secondaryEmails: user.secondaryEmails || [] });
+      if (!(user.secondaryEmails || []).includes(normalizedEmail)) {
+        return res.status(400).json({ error: 'Cette adresse n\'est pas associée à ce compte.' });
+      }
+      const emails = [user.email, ...(user.secondaryEmails || []).filter(e => e !== normalizedEmail)];
+      const updated = await prisma.user.update({
+        where: { id: user.id },
+        data: { email: normalizedEmail, secondaryEmails: emails },
+        select: { email: true, secondaryEmails: true }
+      });
+      logger.info(`[admin] ${req.user.email} : adresse principale de ${user.email} → ${normalizedEmail}`);
+      return res.json(updated);
+    }
+
+    // Corriger une adresse (principale ou secondaire)
+    if (action === 'replace') {
+      const newEmail = String(req.body.newEmail || '').toLowerCase().trim();
+      if (!emailRegex.test(newEmail)) return res.status(400).json({ error: "Format d'email invalide." });
+      if (newEmail === normalizedEmail) return res.json({ email: user.email, secondaryEmails: user.secondaryEmails || [] });
+
+      const isPrimary = normalizedEmail === user.email;
+      if (!isPrimary && !(user.secondaryEmails || []).includes(normalizedEmail)) {
+        return res.status(400).json({ error: 'Cette adresse n\'est pas associée à ce compte.' });
+      }
+      if (newEmail === user.email || (user.secondaryEmails || []).includes(newEmail)) {
+        return res.status(400).json({ error: 'Cette adresse est déjà associée à ce compte.' });
+      }
+      const taken = await prisma.user.findFirst({
+        where: { id: { not: user.id }, OR: [{ email: newEmail }, { secondaryEmails: { has: newEmail } }] }
+      });
+      if (taken) return res.status(409).json({ error: 'Cet email est déjà utilisé par un autre compte.' });
+
+      const data = isPrimary
+        ? { email: newEmail }
+        : { secondaryEmails: (user.secondaryEmails || []).map(e => (e === normalizedEmail ? newEmail : e)) };
+      const updated = await prisma.user.update({ where: { id: user.id }, data, select: { email: true, secondaryEmails: true } });
+      logger.info(`[admin] ${req.user.email} : adresse ${normalizedEmail} → ${newEmail} (compte ${user.id})`);
+      return res.json(updated);
+    }
+
+    res.status(400).json({ error: 'Action invalide.' });
   } catch (err) {
     logger.error('Erreur manage emails', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });

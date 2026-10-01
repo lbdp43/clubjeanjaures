@@ -189,6 +189,9 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailMsg, setEmailMsg] = useState('');
   const [localSecondaryEmails, setLocalSecondaryEmails] = useState(m.secondaryEmails || []);
+  const [localPrimary, setLocalPrimary] = useState(m.email);
+  const [editingEmail, setEditingEmail] = useState(null); // adresse en cours de correction
+  const [editValue, setEditValue] = useState('');
   const profilePhotoRef = useRef();
   const logoRef = useRef();
 
@@ -294,6 +297,43 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
     setMergeLoading(false);
   };
 
+  const applyEmails = (result) => {
+    setLocalSecondaryEmails(result.secondaryEmails || []);
+    if (result.email) {
+      setLocalPrimary(result.email);
+      onUpdate({ id: m.id, email: result.email, secondaryEmails: result.secondaryEmails || [] });
+    }
+  };
+
+  const runEmailAction = async (fn, okMsg) => {
+    setEmailMsg('');
+    setEmailLoading(true);
+    try {
+      applyEmails(await fn());
+      setEmailMsg(okMsg);
+      return true;
+    } catch (err) {
+      setEmailMsg(`Erreur : ${err.message || 'action impossible'}`);
+      return false;
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const handleSetPrimary = (email) => {
+    if (!confirm(`Faire de « ${email} » l'adresse principale ?\n\n« ${localPrimary} » deviendra une adresse secondaire. Le membre pourra toujours se connecter avec les deux.`)) return;
+    runEmailAction(() => api.manageSecondaryEmail(m.id, 'setPrimary', email), 'Adresse principale modifiée.');
+  };
+
+  const startEdit = (email) => { setEditingEmail(email); setEditValue(email); setEmailMsg(''); };
+
+  const handleReplaceEmail = async (e) => {
+    e.preventDefault();
+    if (!editValue.trim() || !editingEmail) return;
+    const ok = await runEmailAction(() => api.manageSecondaryEmail(m.id, 'replace', editingEmail, editValue.trim()), 'Adresse corrigée.');
+    if (ok) setEditingEmail(null);
+  };
+
   const handleAddEmail = async (e) => {
     e.preventDefault();
     if (!addEmail.trim()) return;
@@ -301,11 +341,11 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
     setEmailLoading(true);
     try {
       const result = await api.manageSecondaryEmail(m.id, 'add', addEmail.trim());
-      setLocalSecondaryEmails(result.secondaryEmails);
+      applyEmails(result);
       setAddEmail('');
       setEmailMsg('Email ajouté.');
     } catch (err) {
-      setEmailMsg(err.message || "Erreur lors de l'ajout.");
+      setEmailMsg(`Erreur : ${err.message || "ajout impossible"}`);
     }
     setEmailLoading(false);
   };
@@ -316,10 +356,10 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
     setEmailLoading(true);
     try {
       const result = await api.manageSecondaryEmail(m.id, 'remove', email);
-      setLocalSecondaryEmails(result.secondaryEmails);
+      applyEmails(result);
       setEmailMsg('Email retiré.');
     } catch (err) {
-      setEmailMsg(err.message || 'Erreur lors de la suppression.');
+      setEmailMsg(`Erreur : ${err.message || 'suppression impossible'}`);
     }
     setEmailLoading(false);
   };
@@ -420,7 +460,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                 activeTab === 'merge' ? 'bg-white text-blue shadow-sm' : 'text-text-muted'
               }`}
             >
-              Fusionner
+              Emails
             </button>
           </div>
 
@@ -634,29 +674,63 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
             <div className="space-y-5">
               {/* Emails secondaires */}
               <div>
-                <h4 className="text-xs sm:text-sm font-semibold mb-2">Emails associés à ce compte</h4>
+                <h4 className="text-xs sm:text-sm font-semibold mb-2">Adresses mail de ce compte</h4>
                 <p className="text-xs text-text-muted mb-3">
-                  Le membre peut se connecter avec n'importe lequel de ces emails.
+                  Le membre peut se connecter avec n'importe laquelle de ces adresses. Les mails du club partent à toutes.
                 </p>
-                <div className="space-y-1.5 mb-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="bg-blue-light text-blue text-xs px-2 py-0.5 rounded-full">Principal</span>
-                    <span>{m.email}</span>
-                  </div>
-                  {localSecondaryEmails.map(email => (
-                    <div key={email} className="flex items-center gap-2 text-sm">
-                      <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">Secondaire</span>
-                      <span className="flex-1 min-w-0 truncate">{email}</span>
-                      <button
-                        onClick={() => handleRemoveEmail(email)}
-                        className="text-xs text-red-500 hover:underline flex-shrink-0"
-                        disabled={emailLoading}
-                      >
-                        Retirer
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <ul className="space-y-2 mb-3">
+                  {[localPrimary, ...localSecondaryEmails].map((email, idx) => {
+                    const primary = idx === 0;
+                    return (
+                      <li key={email} className="bg-white rounded-xl ring-1 ring-gray-100 px-3 py-2.5">
+                        {editingEmail === email ? (
+                          <form onSubmit={handleReplaceEmail} className="flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="email"
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              className="input-field text-sm flex-1"
+                              autoFocus
+                              required
+                            />
+                            <div className="flex gap-2">
+                              <button type="submit" className="btn-primary text-xs whitespace-nowrap flex-1 sm:flex-none" disabled={emailLoading}>
+                                {emailLoading ? '...' : 'Enregistrer'}
+                              </button>
+                              <button type="button" onClick={() => setEditingEmail(null)} className="text-xs text-text-muted px-3">
+                                Annuler
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${primary ? 'bg-blue-light text-blue' : 'bg-gray-100 text-gray-500'}`}>
+                                {primary ? 'Principale' : 'Secondaire'}
+                              </span>
+                              <span className="text-sm min-w-0 truncate">{email}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
+                              <button type="button" onClick={() => startEdit(email)} className="text-blue hover:underline" disabled={emailLoading}>
+                                Modifier
+                              </button>
+                              {!primary && (
+                                <>
+                                  <button type="button" onClick={() => handleSetPrimary(email)} className="text-blue hover:underline" disabled={emailLoading}>
+                                    Rendre principale
+                                  </button>
+                                  <button type="button" onClick={() => handleRemoveEmail(email)} className="text-red-500 hover:underline" disabled={emailLoading}>
+                                    Retirer
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
                 <form onSubmit={handleAddEmail} className="flex gap-2">
                   <input
                     type="email"
@@ -670,7 +744,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
                     {emailLoading ? '...' : 'Ajouter'}
                   </button>
                 </form>
-                {emailMsg && <p className={`text-sm mt-2 ${emailMsg.includes('Erreur') || emailMsg.includes('invalide') || emailMsg.includes('utilisé') ? 'text-red-500' : 'text-green-600'}`}>{emailMsg}</p>}
+                {emailMsg && <p className={`text-sm mt-2 ${emailMsg.startsWith('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{emailMsg}</p>}
               </div>
 
               {/* Fusionner un compte existant */}
