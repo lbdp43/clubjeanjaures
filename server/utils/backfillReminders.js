@@ -32,4 +32,38 @@ async function backfillReminders(prisma) {
   return recipients.length;
 }
 
-module.exports = { backfillReminders };
+// Rappels automatiques J-N envoyés avant la mise en ligne du journal : seul le nombre d'envois
+// était gardé (event_reminder_batches). L'ancienne version écrivait à tous les membres actifs,
+// non désabonnés, sans réponse à ce moment-là : on reconstitue ces destinataires, une fois par envoi.
+async function backfillAutoReminders(prisma) {
+  const batches = await prisma.eventReminderBatch.findMany({
+    where: { sentCount: { gt: 0 }, sentAt: { lt: new Date('2026-10-01T09:16:00.000Z') } }
+  });
+  let total = 0;
+  for (const b of batches) {
+    const already = await prisma.eventReminderLog.count({ where: { eventId: b.eventId, kind: 'auto', sentAt: b.sentAt } });
+    if (already) continue;
+    const answered = await prisma.rsvp.findMany({
+      where: { eventId: b.eventId, createdAt: { lte: b.sentAt } },
+      select: { userId: true }
+    });
+    const recipients = await prisma.user.findMany({
+      where: {
+        status: 'active',
+        role: { not: 'visitor' },
+        reminderOptOut: false,
+        createdAt: { lte: b.sentAt },
+        id: { notIn: answered.map(r => r.userId) }
+      },
+      select: { id: true }
+    });
+    if (!recipients.length) continue;
+    await prisma.eventReminderLog.createMany({
+      data: recipients.map(u => ({ eventId: b.eventId, userId: u.id, kind: 'auto', sentAt: b.sentAt }))
+    });
+    total += recipients.length;
+  }
+  return { total, batches: batches.length };
+}
+
+module.exports = { backfillReminders, backfillAutoReminders };
