@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl, mapsUrl, imgUrl } from '../utils/helpers';
 import { haptic } from '../utils/haptics';
+import EventResponses from '../components/agenda/EventResponses';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -26,7 +27,18 @@ export default function EventDetail() {
     `rsvps:${id}`,
     () => api.getEventRsvps(id)
   );
-  const participating = !!user && rsvps.some(r => r.user.id === user.id);
+  const { data: responses, refetch: refetchResponses } = useCachedFetch(
+    user ? `responses:${id}` : null,
+    () => api.getEventResponses(id),
+    { enabled: !!user }
+  );
+  // Réponse de l'utilisateur : 'going' (inscrit), 'declined' (pas dispo) ou null (pas encore répondu)
+  const [localStatus, setLocalStatus] = useState(undefined);
+  const serverGoing = !!user && rsvps.some(r => r.user.id === user.id);
+  const serverStatus = event?.myStatus !== undefined ? event.myStatus : (serverGoing ? 'going' : null);
+  const status = !user ? null : localStatus !== undefined ? localStatus : serverStatus;
+  const participating = status === 'going';
+  const isPast = event ? new Date(event.date).getTime() < new Date().setHours(0, 0, 0, 0) : false;
 
   useEffect(() => {
     if (!event || editing) return;
@@ -42,17 +54,19 @@ export default function EventDetail() {
     });
   }, [event, editing]);
 
-  const handleRsvp = async () => {
-    if (!user || rsvpLoading) return;
-    haptic(participating ? 'light' : 'success');
+  const answer = async (next) => {
+    if (!user || rsvpLoading || status === next) return;
+    haptic(next === 'going' ? 'success' : 'light');
     setRsvpLoading(true);
+    setLocalStatus(next);
     setMsg('');
     try {
-      await api.toggleRsvp(event.id);
-      await refetchRsvps();
+      await api.setRsvp(event.id, next);
+      await Promise.all([refetchRsvps(), refetchEvent(), refetchResponses()]);
     } catch (err) {
       setMsg(`Erreur : ${err.message}`);
     }
+    setLocalStatus(undefined);
     setRsvpLoading(false);
   };
 
@@ -373,12 +387,12 @@ export default function EventDetail() {
           <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
               <p className="text-xs sm:text-sm font-medium text-text-muted">
-                {rsvps.length} participant{rsvps.length !== 1 ? 's' : ''}
+                <span className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" />Inscrits <span className="text-text-main font-semibold">{rsvps.length}</span></span>
               </p>
               {user ? (
                 <div className="hidden lg:flex items-center gap-2">
                   <button
-                    onClick={() => { if (!participating) handleRsvp(); }}
+                    onClick={() => answer('going')}
                     disabled={rsvpLoading}
                     className={`px-4 py-2.5 rounded-full text-sm font-medium transition-colors ${
                       participating
@@ -389,10 +403,10 @@ export default function EventDetail() {
                     {rsvpLoading ? '...' : participating ? '✓ Inscrit' : '✓ Je participe'}
                   </button>
                   <button
-                    onClick={() => { if (participating) handleRsvp(); }}
+                    onClick={() => answer('declined')}
                     disabled={rsvpLoading}
                     className={`px-4 py-2.5 rounded-full text-sm font-medium transition-colors ${
-                      !participating
+                      status === 'declined'
                         ? 'bg-red-50 text-red-500 ring-1 ring-red-200'
                         : 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500'
                     }`}
@@ -428,6 +442,14 @@ export default function EventDetail() {
                 ))}
               </div>
             )}
+            {user && (
+              <EventResponses
+                eventId={event.id}
+                responses={responses}
+                isAdmin={isAdmin}
+                canRemind={!isPast}
+              />
+            )}
           </div>
         </div>
       )}
@@ -444,7 +466,7 @@ export default function EventDetail() {
                 </span>
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => { if (!participating) handleRsvp(); }}
+                    onClick={() => answer('going')}
                     disabled={rsvpLoading}
                     className={`py-2.5 rounded-full text-sm font-semibold transition-colors ${
                       participating ? 'bg-green-500 text-white shadow' : 'bg-white/20 text-white'
@@ -453,10 +475,10 @@ export default function EventDetail() {
                     {rsvpLoading ? '...' : participating ? '✓ Inscrit' : '✓ Je participe'}
                   </button>
                   <button
-                    onClick={() => { if (participating) handleRsvp(); }}
+                    onClick={() => answer('declined')}
                     disabled={rsvpLoading}
                     className={`py-2.5 rounded-full text-sm font-semibold transition-colors ${
-                      !participating ? 'bg-white text-red-600 shadow' : 'bg-white/20 text-white'
+                      status === 'declined' ? 'bg-white text-red-600 shadow' : 'bg-white/20 text-white'
                     }`}
                   >
                     {rsvpLoading ? '...' : '✗ Pas dispo'}

@@ -4,7 +4,8 @@ const prisma = require('../prisma/db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/roles');
 const { createSingleEvent } = require('../services/ical');
-const { sendPushToAllMembers } = require('../services/push');
+const { sendPushToAllMembers, sendPushToUsers } = require('../services/push');
+const { sendRsvpRequest } = require('../services/email');
 const xss = require('xss');
 const logger = require('../utils/logger');
 
@@ -50,8 +51,9 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
       orderBy: { date: past === 'true' ? 'desc' : 'asc' },
       take: limit,
       include: {
-        _count: { select: { rsvps: true } },
+        _count: { select: { rsvps: { where: { status: 'going' } } } },
         rsvps: {
+          where: { status: 'going' },
           orderBy: { createdAt: 'asc' },
           select: {
             userId: true,
@@ -60,6 +62,16 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
         }
       }
     });
+
+    // Réponse de l'utilisateur connecté (inscrit / pas dispo / rien) pour chaque événement
+    if (req.user && events.length) {
+      const mine = await prisma.rsvp.findMany({
+        where: { userId: req.user.id, eventId: { in: events.map(e => e.id) } },
+        select: { eventId: true, status: true }
+      });
+      const byEvent = new Map(mine.map(r => [r.eventId, r.status]));
+      for (const e of events) e.myStatus = byEvent.get(e.id) || null;
+    }
 
     res.set('Cache-Control', 'no-cache');
     res.json(events);
@@ -75,11 +87,18 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const event = await prisma.event.findUnique({
       where: { id: req.params.id },
       include: {
-        _count: { select: { rsvps: true } },
-        rsvps: { select: { userId: true } }
+        _count: { select: { rsvps: { where: { status: 'going' } } } },
+        rsvps: { where: { status: 'going' }, select: { userId: true } }
       }
     });
     if (!event) return res.status(404).json({ error: 'Événement introuvable' });
+    if (req.user) {
+      const mine = await prisma.rsvp.findUnique({
+        where: { userId_eventId: { userId: req.user.id, eventId: event.id } },
+        select: { status: true }
+      });
+      event.myStatus = mine?.status || null;
+    }
     res.set('Cache-Control', 'no-cache');
     res.json(event);
   } catch (err) {
@@ -104,25 +123,118 @@ router.get('/:id/ics', async (req, res) => {
   }
 });
 
-// POST /api/events/:id/rsvp — toggle participation
+// POST /api/events/:id/rsvp — répondre : { status: 'going' | 'declined' | null }
+// Sans corps (ancienne version de l'appli encore en cache) : bascule inscrit / désinscrit.
 router.post('/:id/rsvp', requireAuth, async (req, res) => {
   try {
     const eventId = req.params.id;
     const userId = req.user.id;
+    const hasStatus = req.body && Object.prototype.hasOwnProperty.call(req.body, 'status');
+    let status = hasStatus ? req.body.status : undefined;
+    if (hasStatus && status !== null && status !== 'going' && status !== 'declined') {
+      return res.status(400).json({ error: 'Réponse invalide' });
+    }
 
     const existing = await prisma.rsvp.findUnique({
       where: { userId_eventId: { userId, eventId } }
     });
 
-    if (existing) {
-      await prisma.rsvp.delete({ where: { id: existing.id } });
-      return res.json({ participating: false });
-    }
+    if (!hasStatus) status = existing?.status === 'going' ? 'declined' : 'going';
 
-    await prisma.rsvp.create({ data: { userId, eventId } });
-    res.json({ participating: true });
+    if (status === null) {
+      if (existing) await prisma.rsvp.delete({ where: { id: existing.id } });
+    } else if (existing) {
+      if (existing.status !== status) await prisma.rsvp.update({ where: { id: existing.id }, data: { status } });
+    } else {
+      await prisma.rsvp.create({ data: { userId, eventId, status } });
+    }
+    res.json({ participating: status === 'going', status });
   } catch (err) {
     logger.error('Erreur RSVP:', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Membres concernés par les événements (mêmes critères que les rappels automatiques)
+const memberWhere = { status: 'active', role: { not: 'visitor' } };
+const memberSelect = { id: true, email: true, member: { select: { companyName: true, photoUrl: true, jobTitle: true } } };
+
+async function pendingMembers(eventId) {
+  const responded = await prisma.rsvp.findMany({ where: { eventId }, select: { userId: true } });
+  return prisma.user.findMany({
+    where: { ...memberWhere, id: { notIn: responded.map(r => r.userId) } },
+    select: memberSelect
+  });
+}
+
+const byName = (a, b) => (a.member?.companyName || a.email).localeCompare(b.member?.companyName || b.email, 'fr', { sensitivity: 'base' });
+
+// GET /api/events/:id/responses — inscrits, pas dispo et sans réponse (membres connectés)
+router.get('/:id/responses', requireAuth, async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const [rsvps, pending] = await Promise.all([
+      prisma.rsvp.findMany({
+        where: { eventId },
+        orderBy: { createdAt: 'asc' },
+        select: { status: true, user: { select: memberSelect } }
+      }),
+      pendingMembers(eventId)
+    ]);
+    res.set('Cache-Control', 'no-cache');
+    res.json({
+      declined: rsvps.filter(r => r.status === 'declined').map(r => r.user).sort(byName),
+      pending: pending.sort(byName)
+    });
+  } catch (err) {
+    logger.error('Erreur responses', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/events/:id/remind (admin) — relancer par mail les membres sélectionnés qui n'ont pas répondu
+const remindLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Trop de relances, réessayez dans quelques minutes' } });
+
+router.post('/:id/remind', requireAuth, requireAdmin, remindLimiter, async (req, res) => {
+  try {
+    const event = await prisma.event.findUnique({ where: { id: req.params.id } });
+    if (!event) return res.status(404).json({ error: 'Événement introuvable' });
+
+    const wanted = Array.isArray(req.body?.userIds) ? new Set(req.body.userIds.map(String)) : null;
+    if (!wanted || wanted.size === 0) return res.status(400).json({ error: 'Aucun destinataire sélectionné' });
+
+    // On ne relance que des membres qui n'ont réellement pas répondu
+    const targets = (await pendingMembers(event.id)).filter(u => wanted.has(u.id));
+    if (targets.length === 0) return res.status(400).json({ error: 'Ces membres ont déjà répondu' });
+
+    const message = typeof req.body.message === 'string' ? xss(req.body.message.trim()).slice(0, 1000) : '';
+    let sent = 0;
+    let lastError = null;
+    for (const u of targets) {
+      const r = await sendRsvpRequest(u.email, { event, message });
+      if (r.ok) sent++; else lastError = r.error;
+      await new Promise(r2 => setTimeout(r2, 120)); // 10 mails/s max
+    }
+
+    // Même relance en notification sur les téléphones abonnés
+    try {
+      const dateStr = new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+      await sendPushToUsers(targets.map(u => u.id), {
+        title: `${event.title} — ${dateStr}`,
+        body: 'Tu n\'as pas encore répondu : dis-nous si tu es dispo ou pas dispo.',
+        url: `/agenda/${event.id}`,
+        tag: `rsvp-${event.id}`
+      });
+    } catch (err) {
+      logger.warn('Push relance échouée', { error: err.message });
+    }
+
+    logger.info(`[relance] ${event.title} : ${sent}/${targets.length} mails envoyés par ${req.user.email}`);
+    if (sent === 0) return res.status(502).json({ error: lastError || 'Aucun mail n\'a pu être envoyé' });
+    res.json({ sent, total: targets.length });
+  } catch (err) {
+    logger.error('Erreur relance', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -131,7 +243,7 @@ router.post('/:id/rsvp', requireAuth, async (req, res) => {
 router.get('/:id/rsvps', async (req, res) => {
   try {
     const rsvps = await prisma.rsvp.findMany({
-      where: { eventId: req.params.id },
+      where: { eventId: req.params.id, status: 'going' },
       include: {
         user: {
           select: {

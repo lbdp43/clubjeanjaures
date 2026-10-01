@@ -185,19 +185,23 @@ function NextEventCard({ event, user, onChange }) {
   const [busy, setBusy] = useState(false);
   const [local, setLocal] = useState(null);
   const serverHasMe = event.rsvps?.some(r => r.userId === user.id) || false;
-  const participating = local ?? serverHasMe;
-  const count = (event._count?.rsvps || 0) + (local === null ? 0 : (local ? 1 : 0) - (serverHasMe ? 1 : 0));
+  // 'going' (inscrit), 'declined' (pas dispo) ou null (pas encore répondu)
+  const serverStatus = event.myStatus ?? (serverHasMe ? 'going' : null);
+  const status = local ?? serverStatus;
+  const participating = status === 'going';
+  const count = (event._count?.rsvps || 0) + (participating ? 1 : 0) - (serverHasMe ? 1 : 0);
   let displayedRsvps = event.rsvps || [];
   if (participating && !serverHasMe) displayedRsvps = [{ userId: user.id, user: { email: user.email, member: user.member } }, ...displayedRsvps];
   else if (!participating && serverHasMe) displayedRsvps = displayedRsvps.filter(r => r.userId !== user.id);
 
   const toggle = async (target) => {
-    if (busy || participating === target) return;
+    const next = target ? 'going' : 'declined';
+    if (busy || status === next) return;
     haptic(target ? 'success' : 'light');
     setBusy(true);
-    setLocal(target);
+    setLocal(next);
     try {
-      await api.toggleRsvp(event.id);
+      await api.setRsvp(event.id, next);
       if (onChange) await onChange();
       setLocal(null);
     } catch {
@@ -234,7 +238,7 @@ function NextEventCard({ event, user, onChange }) {
           onClick={() => toggle(false)}
           disabled={busy}
           className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-colors ${
-            !participating ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-white text-text-muted ring-1 ring-gray-200 hover:bg-red-50 hover:text-red-500'
+            status === 'declined' ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-white text-text-muted ring-1 ring-gray-200 hover:bg-red-50 hover:text-red-500'
           }`}
         >
           ✗ Pas dispo

@@ -12,6 +12,7 @@ router.get('/export', async (req, res) => {
       orderBy: { date: 'asc' },
       include: {
         rsvps: {
+          where: { status: 'going' },
           include: { user: { select: { email: true, member: { select: { companyName: true, jobTitle: true } } } } }
         }
       }
@@ -37,6 +38,7 @@ router.get('/feed.ics', async (req, res) => {
       orderBy: { date: 'asc' },
       include: {
         rsvps: {
+          where: { status: 'going' },
           include: { user: { select: { email: true, member: { select: { companyName: true, jobTitle: true } } } } }
         }
       }

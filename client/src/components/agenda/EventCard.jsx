@@ -71,31 +71,35 @@ function EventCard({ event, onRsvpChange }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [rsvpLoading, setRsvpLoading] = useState(false);
-  const [localParticipating, setLocalParticipating] = useState(false);
+  // Réponse de l'utilisateur : 'going' (inscrit), 'declined' (pas dispo) ou null (pas encore répondu)
+  const [localStatus, setLocalStatus] = useState(null);
   const [localCount, setLocalCount] = useState(0);
   const [shared, setShared] = useState(false);
+  const localParticipating = localStatus === 'going';
 
   useEffect(() => {
-    setLocalParticipating(user && event.rsvps?.some(r => r.userId === user.id));
+    const serverGoing = !!user && !!event.rsvps?.some(r => r.userId === user.id);
+    setLocalStatus(user ? (event.myStatus ?? (serverGoing ? 'going' : null)) : null);
     setLocalCount(event._count?.rsvps || 0);
   }, [event, user]);
 
-  const handleRsvp = async (e) => {
+  const answer = async (e, status) => {
     e.stopPropagation();
-    if (!user || rsvpLoading) return;
+    if (!user || rsvpLoading || localStatus === status) return;
 
-    const was = localParticipating;
-    haptic(was ? 'light' : 'success');
-    setLocalParticipating(!was);
-    setLocalCount(c => was ? c - 1 : c + 1);
+    const was = localStatus;
+    haptic(status === 'going' ? 'success' : 'light');
+    setLocalStatus(status);
+    const delta = (status === 'going' ? 1 : 0) - (was === 'going' ? 1 : 0);
+    setLocalCount(c => c + delta);
 
     setRsvpLoading(true);
     try {
-      await api.toggleRsvp(event.id);
+      await api.setRsvp(event.id, status);
       if (onRsvpChange) onRsvpChange();
     } catch {
-      setLocalParticipating(was);
-      setLocalCount(c => was ? c + 1 : c - 1);
+      setLocalStatus(was);
+      setLocalCount(c => c - delta);
     } finally {
       setRsvpLoading(false);
     }
@@ -192,7 +196,7 @@ function EventCard({ event, onRsvpChange }) {
             {user && (
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={(e) => { e.stopPropagation(); if (!localParticipating) handleRsvp(e); }}
+                  onClick={(e) => answer(e, 'going')}
                   disabled={rsvpLoading}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                     localParticipating
@@ -203,10 +207,10 @@ function EventCard({ event, onRsvpChange }) {
                   {localParticipating ? '✓ Inscrit' : '✓ Je participe'}
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); if (localParticipating) handleRsvp(e); }}
+                  onClick={(e) => answer(e, 'declined')}
                   disabled={rsvpLoading}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
-                    !localParticipating
+                    localStatus === 'declined'
                       ? 'bg-red-50 text-red-500 ring-1 ring-red-200'
                       : 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500'
                   } ${rsvpLoading ? 'opacity-50' : ''}`}

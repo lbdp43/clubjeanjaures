@@ -141,4 +141,36 @@ async function sendEventReminder(email, { event, daysBefore, customMessage, user
   return sendEmail(email, subject, html);
 }
 
-module.exports = { sendMagicLink, sendInvitation, sendBulkEmail, sendEventReminder };
+// ─── Relance manuelle (admin) : membre qui n'a pas encore répondu ───
+async function sendRsvpRequest(email, { event, message }) {
+  const eventUrl = `${APP_URL}/agenda/${event.id}`;
+  const dateStr = new Date(event.date).toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'
+  });
+  const subject = `${event.title} : es-tu dispo ?`;
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+      <h2 style="color:#2B5C8A;margin:0 0 16px;">Club Jean Jaurès</h2>
+      <p>Bonjour,</p>
+      <p>Tu n'as pas encore indiqué si tu participes à <strong>${event.title}</strong>.</p>
+      <div style="background:#F3F4F6;border-radius:12px;padding:16px;margin:16px 0;">
+        <p style="margin:0 0 6px;"><strong>📅 ${dateStr}</strong></p>
+        <p style="margin:0 0 6px;">🕐 ${event.timeStart}${event.timeEnd ? ` — ${event.timeEnd}` : ''}</p>
+        <p style="margin:0;">📍 ${event.location}</p>
+      </div>
+      <p style="font-size:15px;"><strong>Merci de nous dire si tu es dispo ou pas dispo, ça nous aide à organiser l'événement.</strong></p>
+      ${message ? `<p style="color:#374151;">${message.replace(/\n/g, '<br>')}</p>` : ''}
+      <a href="${eventUrl}" style="display:inline-block;background:#2B5C8A;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;margin:16px 0;font-weight:600;">
+        Je réponds
+      </a>
+      <p style="color:#6B7280;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:12px;">
+        Un clic sur « Je participe » ou « Pas dispo » dans l'application suffit.
+      </p>
+    </div>
+  `;
+
+  return sendEmail(email, subject, html);
+}
+
+module.exports = { sendMagicLink, sendInvitation, sendBulkEmail, sendEventReminder, sendRsvpRequest };

@@ -245,6 +245,8 @@ model Rsvp {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
   eventId   String   @map("event_id") @db.Uuid
+  // going = inscrit, declined = a répondu « Pas dispo ». Sans ligne = pas encore répondu.
+  status    RsvpStatus @default(going)
   createdAt DateTime @default(now()) @map("created_at")
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -254,4 +256,9 @@ model Rsvp {
   @@map("rsvps")
   @@index([eventId])
   @@index([userId])
+}
+
+enum RsvpStatus {
+  going
+  declined
 }

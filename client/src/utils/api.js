@@ -104,7 +104,10 @@ export const api = {
     method: 'PUT', body: JSON.stringify(data)
   }),
   deleteEvent: (id) => apiFetch(`/events/${id}`, { method: 'DELETE' }),
-  toggleRsvp: (eventId) => apiFetch(`/events/${eventId}/rsvp`, { method: 'POST' }),
+  // status : 'going' (inscrit), 'declined' (pas dispo) ou null (retirer sa réponse)
+  setRsvp: (eventId, status) => apiFetch(`/events/${eventId}/rsvp`, { method: 'POST', body: JSON.stringify({ status }) }),
+  getEventResponses: (eventId) => apiFetch(`/events/${eventId}/responses`),
+  remindEvent: (eventId, userIds, message) => apiFetch(`/events/${eventId}/remind`, { method: 'POST', body: JSON.stringify({ userIds, message }) }),
   getEventRsvps: (eventId) => apiFetch(`/events/${eventId}/rsvps`),
 
   // Posts
