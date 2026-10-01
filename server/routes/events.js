@@ -173,7 +173,7 @@ const byName = (a, b) => (a.member?.companyName || a.email).localeCompare(b.memb
 router.get('/:id/responses', requireAuth, requireMember, async (req, res) => {
   try {
     const eventId = req.params.id;
-    const [rsvps, pending] = await Promise.all([
+    let [rsvps, pending] = await Promise.all([
       prisma.rsvp.findMany({
         where: { eventId },
         orderBy: { createdAt: 'asc' },
@@ -181,11 +181,24 @@ router.get('/:id/responses', requireAuth, requireMember, async (req, res) => {
       }),
       pendingMembers(eventId)
     ]);
+    let declined = rsvps.filter(r => r.status === 'declined').map(r => r.user);
+
+    // Admin : nombre de relances reçues par chacun pour cet événement, et date de la dernière
+    if (req.user.role === 'admin') {
+      const logs = await prisma.eventReminderLog.groupBy({
+        by: ['userId'],
+        where: { eventId },
+        _count: { _all: true },
+        _max: { sentAt: true }
+      });
+      const byUser = new Map(logs.map(l => [l.userId, { count: l._count._all, last: l._max.sentAt }]));
+      const withReminders = u => ({ ...u, reminders: byUser.get(u.id) || { count: 0, last: null } });
+      declined = declined.map(withReminders);
+      pending = pending.map(withReminders);
+    }
+
     res.set('Cache-Control', 'no-cache');
-    res.json({
-      declined: rsvps.filter(r => r.status === 'declined').map(r => r.user).sort(byName),
-      pending: pending.sort(byName)
-    });
+    res.json({ declined: declined.sort(byName), pending: pending.sort(byName) });
   } catch (err) {
     logger.error('Erreur responses', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
@@ -213,7 +226,11 @@ router.post('/:id/remind', requireAuth, requireAdmin, remindLimiter, async (req,
     let lastError = null;
     for (const u of targets) {
       const r = await sendRsvpRequest(u.email, { event, message });
-      if (r.ok) sent++; else lastError = r.error;
+      if (r.ok) {
+        sent++;
+        await prisma.eventReminderLog.create({ data: { eventId: event.id, userId: u.id, kind: 'manual' } })
+          .catch(err => logger.warn('Journal de relance non enregistré', { error: err.message }));
+      } else lastError = r.error;
       await new Promise(r2 => setTimeout(r2, 120)); // 10 mails/s max
     }
 

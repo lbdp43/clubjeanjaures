@@ -90,7 +90,11 @@ async function run() {
             customMessage,
             userId: u.id
           });
-          if (result.ok) sent++;
+          if (result.ok) {
+            sent++;
+            await prisma.eventReminderLog.create({ data: { eventId: event.id, userId: u.id, kind: 'auto' } })
+              .catch(err => logger.warn('[reminders] Journal de relance non enregistré', { error: err.message }));
+          }
           // throttle: 10 emails/seconde max (Brevo free-tier friendly)
           await new Promise(r => setTimeout(r, 120));
         } catch (err) {

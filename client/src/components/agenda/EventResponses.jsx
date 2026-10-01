@@ -6,6 +6,27 @@ import Collapse from '../ui/Collapse';
 
 const nameOf = (u) => u.member?.companyName || u.email;
 
+// Relances reçues pour cet événement (renseigné seulement pour les admins)
+function reminderLabel(r) {
+  if (!r) return null;
+  if (!r.count) return 'Jamais relancé';
+  const last = r.last ? new Date(r.last).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : null;
+  return `${r.count} relance${r.count > 1 ? 's' : ''}${last ? ` · dernière le ${last}` : ''}`;
+}
+
+function ReminderBadge({ reminders }) {
+  if (!reminders) return null;
+  const n = reminders.count;
+  return (
+    <span
+      title={reminderLabel(reminders)}
+      className={`text-[10px] font-semibold rounded-full px-1.5 py-0.5 ${n ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-500'}`}
+    >
+      {n ? `${n} relance${n > 1 ? 's' : ''}` : '0 relance'}
+    </span>
+  );
+}
+
 function MemberChip({ user, muted }) {
   return (
     <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${muted ? 'bg-gray-50 opacity-80' : 'bg-gray-50'}`}>
@@ -17,6 +38,7 @@ function MemberChip({ user, muted }) {
         </div>
       )}
       <span className="text-xs text-text-main">{nameOf(user)}</span>
+      <ReminderBadge reminders={user.reminders} />
     </div>
   );
 }
@@ -117,8 +139,15 @@ export default function EventResponses({ eventId, responses, isAdmin, canRemind,
                       onChange={() => toggle(u.id)}
                       className="w-5 h-5 rounded accent-blue flex-shrink-0"
                     />
-                    <span className="text-sm text-text-main truncate flex-1">{nameOf(u)}</span>
-                    <span className="text-[11px] text-text-muted truncate max-w-[45%]">{u.email}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm text-text-main truncate">{nameOf(u)}</span>
+                      <span className="block text-[11px] text-text-muted truncate">{u.email}</span>
+                    </span>
+                    {u.reminders && (
+                      <span className={`text-[11px] text-right flex-shrink-0 max-w-[40%] ${u.reminders.count ? 'text-amber-700' : 'text-text-muted'}`}>
+                        {reminderLabel(u.reminders)}
+                      </span>
+                    )}
                   </label>
                 </li>
               ))}

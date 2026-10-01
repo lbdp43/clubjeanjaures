@@ -448,6 +448,7 @@ export default function EventDetail() {
                 responses={responses}
                 isAdmin={isAdmin}
                 canRemind={!isPast}
+                onReminded={refetchResponses}
               />
             )}
           </div>
