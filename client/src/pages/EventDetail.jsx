@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCalendarUrl, outlookCalendarUrl, mapsUrl, imgUrl } from '../utils/helpers';
 import { haptic } from '../utils/haptics';
-import EventResponses from '../components/agenda/EventResponses';
+import EventResponses, { ReminderBadge } from '../components/agenda/EventResponses';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -38,6 +38,10 @@ export default function EventDetail() {
   const serverStatus = event?.myStatus !== undefined ? event.myStatus : (serverGoing ? 'going' : null);
   const status = !user ? null : localStatus !== undefined ? localStatus : serverStatus;
   const participating = status === 'going';
+  // Admin : mails de relance reçus par chaque membre (pour les afficher aussi sur les inscrits)
+  const remindersById = new Map(
+    ['going', 'declined', 'pending'].flatMap(k => (responses?.[k] || []).filter(u => u.reminders).map(u => [u.id, u.reminders]))
+  );
   const isPast = event ? new Date(event.date).getTime() < new Date().setHours(0, 0, 0, 0) : false;
 
   useEffect(() => {
@@ -438,6 +442,7 @@ export default function EventDetail() {
                       </div>
                     )}
                     <span className="text-xs text-text-main">{r.user.member?.companyName || r.user.email}</span>
+                    <ReminderBadge reminders={remindersById.get(r.user.id)} />
                   </div>
                 ))}
               </div>

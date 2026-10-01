@@ -9,21 +9,42 @@ const nameOf = (u) => u.member?.companyName || u.email;
 // Relances reçues pour cet événement (renseigné seulement pour les admins)
 function reminderLabel(r) {
   if (!r) return null;
-  if (!r.count) return 'Jamais relancé';
+  if (!r.count) return 'Aucun mail de relance';
   const last = r.last ? new Date(r.last).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : null;
-  return `${r.count} relance${r.count > 1 ? 's' : ''}${last ? ` · dernière le ${last}` : ''}`;
+  return `${r.count} mail${r.count > 1 ? 's' : ''} reçu${r.count > 1 ? 's' : ''}${last ? ` · dernier le ${last}` : ''}`;
 }
 
-function ReminderBadge({ reminders }) {
+// Petit badge « ✉ 2 » : nombre de mails de relance reçus pour cet événement (admins uniquement)
+export function ReminderBadge({ reminders }) {
   if (!reminders) return null;
   const n = reminders.count;
   return (
     <span
       title={reminderLabel(reminders)}
-      className={`text-[10px] font-semibold rounded-full px-1.5 py-0.5 ${n ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-500'}`}
+      aria-label={reminderLabel(reminders)}
+      className={`inline-flex items-center gap-0.5 text-[10px] font-semibold rounded-full px-1.5 py-0.5 ${n ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-500'}`}
     >
-      {n ? `${n} relance${n > 1 ? 's' : ''}` : '0 relance'}
+      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+      </svg>
+      {n}
     </span>
+  );
+}
+
+// Résumé admin : combien de mails de relance ont été envoyés pour cet événement
+function ReminderSummary({ responses }) {
+  const all = ['going', 'declined', 'pending'].flatMap(k => responses[k] || []).filter(u => u.reminders);
+  if (!all.length) return null;
+  const mails = all.reduce((n, u) => n + u.reminders.count, 0);
+  const people = all.filter(u => u.reminders.count > 0).length;
+  return (
+    <p className="mt-4 text-xs text-text-muted flex items-center gap-2">
+      <ReminderBadge reminders={{ count: mails }} />
+      {mails
+        ? `${mails} mail${mails > 1 ? 's' : ''} de relance envoyé${mails > 1 ? 's' : ''} à ${people} membre${people > 1 ? 's' : ''} pour cet événement`
+        : 'Aucun mail de relance envoyé pour cet événement'}
+    </p>
   );
 }
 
@@ -200,8 +221,8 @@ function RemindPanel({ eventId, responses, onClose, onSent }) {
 // Membres « Sans réponse » et « Pas dispo » d'un événement, visibles par tous les membres.
 // Un admin peut envoyer une relance par mail à tout le monde ou à une sélection.
 export default function EventResponses({ eventId, responses, isAdmin, canRemind, onReminded }) {
-  const [openPending, setOpenPending] = useState(false);
-  const [openDeclined, setOpenDeclined] = useState(false);
+  const [openPending, setOpenPending] = useState(!!isAdmin);
+  const [openDeclined, setOpenDeclined] = useState(!!isAdmin);
   const [panel, setPanel] = useState(false);
   const [result, setResult] = useState('');
 
@@ -230,6 +251,8 @@ export default function EventResponses({ eventId, responses, isAdmin, canRemind,
           </div>
         )}
       </Section>
+
+      {isAdmin && <ReminderSummary responses={responses} />}
 
       {isAdmin && canRemind && total > 0 && (
         panel ? (
