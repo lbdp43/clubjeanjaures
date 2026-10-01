@@ -188,6 +188,12 @@ const { repairSectors } = require('./utils/repairSectors');
   } catch (err) {
     logger.warn('Nettoyage des secteurs impossible', { error: err.message });
   }
+  try {
+    const n = await require('./utils/backfillReminders').backfillReminders(prisma);
+    if (n) logger.warn(`${n} relance(s) du 1er octobre ajoutée(s) au journal`);
+  } catch (err) {
+    logger.warn('Rattrapage du journal des relances impossible', { error: err.message });
+  }
 })();
 
 process.on('SIGTERM', () => {
