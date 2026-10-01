@@ -15,7 +15,8 @@ async function sendViaBrevo(to, subject, html) {
     },
     body: JSON.stringify({
       sender: { name: FROM_NAME, email: FROM_EMAIL },
-      to: [{ email: to }],
+      // Un seul mail pour toutes les adresses d'un même membre (principale + secondaires)
+      to: (Array.isArray(to) ? to : [to]).map(email => ({ email })),
       subject,
       htmlContent: html
     })
@@ -27,7 +28,12 @@ async function sendViaBrevo(to, subject, html) {
   }
 }
 
-// ─── Envoi principal ───
+// Toutes les adresses d'un membre : principale puis secondaires, sans doublon
+function memberEmails(user) {
+  return [...new Set([user.email, ...(user.secondaryEmails || [])].filter(Boolean).map(e => e.toLowerCase().trim()))];
+}
+
+// ─── Envoi principal ─── (to : une adresse ou la liste des adresses d'un même membre)
 async function sendEmail(to, subject, html) {
   if (!process.env.BREVO_API_KEY) {
     logger.warn('Email non envoyé (BREVO_API_KEY non configurée)', { to, subject });
@@ -195,4 +201,4 @@ async function sendRsvpRequest(email, { event, message, status = 'pending' }) {
   return sendEmail(email, subject, html);
 }
 
-module.exports = { sendMagicLink, sendInvitation, sendBulkEmail, sendEventReminder, sendRsvpRequest };
+module.exports = { memberEmails, sendMagicLink, sendInvitation, sendBulkEmail, sendEventReminder, sendRsvpRequest };

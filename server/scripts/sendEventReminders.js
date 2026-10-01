@@ -8,7 +8,7 @@
  * Usage local : node server/scripts/sendEventReminders.js
  */
 const prisma = require('../prisma/db');
-const { sendEventReminder } = require('../services/email');
+const { sendEventReminder, memberEmails } = require('../services/email');
 const { sendPushToUsers } = require('../services/push');
 const logger = require('../utils/logger');
 
@@ -69,7 +69,7 @@ async function run() {
           reminderOptOut: false,
           id: { notIn: [...respondedIds] }
         },
-        select: { id: true, email: true }
+        select: { id: true, email: true, secondaryEmails: true }
       });
 
       if (candidates.length === 0) {
@@ -84,7 +84,7 @@ async function run() {
       let sent = 0;
       for (const u of candidates) {
         try {
-          const result = await sendEventReminder(u.email, {
+          const result = await sendEventReminder(memberEmails(u), {
             event,
             daysBefore,
             customMessage,

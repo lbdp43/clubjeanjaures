@@ -5,7 +5,7 @@ const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { requireAdmin, requireMember } = require('../middleware/roles');
 const { createSingleEvent } = require('../services/ical');
 const { sendPushToAllMembers, sendPushToUsers } = require('../services/push');
-const { sendRsvpRequest } = require('../services/email');
+const { sendRsvpRequest, memberEmails } = require('../services/email');
 const xss = require('xss');
 const logger = require('../utils/logger');
 
@@ -241,10 +241,14 @@ router.post('/:id/remind', requireAuth, requireAdmin, remindLimiter, async (req,
     if (targets.length === 0) return res.status(400).json({ error: 'Aucun destinataire valide' });
 
     const message = typeof req.body.message === 'string' ? xss(req.body.message.trim()).slice(0, 1000) : '';
+    // Adresses secondaires : chargées ici seulement (jamais renvoyées dans les listes visibles par les membres)
+    const extra = await prisma.user.findMany({ where: { id: { in: targets.map(u => u.id) } }, select: { id: true, secondaryEmails: true } });
+    const secondaryById = new Map(extra.map(u => [u.id, u.secondaryEmails]));
     let sent = 0;
     let lastError = null;
     for (const u of targets) {
-      const r = await sendRsvpRequest(u.email, { event, message, status: u.rsvpStatus });
+      const to = memberEmails({ email: u.email, secondaryEmails: secondaryById.get(u.id) });
+      const r = await sendRsvpRequest(to, { event, message, status: u.rsvpStatus });
       if (r.ok) {
         sent++;
         await prisma.eventReminderLog.create({ data: { eventId: event.id, userId: u.id, kind: 'manual' } })

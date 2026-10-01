@@ -8,7 +8,7 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const upload = require('../middleware/upload');
 const { uploadImage } = require('../services/cloudinaryUpload');
-const { sendInvitation, sendBulkEmail, sendEventReminder } = require('../services/email');
+const { sendInvitation, sendBulkEmail, sendEventReminder, memberEmails } = require('../services/email');
 const { sendPushToAllMembers, isPushEnabled } = require('../services/push');
 const xss = require('xss');
 const logger = require('../utils/logger');
@@ -418,10 +418,11 @@ router.post('/notify', requireAuth, requireAdmin, emailLimiter, async (req, res)
 
     const members = await prisma.user.findMany({
       where: { status: 'active', role: { not: 'visitor' } },
-      select: { email: true }
+      select: { email: true, secondaryEmails: true }
     });
 
-    const emails = members.map(m => m.email);
+    // Une entrée par membre : toutes ses adresses (principale + secondaires) dans le même mail
+    const emails = members.map(m => memberEmails(m));
     if (emails.length === 0) {
       return res.json({ sent: 0, message: 'Aucun membre actif trouvé.' });
     }
