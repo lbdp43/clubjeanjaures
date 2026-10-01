@@ -169,19 +169,28 @@ async function pendingMembers(eventId) {
 
 const byName = (a, b) => (a.member?.companyName || a.email).localeCompare(b.member?.companyName || b.email, 'fr', { sensitivity: 'base' });
 
-// GET /api/events/:id/responses — pas dispo et sans réponse (membres validés uniquement, pas les visiteurs)
+// Réponses d'un événement, membre par membre : inscrits (going), pas dispo (declined), sans réponse (pending)
+async function eventAudience(eventId) {
+  const [rsvps, pending] = await Promise.all([
+    prisma.rsvp.findMany({
+      where: { eventId, user: { status: 'active' } },
+      orderBy: { createdAt: 'asc' },
+      select: { status: true, user: { select: memberSelect } }
+    }),
+    pendingMembers(eventId)
+  ]);
+  return {
+    going: rsvps.filter(r => r.status === 'going').map(r => r.user),
+    declined: rsvps.filter(r => r.status === 'declined').map(r => r.user),
+    pending
+  };
+}
+
+// GET /api/events/:id/responses — inscrits, pas dispo et sans réponse (membres validés uniquement, pas les visiteurs)
 router.get('/:id/responses', requireAuth, requireMember, async (req, res) => {
   try {
     const eventId = req.params.id;
-    let [rsvps, pending] = await Promise.all([
-      prisma.rsvp.findMany({
-        where: { eventId },
-        orderBy: { createdAt: 'asc' },
-        select: { status: true, user: { select: memberSelect } }
-      }),
-      pendingMembers(eventId)
-    ]);
-    let declined = rsvps.filter(r => r.status === 'declined').map(r => r.user);
+    let { going, declined, pending } = await eventAudience(eventId);
 
     // Admin : nombre de relances reçues par chacun pour cet événement, et date de la dernière
     if (req.user.role === 'admin') {
@@ -193,21 +202,29 @@ router.get('/:id/responses', requireAuth, requireMember, async (req, res) => {
       });
       const byUser = new Map(logs.map(l => [l.userId, { count: l._count._all, last: l._max.sentAt }]));
       const withReminders = u => ({ ...u, reminders: byUser.get(u.id) || { count: 0, last: null } });
+      going = going.map(withReminders);
       declined = declined.map(withReminders);
       pending = pending.map(withReminders);
     }
 
     res.set('Cache-Control', 'no-cache');
-    res.json({ declined: declined.sort(byName), pending: pending.sort(byName) });
+    res.json({ going: going.sort(byName), declined: declined.sort(byName), pending: pending.sort(byName) });
   } catch (err) {
     logger.error('Erreur responses', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// POST /api/events/:id/remind (admin) — relancer par mail les membres sélectionnés qui n'ont pas répondu
+// POST /api/events/:id/remind (admin) — relancer par mail les membres sélectionnés (tout le monde ou une sélection).
+// Le contenu du mail s'adapte à la réponse de chacun : sans réponse, pas dispo ou inscrit.
 const remindLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
   message: { error: 'Trop de relances, réessayez dans quelques minutes' } });
+
+const PUSH_BODY = {
+  pending: 'Tu n\'as pas encore répondu : dis-nous si tu es dispo ou pas dispo.',
+  declined: 'Tu avais indiqué ne pas être dispo. Si ça change, tu peux encore t\'inscrire.',
+  going: 'Petit rappel : tu es inscrit·e, à bientôt !'
+};
 
 router.post('/:id/remind', requireAuth, requireAdmin, remindLimiter, async (req, res) => {
   try {
@@ -217,15 +234,17 @@ router.post('/:id/remind', requireAuth, requireAdmin, remindLimiter, async (req,
     const wanted = Array.isArray(req.body?.userIds) ? new Set(req.body.userIds.map(String)) : null;
     if (!wanted || wanted.size === 0) return res.status(400).json({ error: 'Aucun destinataire sélectionné' });
 
-    // On ne relance que des membres qui n'ont réellement pas répondu
-    const targets = (await pendingMembers(event.id)).filter(u => wanted.has(u.id));
-    if (targets.length === 0) return res.status(400).json({ error: 'Ces membres ont déjà répondu' });
+    const audience = await eventAudience(event.id);
+    const targets = ['pending', 'declined', 'going'].flatMap(status =>
+      audience[status].filter(u => wanted.has(u.id)).map(u => ({ ...u, rsvpStatus: status }))
+    );
+    if (targets.length === 0) return res.status(400).json({ error: 'Aucun destinataire valide' });
 
     const message = typeof req.body.message === 'string' ? xss(req.body.message.trim()).slice(0, 1000) : '';
     let sent = 0;
     let lastError = null;
     for (const u of targets) {
-      const r = await sendRsvpRequest(u.email, { event, message });
+      const r = await sendRsvpRequest(u.email, { event, message, status: u.rsvpStatus });
       if (r.ok) {
         sent++;
         await prisma.eventReminderLog.create({ data: { eventId: event.id, userId: u.id, kind: 'manual' } })
@@ -234,15 +253,19 @@ router.post('/:id/remind', requireAuth, requireAdmin, remindLimiter, async (req,
       await new Promise(r2 => setTimeout(r2, 120)); // 10 mails/s max
     }
 
-    // Même relance en notification sur les téléphones abonnés
+    // Même relance en notification sur les téléphones abonnés, message adapté à chaque réponse
     try {
       const dateStr = new Date(event.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
-      await sendPushToUsers(targets.map(u => u.id), {
-        title: `${event.title} — ${dateStr}`,
-        body: 'Tu n\'as pas encore répondu : dis-nous si tu es dispo ou pas dispo.',
-        url: `/agenda/${event.id}`,
-        tag: `rsvp-${event.id}`
-      });
+      for (const status of ['pending', 'declined', 'going']) {
+        const ids = targets.filter(u => u.rsvpStatus === status).map(u => u.id);
+        if (!ids.length) continue;
+        await sendPushToUsers(ids, {
+          title: `${event.title} — ${dateStr}`,
+          body: PUSH_BODY[status],
+          url: `/agenda/${event.id}`,
+          tag: `rsvp-${event.id}`
+        });
+      }
     } catch (err) {
       logger.warn('Push relance échouée', { error: err.message });
     }
