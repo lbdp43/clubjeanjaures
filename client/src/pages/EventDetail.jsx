@@ -11,7 +11,7 @@ import EventResponses from '../components/agenda/EventResponses';
 export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isMember } = useAuth();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
@@ -28,9 +28,9 @@ export default function EventDetail() {
     () => api.getEventRsvps(id)
   );
   const { data: responses, refetch: refetchResponses } = useCachedFetch(
-    user ? `responses:${id}` : null,
+    isMember ? `responses:${id}` : null,
     () => api.getEventResponses(id),
-    { enabled: !!user }
+    { enabled: isMember }
   );
   // Réponse de l'utilisateur : 'going' (inscrit), 'declined' (pas dispo) ou null (pas encore répondu)
   const [localStatus, setLocalStatus] = useState(undefined);
@@ -62,7 +62,7 @@ export default function EventDetail() {
     setMsg('');
     try {
       await api.setRsvp(event.id, next);
-      await Promise.all([refetchRsvps(), refetchEvent(), refetchResponses()]);
+      await Promise.all([refetchRsvps(), refetchEvent(), isMember ? refetchResponses() : null]);
     } catch (err) {
       setMsg(`Erreur : ${err.message}`);
     }
@@ -442,7 +442,7 @@ export default function EventDetail() {
                 ))}
               </div>
             )}
-            {user && (
+            {isMember && (
               <EventResponses
                 eventId={event.id}
                 responses={responses}

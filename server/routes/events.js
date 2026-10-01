@@ -2,7 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../prisma/db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
-const { requireAdmin } = require('../middleware/roles');
+const { requireAdmin, requireMember } = require('../middleware/roles');
 const { createSingleEvent } = require('../services/ical');
 const { sendPushToAllMembers, sendPushToUsers } = require('../services/push');
 const { sendRsvpRequest } = require('../services/email');
@@ -169,8 +169,8 @@ async function pendingMembers(eventId) {
 
 const byName = (a, b) => (a.member?.companyName || a.email).localeCompare(b.member?.companyName || b.email, 'fr', { sensitivity: 'base' });
 
-// GET /api/events/:id/responses — inscrits, pas dispo et sans réponse (membres connectés)
-router.get('/:id/responses', requireAuth, async (req, res) => {
+// GET /api/events/:id/responses — pas dispo et sans réponse (membres validés uniquement, pas les visiteurs)
+router.get('/:id/responses', requireAuth, requireMember, async (req, res) => {
   try {
     const eventId = req.params.id;
     const [rsvps, pending] = await Promise.all([
