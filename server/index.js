@@ -199,22 +199,6 @@ const { repairSectors } = require('./utils/repairSectors');
   }
 })();
 
-// Correction ponctuelle demandée par l'admin : faute de frappe dans l'adresse du CIC (glail.com → gmail.com)
-(async () => {
-  try {
-    const from = 'bonnetcic@glail.com';
-    const to = 'bonnetcic@gmail.com';
-    const user = await prisma.user.findUnique({ where: { email: from } });
-    if (!user) return;
-    const taken = await prisma.user.findFirst({ where: { id: { not: user.id }, OR: [{ email: to }, { secondaryEmails: { has: to } }] } });
-    if (taken) return logger.warn(`[correction] ${to} déjà utilisé par un autre compte : rien changé`);
-    await prisma.user.update({ where: { id: user.id }, data: { email: to } });
-    logger.warn(`[correction] adresse ${from} remplacée par ${to}`);
-  } catch (err) {
-    logger.warn('[correction] adresse CIC impossible', { error: err.message });
-  }
-})();
-
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully...');
   server.close(() => {
