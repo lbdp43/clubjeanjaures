@@ -199,24 +199,6 @@ const { repairSectors } = require('./utils/repairSectors');
   }
 })();
 
-// Vérification ponctuelle (temporaire) : numéros du groupe WhatsApp présents parmi les membres ?
-// N'écrit que le nom de l'entreprise trouvée, jamais d'autre donnée.
-(async () => {
-  try {
-    const wanted = { Ahmed: '666548515', Aymeric: '620913545', Clement: '681328118' };
-    const members = await prisma.member.findMany({ select: { companyName: true, phone: true } });
-    const last9 = (p) => String(p || '').replace(/\D/g, '').slice(-9);
-    for (const [name, digits] of Object.entries(wanted)) {
-      const hit = members.filter(m => last9(m.phone) === digits).map(m => m.companyName);
-      logger.warn(`[pointage WhatsApp] ${name} : ${hit.length ? hit.join(', ') : 'aucun membre avec ce numéro'}`);
-    }
-    const withPhone = members.filter(m => last9(m.phone).length === 9).length;
-    logger.warn(`[pointage WhatsApp] ${members.length} fiches membres, ${withPhone} avec un numéro`);
-  } catch (err) {
-    logger.warn('[pointage WhatsApp] impossible', { error: err.message });
-  }
-})();
-
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully...');
   server.close(() => {
