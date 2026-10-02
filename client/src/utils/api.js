@@ -107,6 +107,8 @@ export const api = {
   // status : 'going' (inscrit), 'declined' (pas dispo) ou null (retirer sa réponse)
   setRsvp: (eventId, status) => apiFetch(`/events/${eventId}/rsvp`, { method: 'POST', body: JSON.stringify({ status }) }),
   getEventResponses: (eventId) => apiFetch(`/events/${eventId}/responses`),
+  // Admin : fixer la réponse d'un membre ('going', 'declined' ou null)
+  adminSetRsvp: (eventId, userId, status) => apiFetch(`/events/${eventId}/responses/${userId}`, { method: 'PUT', body: JSON.stringify({ status }) }),
   remindEvent: (eventId, userIds, message) => apiFetch(`/events/${eventId}/remind`, { method: 'POST', body: JSON.stringify({ userIds, message }) }),
   getEventRsvps: (eventId) => apiFetch(`/events/${eventId}/rsvps`),
 

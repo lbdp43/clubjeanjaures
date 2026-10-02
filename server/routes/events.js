@@ -215,6 +215,38 @@ router.get('/:id/responses', requireAuth, requireMember, async (req, res) => {
   }
 });
 
+// PUT /api/events/:id/responses/:userId (admin) — inscrire / désinscrire un membre à sa place
+// { status: 'going' | 'declined' | null }
+router.put('/:id/responses/:userId', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id: eventId, userId } = req.params;
+    const status = req.body?.status ?? null;
+    if (status !== null && status !== 'going' && status !== 'declined') {
+      return res.status(400).json({ error: 'Réponse invalide' });
+    }
+    const [event, user] = await Promise.all([
+      prisma.event.findUnique({ where: { id: eventId }, select: { id: true, title: true } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, status: true } })
+    ]);
+    if (!event) return res.status(404).json({ error: 'Événement introuvable' });
+    if (!user || user.status !== 'active') return res.status(404).json({ error: 'Membre introuvable' });
+
+    const existing = await prisma.rsvp.findUnique({ where: { userId_eventId: { userId, eventId } } });
+    if (status === null) {
+      if (existing) await prisma.rsvp.delete({ where: { id: existing.id } });
+    } else if (existing) {
+      if (existing.status !== status) await prisma.rsvp.update({ where: { id: existing.id }, data: { status } });
+    } else {
+      await prisma.rsvp.create({ data: { userId, eventId, status } });
+    }
+    logger.info(`[admin] ${req.user.email} : ${user.email} → ${status || 'sans réponse'} pour « ${event.title} »`);
+    res.json({ userId, status });
+  } catch (err) {
+    logger.error('Erreur réponse admin', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // POST /api/events/:id/remind (admin) — relancer par mail les membres sélectionnés (tout le monde ou une sélection).
 // Le contenu du mail s'adapte à la réponse de chacun : sans réponse, pas dispo ou inscrit.
 const remindLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,

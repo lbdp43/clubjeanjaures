@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../utils/api';
 import { formatDate, formatTime, getEventTypeLabel } from '../../utils/helpers';
+import Collapse from '../ui/Collapse';
+import AdminRsvpManager from './AdminRsvpManager';
 
 const emptyForm = {
   title: '', type: 'matinale', date: '', timeStart: '07:30',
@@ -15,6 +17,7 @@ export default function AdminEvents() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [rsvpOpen, setRsvpOpen] = useState(null); // événement dont on gère les inscriptions
 
   useEffect(() => { loadEvents(); }, []);
 
@@ -28,6 +31,14 @@ export default function AdminEvents() {
       setMsg(`Erreur : ${err.message}`);
     }
     setLoading(false);
+  };
+
+  // Met à jour le nombre d'inscrits affiché sans recharger toute la liste
+  const refreshCounts = async () => {
+    try {
+      const data = await api.getEvents();
+      setEvents(prev => prev.map(ev => ({ ...ev, _count: data.find(d => d.id === ev.id)?._count ?? ev._count })));
+    } catch {}
   };
 
   const openCreate = () => {
@@ -183,6 +194,22 @@ export default function AdminEvents() {
                   </button>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setRsvpOpen(o => (o === e.id ? null : e.id))}
+                aria-expanded={rsvpOpen === e.id}
+                className="mt-3 w-full flex items-center justify-between gap-2 text-xs sm:text-sm font-semibold text-blue-dark bg-blue-light/70 hover:bg-blue-light rounded-full px-4 py-2 transition-colors"
+              >
+                <span>Gérer les inscriptions · {e._count?.rsvps ?? 0} inscrit{(e._count?.rsvps ?? 0) > 1 ? 's' : ''}</span>
+                <svg className={`w-4 h-4 transition-transform duration-300 ${rsvpOpen === e.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <Collapse open={rsvpOpen === e.id}>
+                <div className="pt-3">
+                  {rsvpOpen === e.id && <AdminRsvpManager eventId={e.id} onChange={refreshCounts} />}
+                </div>
+              </Collapse>
             </div>
           ))}
         </div>
