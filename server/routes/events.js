@@ -73,6 +73,24 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
       for (const e of events) e.myStatus = byEvent.get(e.id) || null;
     }
 
+    // Membres validés : les 3 compteurs (participent / ne participent pas / pas encore répondu)
+    if (req.user && ['member', 'moderator', 'admin'].includes(req.user.role) && events.length) {
+      const memberFilter = { status: 'active', role: { not: 'visitor' } };
+      const [totalMembers, grouped] = await Promise.all([
+        prisma.user.count({ where: memberFilter }),
+        prisma.rsvp.groupBy({
+          by: ['eventId', 'status'],
+          where: { eventId: { in: events.map(e => e.id) }, user: memberFilter },
+          _count: { _all: true }
+        })
+      ]);
+      for (const e of events) {
+        const going = grouped.find(g => g.eventId === e.id && g.status === 'going')?._count._all || 0;
+        const declined = grouped.find(g => g.eventId === e.id && g.status === 'declined')?._count._all || 0;
+        e.responseCounts = { going, declined, pending: Math.max(totalMembers - going - declined, 0) };
+      }
+    }
+
     res.set('Cache-Control', 'no-cache');
     res.json(events);
   } catch (err) {

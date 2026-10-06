@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
 import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl, imgUrl } from '../../utils/helpers';
+import ResponseCounts, { adjustCounts } from './ResponseCounts';
 import Collapse from '../ui/Collapse';
 import { haptic } from '../../utils/haptics';
 
@@ -238,6 +239,12 @@ function EventCard({ event, onRsvpChange }) {
           </div>
 
           <Participants rsvps={displayedRsvps} count={localCount} />
+          {event.responseCounts && (
+            <ResponseCounts
+              className="mt-2"
+              counts={adjustCounts(event.responseCounts, event.myStatus ?? (serverHasMe ? 'going' : null), localStatus)}
+            />
+          )}
         </div>
       </div>
     </div>

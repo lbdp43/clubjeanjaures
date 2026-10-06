@@ -86,9 +86,9 @@ function Section({ title, count, tone, open, onToggle, children }) {
 }
 
 const GROUPS = [
-  { key: 'pending', label: 'Sans réponse', dot: 'bg-amber-400' },
-  { key: 'declined', label: 'Pas dispo', dot: 'bg-red-400' },
-  { key: 'going', label: 'Inscrits', dot: 'bg-green-500' }
+  { key: 'pending', label: 'Pas encore répondu', dot: 'bg-amber-400' },
+  { key: 'declined', label: 'Ne participent pas', dot: 'bg-red-400' },
+  { key: 'going', label: 'Participent', dot: 'bg-green-500' }
 ];
 
 const EMAIL_HINT = {
@@ -127,7 +127,7 @@ function RemindPanel({ eventId, responses, onClose, onSent }) {
 
   const presets = [
     { label: 'Tout le monde', apply: () => setSelected(new Set(everyone.map(u => u.id))) },
-    { label: 'Sans réponse', apply: () => setSelected(new Set(ids('pending'))) },
+    { label: 'Pas encore répondu', apply: () => setSelected(new Set(ids('pending'))) },
     { label: 'Personne', apply: () => setSelected(new Set()) }
   ];
 
@@ -218,11 +218,11 @@ function RemindPanel({ eventId, responses, onClose, onSent }) {
   );
 }
 
-// Membres « Sans réponse » et « Pas dispo » d'un événement, visibles par tous les membres.
+// Membres « Ne participent pas » et « Pas encore répondu » d'un événement, visibles par tous les membres.
 // Un admin peut envoyer une relance par mail à tout le monde ou à une sélection.
 export default function EventResponses({ eventId, responses, isAdmin, canRemind, onReminded }) {
-  const [openPending, setOpenPending] = useState(!!isAdmin);
-  const [openDeclined, setOpenDeclined] = useState(!!isAdmin);
+  const [openPending, setOpenPending] = useState(true);
+  const [openDeclined, setOpenDeclined] = useState(true);
   const [panel, setPanel] = useState(false);
   const [result, setResult] = useState('');
 
@@ -232,22 +232,22 @@ export default function EventResponses({ eventId, responses, isAdmin, canRemind,
 
   return (
     <>
-      <Section title="Sans réponse" count={pending.length} tone="bg-amber-400" open={openPending} onToggle={() => setOpenPending(o => !o)}>
-        {pending.length === 0 ? (
-          <p className="text-xs text-text-muted">Tout le monde a répondu 🎉</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {pending.map(u => <MemberChip key={u.id} user={u} muted />)}
-          </div>
-        )}
-      </Section>
-
-      <Section title="Pas dispo" count={declined.length} tone="bg-red-400" open={openDeclined} onToggle={() => setOpenDeclined(o => !o)}>
+      <Section title="Ne participent pas" count={declined.length} tone="bg-red-400" open={openDeclined} onToggle={() => setOpenDeclined(o => !o)}>
         {declined.length === 0 ? (
           <p className="text-xs text-text-muted">Personne pour l'instant.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {declined.map(u => <MemberChip key={u.id} user={u} muted />)}
+          </div>
+        )}
+      </Section>
+
+      <Section title="Pas encore répondu" count={pending.length} tone="bg-amber-400" open={openPending} onToggle={() => setOpenPending(o => !o)}>
+        {pending.length === 0 ? (
+          <p className="text-xs text-text-muted">Tout le monde a répondu 🎉</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {pending.map(u => <MemberChip key={u.id} user={u} muted />)}
           </div>
         )}
       </Section>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ResponseCounts, { adjustCounts } from '../components/agenda/ResponseCounts';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
@@ -248,6 +249,9 @@ function NextEventCard({ event, user, onChange }) {
         <p className="text-xs text-green-700 mt-2">C'est noté, à bientôt !</p>
       )}
       <Participants rsvps={displayedRsvps} count={count} />
+      {event.responseCounts && (
+        <ResponseCounts className="mt-2" counts={adjustCounts(event.responseCounts, serverStatus, status)} />
+      )}
     </div>
   );
 }

@@ -394,7 +394,7 @@ export default function EventDetail() {
           <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
               <p className="text-xs sm:text-sm font-medium text-text-muted">
-                <span className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" />Inscrits <span className="text-text-main font-semibold">{rsvps.length}</span></span>
+                <span className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" />Participent <span className="text-text-main font-semibold">{rsvps.length}</span></span>
               </p>
               {user ? (
                 <div className="hidden lg:flex items-center gap-2">
