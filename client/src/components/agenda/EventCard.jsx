@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../utils/api';
 import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, mapsUrl, imgUrl } from '../../utils/helpers';
 import ResponseCounts, { adjustCounts } from './ResponseCounts';
+import GuestPicker from './GuestPicker';
 import Collapse from '../ui/Collapse';
 import { haptic } from '../../utils/haptics';
 
@@ -24,7 +25,7 @@ function ParticipantAvatar({ rsvp, size = 'w-7 h-7' }) {
   );
 }
 
-export function Participants({ rsvps, count }) {
+export function Participants({ rsvps, count, guests = 0 }) {
   const [open, setOpen] = useState(false);
   if (!rsvps?.length) {
     return <p className="text-xs text-text-muted mt-2.5">Aucun participant pour l'instant — soyez le premier !</p>;
@@ -45,7 +46,7 @@ export function Participants({ rsvps, count }) {
           {rsvps.slice(0, 5).map(r => <ParticipantAvatar key={r.userId} rsvp={r} />)}
         </span>
         <span className="text-xs text-text-muted min-w-0 truncate group-hover:text-text-main">
-          <span className="font-medium text-text-main">{count} participant{count > 1 ? 's' : ''}</span>
+          <span className="font-medium text-text-main">{count} participant{count > 1 ? 's' : ''}{guests > 0 ? ` + ${guests} invité${guests > 1 ? 's' : ''}` : ''}</span>
           {' · '}{shown}{rest > 0 ? ` et ${rest} autre${rest > 1 ? 's' : ''}` : ''}
         </span>
         <span className={`w-7 h-7 rounded-full bg-white border border-gray-200 text-blue flex items-center justify-center flex-shrink-0 ml-auto transition-transform ${open ? 'rotate-180' : ''}`}>
@@ -60,6 +61,7 @@ export function Participants({ rsvps, count }) {
             <li key={r.userId} className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-full pl-0.5 pr-2.5 py-0.5 text-xs">
               <ParticipantAvatar rsvp={r} size="w-5 h-5" />
               <span className="truncate max-w-[160px]">{participantName(r)}</span>
+              {r.guests > 0 && <span className="text-[10px] font-semibold text-blue">+{r.guests}</span>}
             </li>
           ))}
         </ul>
@@ -76,13 +78,26 @@ function EventCard({ event, onRsvpChange }) {
   const [localStatus, setLocalStatus] = useState(null);
   const [localCount, setLocalCount] = useState(0);
   const [shared, setShared] = useState(false);
+  const [localGuests, setLocalGuests] = useState(0);
   const localParticipating = localStatus === 'going';
 
   useEffect(() => {
     const serverGoing = !!user && !!event.rsvps?.some(r => r.userId === user.id);
     setLocalStatus(user ? (event.myStatus ?? (serverGoing ? 'going' : null)) : null);
     setLocalCount(event._count?.rsvps || 0);
+    setLocalGuests(event.myGuests || 0);
   }, [event, user]);
+
+  const saveGuests = async (guests, guestNames) => {
+    const was = localGuests;
+    setLocalGuests(guests);
+    try {
+      await api.setRsvp(event.id, 'going', { guests, guestNames });
+      if (onRsvpChange) onRsvpChange();
+    } catch {
+      setLocalGuests(was);
+    }
+  };
 
   const answer = async (e, status) => {
     e.stopPropagation();
@@ -91,6 +106,7 @@ function EventCard({ event, onRsvpChange }) {
     const was = localStatus;
     haptic(status === 'going' ? 'success' : 'light');
     setLocalStatus(status);
+    if (status !== 'going') setLocalGuests(0);
     const delta = (status === 'going' ? 1 : 0) - (was === 'going' ? 1 : 0);
     setLocalCount(c => c + delta);
 
@@ -238,7 +254,14 @@ function EventCard({ event, onRsvpChange }) {
             </button>
           </div>
 
-          <Participants rsvps={displayedRsvps} count={localCount} />
+          {localParticipating && (
+            <GuestPicker compact guests={localGuests} guestNames={event.myGuestNames} disabled={rsvpLoading} onSave={saveGuests} />
+          )}
+          <Participants
+            rsvps={displayedRsvps}
+            count={localCount}
+            guests={Math.max((event.guestCount || 0) + localGuests - (event.myGuests || 0), 0)}
+          />
           {event.responseCounts && (
             <ResponseCounts
               className="mt-2"

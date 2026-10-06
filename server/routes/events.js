@@ -57,6 +57,7 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
           orderBy: { createdAt: 'asc' },
           select: {
             userId: true,
+            guests: true,
             user: { select: { email: true, member: { select: { companyName: true, photoUrl: true, logoUrl: true } } } }
           }
         }
@@ -67,10 +68,15 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
     if (req.user && events.length) {
       const mine = await prisma.rsvp.findMany({
         where: { userId: req.user.id, eventId: { in: events.map(e => e.id) } },
-        select: { eventId: true, status: true }
+        select: { eventId: true, status: true, guests: true, guestNames: true }
       });
-      const byEvent = new Map(mine.map(r => [r.eventId, r.status]));
-      for (const e of events) e.myStatus = byEvent.get(e.id) || null;
+      const byEvent = new Map(mine.map(r => [r.eventId, r]));
+      for (const e of events) {
+        const r = byEvent.get(e.id);
+        e.myStatus = r?.status || null;
+        e.myGuests = r?.guests || 0;
+        e.myGuestNames = r?.guestNames || null;
+      }
     }
 
     // Membres validés : les 3 compteurs (participent / ne participent pas / pas encore répondu)
@@ -90,6 +96,9 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
         e.responseCounts = { going, declined, pending: Math.max(totalMembers - going - declined, 0) };
       }
     }
+
+    // Nombre total d'invités annoncés par les participants
+    for (const e of events) e.guestCount = (e.rsvps || []).reduce((n, r) => n + (r.guests || 0), 0);
 
     res.set('Cache-Control', 'no-cache');
     res.json(events);
@@ -113,9 +122,11 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (req.user) {
       const mine = await prisma.rsvp.findUnique({
         where: { userId_eventId: { userId: req.user.id, eventId: event.id } },
-        select: { status: true }
+        select: { status: true, guests: true, guestNames: true }
       });
       event.myStatus = mine?.status || null;
+      event.myGuests = mine?.guests || 0;
+      event.myGuestNames = mine?.guestNames || null;
     }
     res.set('Cache-Control', 'no-cache');
     res.json(event);
@@ -141,6 +152,22 @@ router.get('/:id/ics', async (req, res) => {
   }
 });
 
+// Invités : nombre entre 0 et 5, noms facultatifs (200 caractères max)
+const MAX_GUESTS = 5;
+function parseGuests(body) {
+  const out = {};
+  if (body && body.guests !== undefined) {
+    const n = parseInt(body.guests, 10);
+    out.guests = Number.isFinite(n) ? Math.min(Math.max(n, 0), MAX_GUESTS) : 0;
+  }
+  if (body && body.guestNames !== undefined) {
+    const names = typeof body.guestNames === 'string' ? xss(body.guestNames.trim()).slice(0, 200) : '';
+    out.guestNames = names || null;
+  }
+  if (out.guests === 0) out.guestNames = null;
+  return out;
+}
+
 // POST /api/events/:id/rsvp — répondre : { status: 'going' | 'declined' | null }
 // Sans corps (ancienne version de l'appli encore en cache) : bascule inscrit / désinscrit.
 router.post('/:id/rsvp', requireAuth, async (req, res) => {
@@ -159,14 +186,17 @@ router.post('/:id/rsvp', requireAuth, async (req, res) => {
 
     if (!hasStatus) status = existing?.status === 'going' ? 'declined' : 'going';
 
+    // Les invités n'ont de sens que si l'on participe
+    const guestData = status === 'going' ? parseGuests(req.body) : { guests: 0, guestNames: null };
+    let saved = null;
     if (status === null) {
       if (existing) await prisma.rsvp.delete({ where: { id: existing.id } });
     } else if (existing) {
-      if (existing.status !== status) await prisma.rsvp.update({ where: { id: existing.id }, data: { status } });
+      saved = await prisma.rsvp.update({ where: { id: existing.id }, data: { status, ...guestData } });
     } else {
-      await prisma.rsvp.create({ data: { userId, eventId, status } });
+      saved = await prisma.rsvp.create({ data: { userId, eventId, status, ...guestData } });
     }
-    res.json({ participating: status === 'going', status });
+    res.json({ participating: status === 'going', status, guests: saved?.guests || 0, guestNames: saved?.guestNames || null });
   } catch (err) {
     logger.error('Erreur RSVP:', { error: err.message, stack: err.stack });
     res.status(500).json({ error: 'Erreur serveur' });
@@ -193,12 +223,12 @@ async function eventAudience(eventId) {
     prisma.rsvp.findMany({
       where: { eventId, user: { status: 'active' } },
       orderBy: { createdAt: 'asc' },
-      select: { status: true, user: { select: memberSelect } }
+      select: { status: true, guests: true, guestNames: true, user: { select: memberSelect } }
     }),
     pendingMembers(eventId)
   ]);
   return {
-    going: rsvps.filter(r => r.status === 'going').map(r => r.user),
+    going: rsvps.filter(r => r.status === 'going').map(r => ({ ...r.user, guests: r.guests, guestNames: r.guestNames })),
     declined: rsvps.filter(r => r.status === 'declined').map(r => r.user),
     pending
   };
@@ -250,12 +280,13 @@ router.put('/:id/responses/:userId', requireAuth, requireAdmin, async (req, res)
     if (!user || user.status !== 'active') return res.status(404).json({ error: 'Membre introuvable' });
 
     const existing = await prisma.rsvp.findUnique({ where: { userId_eventId: { userId, eventId } } });
+    const guestData = status === 'going' ? parseGuests(req.body) : { guests: 0, guestNames: null };
     if (status === null) {
       if (existing) await prisma.rsvp.delete({ where: { id: existing.id } });
     } else if (existing) {
-      if (existing.status !== status) await prisma.rsvp.update({ where: { id: existing.id }, data: { status } });
+      await prisma.rsvp.update({ where: { id: existing.id }, data: { status, ...guestData } });
     } else {
-      await prisma.rsvp.create({ data: { userId, eventId, status } });
+      await prisma.rsvp.create({ data: { userId, eventId, status, ...guestData } });
     }
     logger.info(`[admin] ${req.user.email} : ${user.email} → ${status || 'sans réponse'} pour « ${event.title} »`);
     res.json({ userId, status });

@@ -8,6 +8,7 @@ import { formatDate, formatTime, getEventBadgeClass, getEventTypeLabel, googleCa
 import { haptic } from '../utils/haptics';
 import EventResponses, { ReminderBadge } from '../components/agenda/EventResponses';
 import AdminRsvpManager from '../components/admin/AdminRsvpManager';
+import GuestPicker from '../components/agenda/GuestPicker';
 import Collapse from '../components/ui/Collapse';
 
 export default function EventDetail() {
@@ -45,6 +46,20 @@ export default function EventDetail() {
   const remindersById = new Map(
     ['going', 'declined', 'pending'].flatMap(k => (responses?.[k] || []).filter(u => u.reminders).map(u => [u.id, u.reminders]))
   );
+  const [localGuests, setLocalGuests] = useState(null);
+  const myGuests = localGuests ?? (event?.myGuests || 0);
+  const guestTotal = Math.max(rsvps.reduce((n, r) => n + (r.guests || 0), 0) + myGuests - (event?.myGuests || 0), 0);
+  const saveGuests = async (guests, guestNames) => {
+    setMsg('');
+    setLocalGuests(guests);
+    try {
+      await api.setRsvp(event.id, 'going', { guests, guestNames });
+      await Promise.all([refetchRsvps(), refetchEvent()]);
+    } catch (err) {
+      setMsg(`Erreur : ${err.message}`);
+    }
+    setLocalGuests(null);
+  };
   const isPast = event ? new Date(event.date).getTime() < new Date().setHours(0, 0, 0, 0) : false;
 
   useEffect(() => {
@@ -394,7 +409,7 @@ export default function EventDetail() {
           <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
               <p className="text-xs sm:text-sm font-medium text-text-muted">
-                <span className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" />Participent <span className="text-text-main font-semibold">{rsvps.length}</span></span>
+                <span className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" />Participent <span className="text-text-main font-semibold">{rsvps.length}</span>{guestTotal > 0 && <span className="text-blue font-semibold">+ {guestTotal} invité{guestTotal > 1 ? 's' : ''}</span>}</span>
               </p>
               {user ? (
                 <div className="hidden lg:flex items-center gap-2">
@@ -433,6 +448,11 @@ export default function EventDetail() {
                 </Link>
               )}
             </div>
+            {participating && !isPast && (
+              <div className="mb-3 rounded-2xl bg-green-50/70 ring-1 ring-green-100 px-3 pb-3 pt-0.5">
+                <GuestPicker guests={myGuests} guestNames={event.myGuestNames} disabled={rsvpLoading} onSave={saveGuests} />
+              </div>
+            )}
             {rsvps.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {rsvps.map(r => (
@@ -445,6 +465,11 @@ export default function EventDetail() {
                       </div>
                     )}
                     <span className="text-xs text-text-main">{r.user.member?.companyName || r.user.email}</span>
+                    {r.guests > 0 && (
+                      <span className="text-[10px] font-semibold text-blue" title={r.guestNames ? `Invité(s) : ${r.guestNames}` : undefined}>
+                        +{r.guests}{r.guestNames ? ` · ${r.guestNames}` : ''}
+                      </span>
+                    )}
                     <ReminderBadge reminders={remindersById.get(r.user.id)} />
                   </div>
                 ))}
@@ -496,7 +521,7 @@ export default function EventDetail() {
             {user ? (
               <>
                 <span className="text-xs text-white/85 flex-shrink-0 pl-2">
-                  {rsvps.length} inscrit{rsvps.length !== 1 ? 's' : ''}
+                  {rsvps.length} inscrit{rsvps.length !== 1 ? 's' : ''}{guestTotal > 0 ? ` +${guestTotal}` : ''}
                 </span>
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <button

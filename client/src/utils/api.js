@@ -105,7 +105,8 @@ export const api = {
   }),
   deleteEvent: (id) => apiFetch(`/events/${id}`, { method: 'DELETE' }),
   // status : 'going' (inscrit), 'declined' (pas dispo) ou null (retirer sa réponse)
-  setRsvp: (eventId, status) => apiFetch(`/events/${eventId}/rsvp`, { method: 'POST', body: JSON.stringify({ status }) }),
+  // extra : { guests, guestNames } pour annoncer des invités quand on participe
+  setRsvp: (eventId, status, extra = {}) => apiFetch(`/events/${eventId}/rsvp`, { method: 'POST', body: JSON.stringify({ status, ...extra }) }),
   getEventResponses: (eventId) => apiFetch(`/events/${eventId}/responses`),
   // Admin : fixer la réponse d'un membre ('going', 'declined' ou null)
   adminSetRsvp: (eventId, userId, status) => apiFetch(`/events/${eventId}/responses/${userId}`, { method: 'PUT', body: JSON.stringify({ status }) }),

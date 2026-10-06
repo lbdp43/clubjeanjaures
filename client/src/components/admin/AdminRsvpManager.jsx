@@ -87,7 +87,12 @@ export default function AdminRsvpManager({ eventId, onChange }) {
         {shown.map(p => (
           <li key={p.id} className="px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2">
             <span className="min-w-0 flex-1">
-              <span className="block text-sm text-text-main truncate">{nameOf(p)}</span>
+              <span className="block text-sm text-text-main truncate">
+                {nameOf(p)}
+                {p.status === 'going' && p.guests > 0 && (
+                  <span className="ml-1.5 text-[11px] font-semibold text-blue">+{p.guests} invité{p.guests > 1 ? 's' : ''}{p.guestNames ? ` (${p.guestNames})` : ''}</span>
+                )}
+              </span>
               <span className="block text-[11px] text-text-muted truncate">{p.email}</span>
             </span>
             <div className={`flex rounded-full bg-white ring-1 ring-gray-200 p-0.5 flex-shrink-0 ${busy === p.id ? 'opacity-60' : ''}`} role="radiogroup" aria-label={`Réponse de ${nameOf(p)}`}>

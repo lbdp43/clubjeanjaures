@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ResponseCounts, { adjustCounts } from '../components/agenda/ResponseCounts';
+import GuestPicker from '../components/agenda/GuestPicker';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
@@ -185,6 +186,7 @@ export default function Home() {
 function NextEventCard({ event, user, onChange }) {
   const [busy, setBusy] = useState(false);
   const [local, setLocal] = useState(null);
+  const [localGuests, setLocalGuests] = useState(null);
   const serverHasMe = event.rsvps?.some(r => r.userId === user.id) || false;
   // 'going' (inscrit), 'declined' (pas dispo) ou null (pas encore répondu)
   const serverStatus = event.myStatus ?? (serverHasMe ? 'going' : null);
@@ -194,6 +196,17 @@ function NextEventCard({ event, user, onChange }) {
   let displayedRsvps = event.rsvps || [];
   if (participating && !serverHasMe) displayedRsvps = [{ userId: user.id, user: { email: user.email, member: user.member } }, ...displayedRsvps];
   else if (!participating && serverHasMe) displayedRsvps = displayedRsvps.filter(r => r.userId !== user.id);
+
+  const guests = participating ? (localGuests ?? event.myGuests ?? 0) : 0;
+  const guestTotal = Math.max((event.guestCount || 0) + guests - (event.myGuests || 0), 0);
+  const saveGuests = async (n, names) => {
+    setLocalGuests(n);
+    try {
+      await api.setRsvp(event.id, 'going', { guests: n, guestNames: names });
+      if (onChange) await onChange();
+    } catch {}
+    setLocalGuests(null);
+  };
 
   const toggle = async (target) => {
     const next = target ? 'going' : 'declined';
@@ -246,9 +259,12 @@ function NextEventCard({ event, user, onChange }) {
         </button>
       </div>
       {participating && (
-        <p className="text-xs text-green-700 mt-2">C'est noté, à bientôt !</p>
+        <>
+          <p className="text-xs text-green-700 mt-2">C'est noté, à bientôt !</p>
+          <GuestPicker compact guests={guests} guestNames={event.myGuestNames} disabled={busy} onSave={saveGuests} />
+        </>
       )}
-      <Participants rsvps={displayedRsvps} count={count} />
+      <Participants rsvps={displayedRsvps} count={count} guests={guestTotal} />
       {event.responseCounts && (
         <ResponseCounts className="mt-2" counts={adjustCounts(event.responseCounts, serverStatus, status)} />
       )}

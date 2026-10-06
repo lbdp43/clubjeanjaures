@@ -29,9 +29,12 @@ function createCalendar(events) {
       const participantLines = event.rsvps.map(r => {
         const name = r.user.member?.companyName || r.user.email;
         const job = r.user.member?.jobTitle;
-        return job ? `• ${name} — ${job}` : `• ${name}`;
+        const plus = r.guests ? ` (+${r.guests} invité${r.guests > 1 ? 's' : ''})` : '';
+        return job ? `• ${name} — ${job}${plus}` : `• ${name}${plus}`;
       });
-      description += `\n\n👥 ${event.rsvps.length} participant${event.rsvps.length > 1 ? 's' : ''} :\n${participantLines.join('\n')}`;
+      const guestTotal = event.rsvps.reduce((n, r) => n + (r.guests || 0), 0);
+      const guestText = guestTotal ? ` + ${guestTotal} invité${guestTotal > 1 ? 's' : ''}` : '';
+      description += `\n\n👥 ${event.rsvps.length} participant${event.rsvps.length > 1 ? 's' : ''}${guestText} :\n${participantLines.join('\n')}`;
     }
 
     calendar.createEvent({
