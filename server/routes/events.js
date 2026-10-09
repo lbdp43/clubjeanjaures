@@ -58,7 +58,7 @@ router.get('/', readLimiter, optionalAuth, async (req, res) => {
           select: {
             userId: true,
             guests: true,
-            user: { select: { email: true, member: { select: { companyName: true, photoUrl: true, logoUrl: true } } } }
+            user: { select: { email: true, member: { select: { firstName: true, lastName: true, companyName: true, photoUrl: true, logoUrl: true } } } }
           }
         }
       }
@@ -205,7 +205,7 @@ router.post('/:id/rsvp', requireAuth, async (req, res) => {
 
 // Membres concernés par les événements (mêmes critères que les rappels automatiques)
 const memberWhere = { status: 'active', role: { not: 'visitor' } };
-const memberSelect = { id: true, email: true, member: { select: { companyName: true, photoUrl: true, jobTitle: true } } };
+const memberSelect = { id: true, email: true, member: { select: { firstName: true, lastName: true, companyName: true, photoUrl: true, jobTitle: true } } };
 
 async function pendingMembers(eventId) {
   const responded = await prisma.rsvp.findMany({ where: { eventId }, select: { userId: true } });
@@ -374,7 +374,7 @@ router.get('/:id/rsvps', async (req, res) => {
           select: {
             id: true,
             email: true,
-            member: { select: { companyName: true, photoUrl: true, jobTitle: true } }
+            member: { select: { firstName: true, lastName: true, companyName: true, photoUrl: true, jobTitle: true } }
           }
         }
       },

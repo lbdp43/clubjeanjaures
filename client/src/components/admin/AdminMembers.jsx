@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../utils/api';
+import { personName } from '../../utils/helpers';
 import Collapse from '../ui/Collapse';
 
 const SECTORS = [
@@ -197,6 +198,8 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
 
   const initProfileForm = () => {
     setProfileForm({
+      firstName: m.member?.firstName || '',
+      lastName: m.member?.lastName || '',
       companyName: m.member?.companyName || '',
       jobTitle: m.member?.jobTitle || '',
       phone: m.member?.phone || '',
@@ -385,6 +388,7 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate text-sm sm:text-base">{m.member?.companyName || m.email}</p>
+            {personName(m.member) && <p className="text-xs sm:text-sm text-text-main truncate">{personName(m.member)}</p>}
             <p className="text-xs sm:text-sm text-text-muted truncate">{m.email}</p>
             {m.secondaryEmails?.length > 0 && (
               <p className="text-[10px] sm:text-xs text-gray-400 truncate">+{m.secondaryEmails.length} email{m.secondaryEmails.length > 1 ? 's' : ''}</p>
@@ -468,6 +472,14 @@ function MemberRow({ member: m, expanded, onToggleExpand, onRoleChange, onStatus
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Prénom</label>
+                  <input value={profileForm.firstName || ''} onChange={e => setProfileForm({...profileForm, firstName: e.target.value})} className="input-field text-sm" maxLength={80} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Nom</label>
+                  <input value={profileForm.lastName || ''} onChange={e => setProfileForm({...profileForm, lastName: e.target.value})} className="input-field text-sm" maxLength={80} />
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Entreprise</label>
                   <input value={profileForm.companyName || ''} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} className="input-field text-sm" />

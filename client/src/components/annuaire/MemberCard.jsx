@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { whatsappLink, mapsUrl, imgUrl } from '../../utils/helpers';
+import { whatsappLink, mapsUrl, imgUrl, personName } from '../../utils/helpers';
 
 function MemberCard({ member, compact = false }) {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ function MemberCard({ member, compact = false }) {
 
   const buildContactText = () => {
     const lines = [];
+    if (personName(member)) lines.push(personName(member));
     if (member.companyName) lines.push(member.companyName);
     if (member.jobTitle) lines.push(member.jobTitle);
     if (member.city) lines.push(member.city);
@@ -59,6 +60,7 @@ function MemberCard({ member, compact = false }) {
         <Avatar member={member} size={compact ? 56 : 64} />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-text-main text-base leading-tight truncate">{member.companyName}</h3>
+          {personName(member) && <p className="text-sm text-text-main truncate mt-0.5">{personName(member)}</p>}
           {member.jobTitle && <p className="text-sm text-text-muted truncate mt-0.5">{member.jobTitle}</p>}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {member.sector && (

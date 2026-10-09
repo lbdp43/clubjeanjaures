@@ -69,6 +69,8 @@ model User {
 
 model Member {
   id          String   @id @db.Uuid
+  firstName   String?  @map("first_name")
+  lastName    String?  @map("last_name")
   companyName String   @map("company_name")
   jobTitle    String   @map("job_title")
   sector      String?  @map("sector")

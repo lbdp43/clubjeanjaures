@@ -17,7 +17,7 @@ const SECTORS = [
 export default function Profile() {
   const { user, refreshUser } = useAuth();
   const [form, setForm] = useState({
-    companyName: '', jobTitle: '', sector: '', phone: '', address: '', city: '',
+    firstName: '', lastName: '', companyName: '', jobTitle: '', sector: '', phone: '', address: '', city: '',
     website: '', description: '', lookingFor: '', canOffer: '',
     socialLinks: { linkedin: '', facebook: '', instagram: '' },
     visibility: { phone: 'public', email: 'public' }
@@ -46,6 +46,8 @@ export default function Profile() {
     if (user?.member && seededFor.current !== user.id) {
       seededFor.current = user.id;
       setForm({
+        firstName: user.member.firstName || '',
+        lastName: user.member.lastName || '',
         companyName: user.member.companyName || '',
         jobTitle: user.member.jobTitle || '',
         sector: user.member.sector || '',
@@ -281,6 +283,14 @@ export default function Profile() {
 
         {/* Champs obligatoires */}
         <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium mb-1">Prénom *</label>
+            <input value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value})} className="input-field" autoComplete="given-name" maxLength={80} required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Nom *</label>
+            <input value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value})} className="input-field" autoComplete="family-name" maxLength={80} required />
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Société *</label>
             <input value={form.companyName} onChange={e => setForm({...form, companyName: e.target.value})} className="input-field" required />

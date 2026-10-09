@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../../utils/api';
-import { imgUrl } from '../../utils/helpers';
+import { imgUrl, personName } from '../../utils/helpers';
 import { haptic } from '../../utils/haptics';
 import Collapse from '../ui/Collapse';
 
@@ -50,7 +50,7 @@ function ReminderSummary({ responses }) {
 
 function MemberChip({ user, muted }) {
   return (
-    <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${muted ? 'bg-gray-50 opacity-80' : 'bg-gray-50'}`}>
+    <div title={personName(user.member) || undefined} className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${muted ? 'bg-gray-50 opacity-80' : 'bg-gray-50'}`}>
       {user.member?.photoUrl ? (
         <img src={imgUrl(user.member.photoUrl, 200)} alt="" loading="lazy" className={`w-6 h-6 rounded-full object-cover ${muted ? 'grayscale' : ''}`} />
       ) : (
@@ -185,7 +185,7 @@ function RemindPanel({ eventId, responses, onClose, onSent }) {
                         className="w-5 h-5 rounded accent-blue flex-shrink-0" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm text-text-main truncate">{nameOf(u)}</span>
-                        <span className="block text-[11px] text-text-muted truncate">{u.email}</span>
+                        <span className="block text-[11px] text-text-muted truncate">{[personName(u.member), u.email].filter(Boolean).join(' · ')}</span>
                       </span>
                       {u.reminders && (
                         <span className={`text-[11px] text-right flex-shrink-0 max-w-[40%] ${u.reminders.count ? 'text-amber-700' : 'text-text-muted'}`}>

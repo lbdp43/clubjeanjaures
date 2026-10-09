@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../utils/api';
+import { personName } from '../../utils/helpers';
 import { haptic } from '../../utils/haptics';
 
 const nameOf = (u) => u.member?.companyName || u.email;
@@ -93,7 +94,7 @@ export default function AdminRsvpManager({ eventId, onChange }) {
                   <span className="ml-1.5 text-[11px] font-semibold text-blue">+{p.guests} invité{p.guests > 1 ? 's' : ''}{p.guestNames ? ` (${p.guestNames})` : ''}</span>
                 )}
               </span>
-              <span className="block text-[11px] text-text-muted truncate">{p.email}</span>
+              <span className="block text-[11px] text-text-muted truncate">{[personName(p.member), p.email].filter(Boolean).join(' · ')}</span>
             </span>
             <div className={`flex rounded-full bg-white ring-1 ring-gray-200 p-0.5 flex-shrink-0 ${busy === p.id ? 'opacity-60' : ''}`} role="radiogroup" aria-label={`Réponse de ${nameOf(p)}`}>
               {OPTIONS.map(o => {

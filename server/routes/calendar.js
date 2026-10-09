@@ -13,7 +13,7 @@ router.get('/export', async (req, res) => {
       include: {
         rsvps: {
           where: { status: 'going' },
-          include: { user: { select: { email: true, member: { select: { companyName: true, jobTitle: true } } } } }
+          include: { user: { select: { email: true, member: { select: { firstName: true, lastName: true, companyName: true, jobTitle: true } } } } }
         }
       }
     });
@@ -39,7 +39,7 @@ router.get('/feed.ics', async (req, res) => {
       include: {
         rsvps: {
           where: { status: 'going' },
-          include: { user: { select: { email: true, member: { select: { companyName: true, jobTitle: true } } } } }
+          include: { user: { select: { email: true, member: { select: { firstName: true, lastName: true, companyName: true, jobTitle: true } } } } }
         }
       }
     });

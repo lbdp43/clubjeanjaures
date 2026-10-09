@@ -101,6 +101,8 @@ router.get('/members/export', requireAuth, requireAdmin, async (req, res) => {
     users.forEach((u, i) => {
       const m = u.member;
       lines.push(`${i + 1}. ${m?.companyName || '(sans nom)'}`);
+      const person = [m?.firstName, m?.lastName].filter(Boolean).join(' ');
+      if (person) lines.push(`   Contact : ${person}`);
       if (m?.jobTitle) lines.push(`   Fonction : ${m.jobTitle}`);
       lines.push(`   Email : ${u.email}`);
       if (m?.phone) lines.push(`   Téléphone : ${m.phone}`);
@@ -305,12 +307,14 @@ router.put('/members/:id/password', requireAuth, requireAdmin, adminActionLimite
 // PUT /api/admin/members/:id/profile — Edit member profile
 router.put('/members/:id/profile', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { companyName, jobTitle, phone, address, city, sector, website, description, lookingFor, canOffer } = req.body;
+    const { firstName, lastName, companyName, jobTitle, phone, address, city, sector, website, description, lookingFor, canOffer } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: req.params.id }, include: { member: true } });
     if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
     const data = {};
+    if (firstName !== undefined) data.firstName = xss(String(firstName || '').trim().replace(/\s+/g, ' ').slice(0, 80)) || null;
+    if (lastName !== undefined) data.lastName = xss(String(lastName || '').trim().replace(/\s+/g, ' ').slice(0, 80)) || null;
     if (companyName !== undefined) data.companyName = xss(companyName);
     if (jobTitle !== undefined) data.jobTitle = xss(jobTitle);
     if (phone !== undefined) data.phone = phone;

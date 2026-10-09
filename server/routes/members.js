@@ -85,6 +85,8 @@ router.get('/public', readLimiter, optionalAuth, async (req, res) => {
       const emailVisible = isAuthenticated || visibility.email !== 'members';
       return {
         id: m.id,
+        firstName: m.firstName,
+        lastName: m.lastName,
         companyName: m.companyName,
         jobTitle: m.jobTitle,
         city: m.city,
@@ -129,6 +131,8 @@ router.get('/', readLimiter, requireAuth, requireMember, async (req, res) => {
         ...VISIBLE_MEMBER,
         OR: [
           { companyName: { contains: search, mode: 'insensitive' } },
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
           { jobTitle: { contains: search, mode: 'insensitive' } },
           { city: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } },
@@ -197,7 +201,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 
     const data = {};
     const fields = [
-      'companyName', 'jobTitle', 'phone', 'address', 'city',
+      'firstName', 'lastName', 'companyName', 'jobTitle', 'phone', 'address', 'city',
       'latitude', 'longitude', 'website', 'description',
       'lookingFor', 'canOffer', 'sector'
     ];
@@ -208,6 +212,10 @@ router.put('/:id', requireAuth, async (req, res) => {
       }
     }
     if (data.sector !== undefined) data.sector = normalizeSector(data.sector);
+    // Prénom / nom : espaces nettoyés, 80 caractères max, vide = non renseigné
+    for (const f of ['firstName', 'lastName']) {
+      if (data[f] !== undefined) data[f] = String(data[f] || '').trim().replace(/\s+/g, ' ').slice(0, 80) || null;
+    }
 
     if (data.latitude !== undefined && (isNaN(data.latitude) || data.latitude < -90 || data.latitude > 90)) {
       return res.status(400).json({ error: 'Latitude invalide' });

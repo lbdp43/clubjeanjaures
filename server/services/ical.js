@@ -27,7 +27,9 @@ function createCalendar(events) {
     let description = event.description || '';
     if (event.rsvps && event.rsvps.length > 0) {
       const participantLines = event.rsvps.map(r => {
-        const name = r.user.member?.companyName || r.user.email;
+        const person = [r.user.member?.firstName, r.user.member?.lastName].filter(Boolean).join(' ');
+        const company = r.user.member?.companyName || r.user.email;
+        const name = person ? `${person} (${company})` : company;
         const job = r.user.member?.jobTitle;
         const plus = r.guests ? ` (+${r.guests} invité${r.guests > 1 ? 's' : ''})` : '';
         return job ? `• ${name} — ${job}${plus}` : `• ${name}${plus}`;

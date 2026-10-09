@@ -153,3 +153,8 @@ function addHours(time, hours) {
   const newM = newH === 23 && h + hours > 23 ? 59 : m;
   return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
+
+// Prénom + nom d'un membre (vide si non renseignés)
+export function personName(member) {
+  return [member?.firstName, member?.lastName].filter(Boolean).join(' ');
+}

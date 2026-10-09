@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { useCachedFetch } from '../hooks/useCachedFetch';
-import { whatsappLink, mapsUrl, imgUrl } from '../utils/helpers';
+import { whatsappLink, mapsUrl, imgUrl, personName } from '../utils/helpers';
 
 export default function MemberDetail() {
   const { id } = useParams();
@@ -114,6 +114,7 @@ export default function MemberDetail() {
             </button>
           </div>
           {msg && <p className="text-xs text-green-600 mt-1">{msg}</p>}
+          {personName(member) && <p className="text-text-main text-base sm:text-lg font-medium">{personName(member)}</p>}
           <p className="text-text-muted text-sm sm:text-base">{member.jobTitle}</p>
           {member.sector && (
             <span className="inline-block text-xs sm:text-sm font-medium bg-blue-light text-blue-dark px-2.5 py-1 rounded-full mt-2">

@@ -34,6 +34,8 @@ export default function Annuaire() {
   const filteredMembers = !isMember && needle
     ? members.filter(m =>
         m.companyName?.toLowerCase().includes(needle) ||
+        m.firstName?.toLowerCase().includes(needle) ||
+        m.lastName?.toLowerCase().includes(needle) ||
         m.jobTitle?.toLowerCase().includes(needle) ||
         m.city?.toLowerCase().includes(needle) ||
         m.sector?.toLowerCase().includes(needle)
