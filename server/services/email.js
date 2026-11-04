@@ -193,7 +193,7 @@ async function sendRsvpRequest(email, { event, message, status = 'pending' }) {
         ${text.cta}
       </a>
       <p style="color:#6B7280;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:12px;">
-        Un clic sur « Je participe » ou « Pas dispo » dans l'application suffit.
+        Un clic sur « Tu participes ? » ou « Pas dispo » dans l'application suffit.
       </p>
     </div>
   `;

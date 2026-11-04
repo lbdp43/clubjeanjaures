@@ -246,7 +246,7 @@ function NextEventCard({ event, user, onChange }) {
             participating ? 'bg-green-600 text-white' : 'bg-white text-green-700 ring-1 ring-green-300 hover:bg-green-50'
           }`}
         >
-          {participating ? '✓ Inscrit' : '✓ Je participe'}
+          {participating ? '✓ Inscrit' : 'Tu participes ?'}
         </button>
         <button
           onClick={() => toggle(false)}

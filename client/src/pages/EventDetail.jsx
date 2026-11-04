@@ -422,7 +422,7 @@ export default function EventDetail() {
                         : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'
                     }`}
                   >
-                    {rsvpLoading ? '...' : participating ? '✓ Inscrit' : '✓ Je participe'}
+                    {rsvpLoading ? '...' : participating ? '✓ Inscrit' : 'Tu participes ?'}
                   </button>
                   <button
                     onClick={() => answer('declined')}
@@ -531,7 +531,7 @@ export default function EventDetail() {
                       participating ? 'bg-green-500 text-white shadow' : 'bg-white/20 text-white'
                     }`}
                   >
-                    {rsvpLoading ? '...' : participating ? '✓ Inscrit' : '✓ Je participe'}
+                    {rsvpLoading ? '...' : participating ? '✓ Inscrit' : 'Tu participes ?'}
                   </button>
                   <button
                     onClick={() => answer('declined')}

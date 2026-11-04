@@ -221,7 +221,7 @@ function EventCard({ event, onRsvpChange }) {
                       : 'bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-600'
                   } ${rsvpLoading ? 'opacity-50' : ''}`}
                 >
-                  {localParticipating ? '✓ Inscrit' : '✓ Je participe'}
+                  {localParticipating ? '✓ Inscrit' : 'Tu participes ?'}
                 </button>
                 <button
                   onClick={(e) => answer(e, 'declined')}
