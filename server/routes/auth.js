@@ -26,9 +26,14 @@ async function findUserByAnyEmail(email) {
 }
 
 // Fonction utilitaire pour créer une session + cookie
-async function createSession(res, userId) {
+async function createSession(res, userId, { passwordReset = false } = {}) {
   const session = await prisma.session.create({
-    data: { userId, expiresAt: new Date(Date.now() + SESSION_DURATION) }
+    data: {
+      userId,
+      expiresAt: new Date(Date.now() + SESSION_DURATION),
+      // Lien « mot de passe oublié » : 30 min pour choisir un nouveau mot de passe sans l'ancien
+      passwordResetUntil: passwordReset ? new Date(Date.now() + 30 * 60 * 1000) : null
+    }
   });
 
   res.cookie('session_id', session.id, {
@@ -160,8 +165,13 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Format d\'email invalide' });
     }
 
+    const isReset = req.body.purpose === 'reset';
     let user = await findUserByAnyEmail(normalizedEmail);
     if (!user) {
+      // Mot de passe oublié sur une adresse inconnue : on oriente vers l'inscription au lieu de créer un compte vide
+      if (isReset) {
+        return res.status(404).json({ error: 'Aucun compte avec cette adresse. Vérifiez l\'adresse ou créez un compte.', code: 'no_account' });
+      }
       user = await prisma.user.create({
         data: { email: normalizedEmail, role: 'visitor' }
       });
@@ -182,7 +192,7 @@ router.post('/magic-link', magicLinkLimiter, async (req, res) => {
       }
     });
 
-    const result = await sendMagicLink(normalizedEmail, rawToken);
+    const result = await sendMagicLink(normalizedEmail, rawToken, { reset: isReset });
     if (!result.ok) {
       return res.status(500).json({ error: result.error || "Impossible d'envoyer l'email." });
     }
@@ -248,8 +258,9 @@ router.get('/verify-redirect', async (req, res) => {
       data: { magicToken: null, magicTokenExpires: null, lastLogin: new Date() }
     });
 
-    await createSession(res, user.id);
-    res.redirect('/');
+    const reset = req.query.reset === '1';
+    await createSession(res, user.id, { passwordReset: reset });
+    res.redirect(reset ? '/profil?nouveau-mot-de-passe=1' : '/');
   } catch (err) {
     logger.error('Erreur verify-redirect', { error: err.message, stack: err.stack });
     res.redirect('/connexion?error=server_error');
@@ -269,8 +280,18 @@ router.post('/logout', async (req, res) => {
 // GET /api/auth/me
 router.get('/me', requireAuth, async (req, res) => {
   const { magicToken, magicTokenExpires, passwordHash, ...safeUser } = req.user;
+  safeUser.hasPassword = !!passwordHash;
+  safeUser.passwordResetAllowed = await resetAllowed(req);
   res.json(safeUser);
 });
+
+// Nouveau mot de passe sans l'ancien : session ouverte par un lien « mot de passe oublié » encore valide
+async function resetAllowed(req) {
+  const sessionId = req.cookies?.session_id;
+  if (!sessionId) return false;
+  const session = await prisma.session.findUnique({ where: { id: sessionId }, select: { passwordResetUntil: true } });
+  return !!session?.passwordResetUntil && session.passwordResetUntil > new Date();
+}
 
 // PUT /api/auth/reminder-preferences — activer/désactiver les rappels d'événements
 router.put('/reminder-preferences', requireAuth, async (req, res) => {
@@ -304,21 +325,25 @@ router.put('/onboarding', requireAuth, async (req, res) => {
 router.put('/password', requireAuth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Mot de passe actuel et nouveau requis.' });
+    if (!newPassword) {
+      return res.status(400).json({ error: 'Nouveau mot de passe requis.' });
     }
     if (newPassword.length < 8) {
       return res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' });
     }
 
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-    if (!user || !user.passwordHash) {
-      return res.status(400).json({ error: 'Aucun mot de passe défini. Utilisez le lien magique.' });
-    }
+    if (!user) return res.status(404).json({ error: 'Compte introuvable.' });
 
-    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!valid) {
-      return res.status(401).json({ error: 'Mot de passe actuel incorrect.' });
+    // L'ancien mot de passe n'est pas demandé si le compte n'en a pas encore,
+    // ou juste après un lien « mot de passe oublié » (la boîte mail a été prouvée)
+    const reset = await resetAllowed(req);
+    if (user.passwordHash && !reset) {
+      if (!currentPassword) return res.status(400).json({ error: 'Mot de passe actuel requis.' });
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) {
+        return res.status(401).json({ error: 'Mot de passe actuel incorrect.' });
+      }
     }
 
     const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
@@ -326,6 +351,12 @@ router.put('/password', requireAuth, async (req, res) => {
       where: { id: req.user.id },
       data: { passwordHash }
     });
+    // Le lien de réinitialisation ne sert qu'une fois ; les autres sessions ouvertes sont fermées
+    const sessionId = req.cookies?.session_id;
+    await prisma.session.updateMany({ where: { id: sessionId }, data: { passwordResetUntil: null } });
+    if (user.passwordHash) {
+      await prisma.session.deleteMany({ where: { userId: user.id, id: { not: sessionId } } });
+    }
 
     res.json({ success: true, message: 'Mot de passe modifié avec succès.' });
   } catch (err) {

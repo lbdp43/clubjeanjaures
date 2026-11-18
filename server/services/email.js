@@ -51,21 +51,23 @@ async function sendEmail(to, subject, html) {
 }
 
 // ─── Magic Link ───
-async function sendMagicLink(email, token) {
-  const link = `${APP_URL}/api/auth/verify-redirect?token=${token}`;
+async function sendMagicLink(email, token, { reset = false } = {}) {
+  const link = `${APP_URL}/api/auth/verify-redirect?token=${token}${reset ? '&reset=1' : ''}`;
 
   return sendEmail(
     email,
-    'Votre lien de connexion — Club Jean Jaurès',
+    reset ? 'Réinitialiser votre mot de passe — Club Jean Jaurès' : 'Votre lien de connexion — Club Jean Jaurès',
     `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
         <h2 style="color:#2B5C8A;">Club Jean Jaurès</h2>
         <p>Bonjour,</p>
-        <p>Cliquez sur le bouton ci-dessous pour vous connecter :</p>
+        <p>${reset
+          ? 'Vous avez demandé à changer votre mot de passe. Cliquez sur le bouton ci-dessous : vous serez connecté et pourrez choisir un nouveau mot de passe.'
+          : 'Cliquez sur le bouton ci-dessous pour vous connecter :'}</p>
         <a href="${link}" style="display:inline-block;background:#2B5C8A;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;margin:16px 0;">
-          Se connecter
+          ${reset ? 'Choisir un nouveau mot de passe' : 'Se connecter'}
         </a>
-        <p style="color:#6B7280;font-size:14px;">Ce lien expire dans 15 minutes et ne peut être utilisé qu'une seule fois.</p>
+        <p style="color:#6B7280;font-size:14px;">Ce lien expire dans 15 minutes et ne peut être utilisé qu'une seule fois.${reset ? " Si vous n'avez rien demandé, ignorez ce message : votre mot de passe actuel reste valable." : ''}</p>
         <p style="color:#6B7280;font-size:12px;">Si le bouton ne fonctionne pas, copiez ce lien : ${link}</p>
       </div>
     `

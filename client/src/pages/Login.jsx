@@ -9,6 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [magicSent, setMagicSent] = useState(false);
   const [error, setError] = useState('');
+  const [noAccount, setNoAccount] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
@@ -34,16 +35,20 @@ export default function Login() {
   const handleMagicLink = async (e) => {
     e.preventDefault();
     setError('');
+    setNoAccount(false);
     setLoading(true);
     try {
-      await api.sendMagicLink(email);
+      await api.sendMagicLink(email, mode === 'reset' ? 'reset' : undefined);
       setMagicSent(true);
     } catch (err) {
       setError(err.message);
+      setNoAccount(err.status === 404);
     } finally {
       setLoading(false);
     }
   };
+
+  const openReset = () => { setMode('reset'); setError(''); setNoAccount(false); setMagicSent(false); };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -91,6 +96,37 @@ export default function Login() {
             <button type="submit" className="btn-primary w-full" disabled={loading}>
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
+            <button type="button" onClick={openReset} className="block mx-auto text-sm text-blue hover:underline font-medium">
+              Mot de passe oublié ?
+            </button>
+          </form>
+        )}
+
+        {/* Mot de passe oublié */}
+        {mode === 'reset' && !magicSent && (
+          <form onSubmit={handleMagicLink} className="space-y-4">
+            <div>
+              <h2 className="font-semibold text-text-main mb-1">Mot de passe oublié</h2>
+              <p className="text-sm text-text-muted">
+                Indiquez votre adresse : vous recevrez un lien pour vous connecter et choisir un nouveau mot de passe.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="email-reset" className="block text-sm font-medium mb-2">Adresse email</label>
+              <input id="email-reset" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="votre@email.fr" required autoFocus />
+            </div>
+            {error && (
+              <p className="text-red-500 text-sm">
+                {error}
+                {noAccount && <> <Link to="/inscription" className="text-blue hover:underline font-medium">Créer un compte</Link></>}
+              </p>
+            )}
+            <button type="submit" className="btn-primary w-full" disabled={loading}>
+              {loading ? 'Envoi...' : 'Recevoir le lien'}
+            </button>
+            <button type="button" onClick={() => { setMode('password'); setError(''); }} className="block mx-auto text-sm text-text-muted hover:text-blue">
+              ← Retour à la connexion
+            </button>
           </form>
         )}
 
@@ -111,7 +147,7 @@ export default function Login() {
           </form>
         )}
 
-        {mode === 'magic' && magicSent && (
+        {(mode === 'magic' || mode === 'reset') && magicSent && (
           <div className="text-center slide-up">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -120,7 +156,9 @@ export default function Login() {
             </div>
             <h2 className="text-xl font-semibold mb-2">Vérifiez vos emails</h2>
             <p className="text-text-muted mb-4">
-              Un lien de connexion a été envoyé à <strong>{email}</strong>. Il expire dans 15 minutes.
+              {mode === 'reset'
+                ? <>Un lien pour choisir un nouveau mot de passe a été envoyé à <strong>{email}</strong>. Il expire dans 15 minutes. Pensez à regarder dans les spams.</>
+                : <>Un lien de connexion a été envoyé à <strong>{email}</strong>. Il expire dans 15 minutes.</>}
             </p>
             <button onClick={() => setMagicSent(false)} className="text-blue hover:underline text-sm">
               Utiliser une autre adresse

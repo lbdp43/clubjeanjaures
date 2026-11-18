@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { whatsappLink, mapsUrl, imgUrl } from '../utils/helpers';
@@ -39,6 +39,19 @@ export default function Profile() {
   const profilePhotoRef = useRef();
   const seededFor = useRef(null);
   const optOutSent = useRef(false);
+  const pwRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const fromResetLink = searchParams.get('nouveau-mot-de-passe') === '1';
+  // Pas d'ancien mot de passe à saisir : compte sans mot de passe, ou arrivée par le lien « mot de passe oublié »
+  const noCurrentNeeded = !!user && (user.hasPassword === false || user.passwordResetAllowed);
+  const [pwDone, setPwDone] = useState(false);
+
+  // Arrivée par le lien « mot de passe oublié » : on amène directement au choix du nouveau mot de passe
+  useEffect(() => {
+    if (!fromResetLink || !user) return;
+    const t = setTimeout(() => pwRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 400);
+    return () => clearTimeout(t);
+  }, [fromResetLink, !!user]);
 
   // On pré-remplit le formulaire une seule fois par utilisateur : un rafraîchissement
   // du profil (après upload de photo par ex.) ne doit pas écraser ce qui est en cours de saisie.
@@ -126,9 +139,11 @@ export default function Profile() {
     }
     setPwSaving(true);
     try {
-      const res = await api.changePassword(pwForm.currentPassword, pwForm.newPassword);
+      const res = await api.changePassword(noCurrentNeeded ? undefined : pwForm.currentPassword, pwForm.newPassword);
       setPwMsg(res.message || 'Mot de passe modifié.');
       setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPwDone(true);
+      refreshUser?.();
     } catch (err) {
       setPwMsg(err.message || 'Erreur lors du changement.');
     }
@@ -504,19 +519,34 @@ export default function Profile() {
       </form>
 
       {/* Mot de passe */}
-      <form onSubmit={handleChangePassword} className="card p-4 sm:p-6 space-y-4">
-        <h3 className="font-semibold">Changer mon mot de passe</h3>
-        <div>
-          <label className="block text-sm font-medium mb-1">Mot de passe actuel</label>
-          <input
-            type="password"
-            value={pwForm.currentPassword}
-            onChange={e => setPwForm({...pwForm, currentPassword: e.target.value})}
-            className="input-field"
-            required
-            autoComplete="current-password"
-          />
-        </div>
+      <form
+        ref={pwRef}
+        onSubmit={handleChangePassword}
+        className={`card p-4 sm:p-6 space-y-4 ${fromResetLink && noCurrentNeeded && !pwDone ? 'ring-2 ring-blue' : ''}`}
+      >
+        <h3 className="font-semibold">
+          {noCurrentNeeded ? 'Choisir mon nouveau mot de passe' : 'Changer mon mot de passe'}
+        </h3>
+        {noCurrentNeeded && !pwDone && (
+          <p className="text-sm text-text-muted">
+            {user?.hasPassword === false
+              ? "Votre compte n'a pas encore de mot de passe : choisissez-en un pour vous connecter plus vite la prochaine fois."
+              : "Vous êtes connecté grâce au lien reçu par mail : choisissez votre nouveau mot de passe, l'ancien n'est pas demandé."}
+          </p>
+        )}
+        {!noCurrentNeeded && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Mot de passe actuel</label>
+            <input
+              type="password"
+              value={pwForm.currentPassword}
+              onChange={e => setPwForm({...pwForm, currentPassword: e.target.value})}
+              className="input-field"
+              required
+              autoComplete="current-password"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium mb-1">Nouveau mot de passe</label>
           <input
@@ -545,7 +575,7 @@ export default function Profile() {
           <p className={`text-sm ${pwMsg.includes('modifié') ? 'text-green-600' : 'text-red-500'}`}>{pwMsg}</p>
         )}
         <button type="submit" className="btn-secondary text-sm" disabled={pwSaving}>
-          {pwSaving ? 'Modification...' : 'Modifier le mot de passe'}
+          {pwSaving ? 'Modification...' : noCurrentNeeded ? 'Enregistrer le mot de passe' : 'Modifier le mot de passe'}
         </button>
       </form>
 

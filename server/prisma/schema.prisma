@@ -230,6 +230,8 @@ model Session {
   id        String   @id @default(uuid())
   userId    String   @map("user_id") @db.Uuid
   expiresAt DateTime @map("expires_at")
+  // Ouverte par un lien « mot de passe oublié » : nouveau mot de passe possible sans l'ancien jusqu'à cette date
+  passwordResetUntil DateTime? @map("password_reset_until")
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("sessions")

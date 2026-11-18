@@ -51,8 +51,9 @@ export const api = {
   login: (email, password) => apiFetch('/auth/login', {
     method: 'POST', body: JSON.stringify({ email, password })
   }),
-  sendMagicLink: (email) => apiFetch('/auth/magic-link', {
-    method: 'POST', body: JSON.stringify({ email })
+  // purpose 'reset' : lien « mot de passe oublié » (pas de création de compte, mène au choix d'un nouveau mot de passe)
+  sendMagicLink: (email, purpose) => apiFetch('/auth/magic-link', {
+    method: 'POST', body: JSON.stringify({ email, purpose })
   }),
   verifyToken: (token) => apiFetch(`/auth/verify?token=${encodeURIComponent(token)}`),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
